@@ -34,7 +34,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 
-
+/*
 
 var db = null,
     dbDetails = new Object();
@@ -44,7 +44,7 @@ var initDb = function(callback) {
 
   var mongodb = require('mongodb');
   if (mongodb == null) return;
-  mongodb.connect(mongoURL, function(err, conn) {
+ mongodb.connect(mongoURL, function(err, conn) {
     if (err) {
       callback(err);
       return;
@@ -59,7 +59,8 @@ var initDb = function(callback) {
   });
 console.log(mongoURL);
 };
-
+*/
+instance.setup(mongoURL);
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
@@ -109,9 +110,7 @@ app.use(function(err, req, res, next){
   res.status(500).send('Something bad happened!');
 });
 
-initDb(function(err){
-  console.log('Error connecting to Mongo. Message:\n'+err);
-});
+
 
 console.log(mongoURL,'MONGO');
 
