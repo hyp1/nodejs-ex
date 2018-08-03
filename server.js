@@ -89,35 +89,23 @@ app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
   var db=instance.DbConnection;
+  db.then(function(db) {
+    console.log(db);
+    db.collection('messages').find({}).toArray(function(err, resultArray){
+      res.json( resultArray );  
+      });
 
-
-  if (db) {
-    var col = db.collection('counts');
-    // Create a document with request IP and current time of request
-    col.insert({ip: req.ip, date: Date.now()});
-    col.count(function(err, count){
-      if (err) {
-        console.log('Error running count. Message:\n'+err);
-      }
-      res.render('index.html', { pageCountMessage : count, dbInfo: dbDetails });
-    });
-  } else {
-    res.render('index.html', { pageCountMessage : null});
-  }
+    //res.render('index.html', { pageCountMessage : null});
+  
 });
 
 app.get('/pagecount', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
 
-  if (db) {
-    db.collection('counts').count(function(err, count ){
-      res.send('{ pageCount: ' + count + '}');
-    });
-  } else {
     res.send('{ pageCount: -1 }');
-  }
-});
+
+  });
 
 // error handling
 app.use(function(err, req, res, next){
