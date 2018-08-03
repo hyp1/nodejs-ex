@@ -34,7 +34,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 
-/*
+
 
 var db = null,
     dbDetails = new Object();
@@ -44,23 +44,10 @@ var initDb = function(callback) {
 
   var mongodb = require('mongodb');
   if (mongodb == null) return;
- mongodb.connect(mongoURL, function(err, conn) {
-    if (err) {
-      callback(err);
-      return;
-    }
+  instance.setup(mongoURL);
 
-    db = conn;
-    dbDetails.databaseName = db.databaseName;
-    dbDetails.url = mongoURLLabel;
-    dbDetails.type = 'MongoDB';
-
-    console.log('Connected to MongoDB at: %s', mongoURL);
-  });
-console.log(mongoURL);
 };
-*/
-instance.setup(mongoURL);
+
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
@@ -112,15 +99,15 @@ app.use(function(err, req, res, next){
 
 
 
-console.log(mongoURL,'MONGO');
+console.log(mongoURL,'MONGOA');
 
-db=instance.setup(mongoURL);
+initDb(function(callback){
+  console.log(callback);
+})
 
-console.log(mongoURL,'MONGO');
+console.log(mongoURL,'MONGOB');
 //mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
 
-test=instance.DbConnection;
-console.log(test,);
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
