@@ -14,7 +14,7 @@ app.use(morgan('combined'));
 app.use('/logs', logs);
 
 app.use('/', express.static('public'),function(req, res){
-  console.log(req.headers);
+  //console.log(req.headers);
   //res.sendFile(express.static('public')+'index.html');
   res.sendFile('index.html', { root: __dirname +'/public'});
 });
