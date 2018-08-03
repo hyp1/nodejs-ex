@@ -36,7 +36,7 @@ var db = null,
     dbDetails = new Object();
 
 
-    mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
+    //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
     console.log(mongoURL,'mongoURL');
 
 
