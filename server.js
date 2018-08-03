@@ -2,8 +2,6 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-
-var mongodb = require('mongodb');
 var instance = require('./database');
 
 Object.assign=require('object-assign')
@@ -35,6 +33,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
+var db = null;
 
 /*
 var db = null,
@@ -61,17 +60,7 @@ var initDb = function(callback) {
   });
 };
 */
-console.log(mongoURL,'MONGO');
 
-db=instance.setup(mongoURL,function(db){
-  console.log(db,'callback');
-});
-
-console.log(mongoURL,'MONGO');
-//mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
-
-db=instance.DbConnection;
-console.log(db);
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
@@ -124,6 +113,17 @@ initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
 */
+
+console.log(mongoURL,'MONGO');
+
+db=instance.setup(mongoURL);
+
+console.log(mongoURL,'MONGO');
+//mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
+
+db=instance.DbConnection;
+console.log(db);
+
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
 
