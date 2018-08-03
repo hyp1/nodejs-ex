@@ -114,7 +114,7 @@ initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
 */
-mongoURL= 'mongodb://userUDO:VSnVK6rQ38yWy7sI@mongodb/sampledb';
+mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
 db=instance.setup(mongoURL);
