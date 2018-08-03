@@ -2,7 +2,9 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-    
+
+var singleton = require('./database');    
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -35,10 +37,13 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
-    var singleton = require('./database');
+
     singleton.setup(mongoURL);
-    var db=singleton.DbConnection;
-        db.then(function(db) {
+    var db=singleton.DbConnection();
+    console.log(mongoURL,'mongoURL');
+    console.log(db,'DB');
+    
+    db.then(function(db) {
         var col = db.collection('messages');
         col.count(function(err, count){
           console.log('MSGCOUNT:'+count)
@@ -52,9 +57,7 @@ var db = null,
 
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
-    console.log(mongoURL,'mongoURL');
-    console.log(db,'DB');
-    
+
 /*
     var initDb = function(callback) {
   if (mongoURL == null) return;
