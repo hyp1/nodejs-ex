@@ -115,20 +115,25 @@ initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
 */
-//mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
+mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
-instance.setup(mongoURL);
-console.log(mongoURL,'MONGO');
 
-db=instance.DbConnection;
 
+
+function test(){
+  db=instance.DbConnection;
 db.then(function(db) {
   console.log(db);
   db.collection('counts').find({}).toArray(function(err, resultArray){
   console.log(resultArray);  
 });
 });
+}
+instance.setup(mongoURL);
+console.log(mongoURL,'MONGO');
+
+test();
 
 console.log(db);
 
