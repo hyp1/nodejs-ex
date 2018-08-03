@@ -2,9 +2,7 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-
-var instance= require('./database');    
-
+    
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -34,35 +32,19 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
-//var db = null,
+var db = null,
     dbDetails = new Object();
 
-    console.log(mongoURL,'mongoURL');
-var test=mongoURL;
-if(test==undefined)test='mongodb://127.0.0.1:27017';
-    instance.setup(test);
-    console.log(instance);
-
-    db=instance.DbConnection;
-    console.log(test,'mongoURL');
-    console.log(db,'DB');
-    
-    db.then(function(db) {
-        var col = db.collection('messages');
-        col.count(function(err, count){
-          console.log('MSGCOUNT:'+count)
-          })
-      // Create a document with request IP and current time of request
-        //col.insert({date:msg.time,msg:msg.msg});
-        //col.count(function(err, count){
-        //console.log('MSGCOUNT:'+count)
-        //});
-    });
+    var singleton = require('./database');
+    singleton.setup(mongoURL);
+    var db=singleton.DbConnection;
 
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
+    console.log(mongoURL,'mongoURL');
+    console.log(db,'DB');
+    
 
-/*
     var initDb = function(callback) {
   if (mongoURL == null) return;
 
@@ -83,29 +65,42 @@ if(test==undefined)test='mongodb://127.0.0.1:27017';
     console.log('Connected to MongoDB at: %s', mongoURL);
   });
 };
-*/
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  var db=instance.DbConnection;
-  db.then(function(db) {
-    console.log(db);
-    db.collection('messages').find({}).toArray(function(err, resultArray){
-      res.json( resultArray );  
-      });
+  if (!db) {
+    initDb(function(err){});
+  }
+  if (db) {
+    var col = db.collection('counts');
+    // Create a document with request IP and current time of request
+    col.insert({ip: req.ip, date: Date.now()});
+    col.count(function(err, count){
+      if (err) {
+        console.log('Error running count. Message:\n'+err);
+      }
+      res.render('index.html', { pageCountMessage : count, dbInfo: dbDetails });
     });
-    //res.render('index.html', { pageCountMessage : null});
-  
+  } else {
+    res.render('index.html', { pageCountMessage : null});
+  }
 });
 
 app.get('/pagecount', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-
+  if (!db) {
+    initDb(function(err){});
+  }
+  if (db) {
+    db.collection('counts').count(function(err, count ){
+      res.send('{ pageCount: ' + count + '}');
+    });
+  } else {
     res.send('{ pageCount: -1 }');
-
-  });
+  }
+});
 
 // error handling
 app.use(function(err, req, res, next){
@@ -113,11 +108,9 @@ app.use(function(err, req, res, next){
   res.status(500).send('Something bad happened!');
 });
 
-/*
 initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
-*/
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
