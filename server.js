@@ -4,7 +4,7 @@ var express = require('express'),
     morgan  = require('morgan');
 
 var mongodb = require('mongodb');
-var instance = require('express');
+var instance = require('./database');
 
 Object.assign=require('object-assign')
 
