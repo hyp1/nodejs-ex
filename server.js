@@ -94,7 +94,7 @@ app.get('/', function (req, res) {
     db.collection('messages').find({}).toArray(function(err, resultArray){
       res.json( resultArray );  
       });
-
+    });
     //res.render('index.html', { pageCountMessage : null});
   
 });
