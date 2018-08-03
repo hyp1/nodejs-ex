@@ -84,6 +84,7 @@ app.get('/', function (req, res) {
     res.render('index.html', { pageCountMessage : null});
   }
   */
+ res.render('index.html', { pageCountMessage : null});
 });
 
 app.get('/pagecount', function (req, res) {
@@ -117,12 +118,18 @@ initDb(function(err){
 mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
-db=instance.setup(mongoURL);
-
+instance.setup(mongoURL);
 console.log(mongoURL,'MONGO');
-//mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
 
-db=instance.DbConnection;
+db=instance.DbConnection();
+
+db.then(function(db) {
+  console.log(db);
+  db.collection('messages').find({}).toArray(function(err, resultArray){
+  console.log(resultArray);  
+});
+
+
 console.log(db);
 
 app.listen(port, ip);
