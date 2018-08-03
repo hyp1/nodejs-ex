@@ -33,7 +33,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 
-console.log(mongoURL);
+
 var db = null,
     dbDetails = new Object();
 
@@ -57,6 +57,7 @@ var initDb = function(callback) {
     console.log('Connected to MongoDB at: %s', mongoURL);
   });
 };
+console.log(mongoURL,'MONGO');
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
