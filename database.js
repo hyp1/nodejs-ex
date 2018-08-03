@@ -1,18 +1,20 @@
+"use strict"
 var mongodb = require('mongodb');
 
 // database.js
-https://stackoverflow.com/questions/33797732/global-module-object-in-node-js
-var singleton = function singleton() {//
+//https://stackoverflow.com/questions/33797732/global-module-object-in-node-js
+var singleton = function singleton() {
 
-    var MongoClient = mongodb.Db;
+    var MongoClient = mongodb;
     this.DbConnection = {};
-    this.setup=function(url,callback) {
-        console.log(url);
-        if (this.url == null) return;            
-        if (mongodb == null) return;      
-        DbConnection = MongoClient.connect(url);
-        callback=DbConnection;
 
+    this.setup=function(url) {
+    console.log(url,'SETUP');
+        if (url == null) return;
+            
+        if (mongodb == null) return;
+      
+        this.DbConnection = MongoClient.connect(url);
       };
       
 };
