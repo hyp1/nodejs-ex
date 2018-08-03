@@ -84,7 +84,7 @@ var db = null,
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  var db=singleton.DbConnection;
+  var db=singleton.DbConnection();
 
 
   if (db) {
@@ -105,9 +105,7 @@ app.get('/', function (req, res) {
 app.get('/pagecount', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  if (!db) {
-    initDb(function(err){});
-  }
+
   if (db) {
     db.collection('counts').count(function(err, count ){
       res.send('{ pageCount: ' + count + '}');
