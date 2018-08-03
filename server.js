@@ -128,6 +128,7 @@ db.then(function(db) {
   db.collection('messages').find({}).toArray(function(err, resultArray){
   console.log(resultArray);  
 });
+});
 
 
 console.log(db);
