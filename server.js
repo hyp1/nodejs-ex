@@ -37,13 +37,15 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 //var db = null,
     dbDetails = new Object();
 
-if(mongoURL==undefined)mongoURL='mongodb://127.0.0.1:27017';
-    instance.setup(mongoURL);
+    console.log(mongoURL,'mongoURL');
+var test=mongoURL;
+if(test==undefined)test='mongodb://127.0.0.1:27017';
+    instance.setup(test);
     console.log(instance);
 
-    test=instance.DbConnection;
-    console.log(mongoURL,'mongoURL');
-    console.log(test,'DB');
+    db=instance.DbConnection;
+    console.log(test,'mongoURL');
+    console.log(db,'DB');
     
     test.then(function(db) {
         var col = db.collection('messages');
