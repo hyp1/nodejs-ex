@@ -84,7 +84,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  var db=singleton.DbConnection();
+  var db=singleton.DbConnection;
 
 
   if (db) {
