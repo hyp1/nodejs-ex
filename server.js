@@ -38,13 +38,24 @@ var db = null,
     var singleton = require('./database');
     singleton.setup(mongoURL);
     var db=singleton.DbConnection;
+        db.then(function(db) {
+        var col = db.collection('messages');
+        col.count(function(err, count){
+          console.log('MSGCOUNT:'+count)
+          })
+      // Create a document with request IP and current time of request
+        //col.insert({date:msg.time,msg:msg.msg});
+        //col.count(function(err, count){
+        //console.log('MSGCOUNT:'+count)
+        //});
+    });
 
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
     console.log(mongoURL,'mongoURL');
     console.log(db,'DB');
     
-
+/*
     var initDb = function(callback) {
   if (mongoURL == null) return;
 
@@ -65,13 +76,14 @@ var db = null,
     console.log('Connected to MongoDB at: %s', mongoURL);
   });
 };
+*/
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  if (!db) {
-    initDb(function(err){});
-  }
+  var db=singleton.DbConnection;
+
+
   if (db) {
     var col = db.collection('counts');
     // Create a document with request IP and current time of request
@@ -108,9 +120,11 @@ app.use(function(err, req, res, next){
   res.status(500).send('Something bad happened!');
 });
 
+/*
 initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
+*/
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
