@@ -39,7 +39,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
-var initDb = function(callback) {
+var initDb = function(instance,callback) {
   if (mongoURL == null) return;
 
   var mongodb = require('mongodb');
@@ -101,9 +101,9 @@ app.use(function(err, req, res, next){
 
 console.log(mongoURL,'MONGOA');
 
-initDb(function(callback){
-  console.log(callback);
-})
+initDb(function(instance,err){
+  console.log('Error connecting to Mongo. Message:\n'+err);
+});
 
 console.log(mongoURL,'MONGOB');
 //mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
