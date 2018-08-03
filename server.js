@@ -35,7 +35,16 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 var db = null;
-
+function testDB(){
+  instance.setup(mongoURL);
+  db=instance.DbConnection;
+  db.then(function(db) {
+  console.log(db);
+  db.collection('counts').find({}).toArray(function(err, resultArray){
+  console.log(resultArray);  
+});
+});
+}
 /*
 var db = null,
     dbDetails = new Object();
@@ -119,21 +128,7 @@ mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
 
-
-
-function testDB(){
-  instance.setup(mongoURL);
-  db=instance.DbConnection;
-db.then(function(db) {
-  console.log(db);
-  db.collection('counts').find({}).toArray(function(err, resultArray){
-  console.log(resultArray);  
-});
-});
-}
-console.log(mongoURL,'MONGO');
-
-testDB();
+initDB();
 
 console.log(db);
 
