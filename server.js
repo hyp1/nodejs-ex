@@ -3,7 +3,7 @@ var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
 
-var singleton = require('./database');    
+var db= require('./database');    
 
 Object.assign=require('object-assign')
 
@@ -34,12 +34,12 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
-var db = null,
+//var db = null,
     dbDetails = new Object();
 
 
-    singleton.setup(mongoURL);
-    var db=singleton.DbConnection();
+    db.setup(mongoURL);
+    db.DbConnection();
     console.log(mongoURL,'mongoURL');
     console.log(db,'DB');
     
