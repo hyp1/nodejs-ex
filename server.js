@@ -3,7 +3,7 @@ var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
 
-var db= require('./database');    
+var instance= require('./database');    
 
 Object.assign=require('object-assign')
 
@@ -37,13 +37,15 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 //var db = null,
     dbDetails = new Object();
 
+if(mongoURL==undefined)mongoURL='mongodb://127.0.0.1:27017';
+    instance.setup(mongoURL);
+    console.log(instance);
 
-    db.setup(mongoURL);
-    db.DbConnection;
+    test=instance.DbConnection;
     console.log(mongoURL,'mongoURL');
-    console.log(db,'DB');
+    console.log(test,'DB');
     
-    db.then(function(db) {
+    test.then(function(db) {
         var col = db.collection('messages');
         col.count(function(err, count){
           console.log('MSGCOUNT:'+count)
