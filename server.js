@@ -35,7 +35,12 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
-var initDb = function(callback) {
+
+    mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
+    console.log(mongoURL,'mongoURL');
+
+
+    var initDb = function(callback) {
   if (mongoURL == null) return;
 
   var mongodb = require('mongodb');
