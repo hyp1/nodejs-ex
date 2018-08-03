@@ -88,7 +88,7 @@ if(test==undefined)test='mongodb://127.0.0.1:27017';
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  var db=singleton.DbConnection;
+  var db=instance.DbConnection;
 
 
   if (db) {
