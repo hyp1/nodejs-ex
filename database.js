@@ -1,31 +1,20 @@
 "use strict"
 
+
 // database.js
 //https://stackoverflow.com/questions/33797732/global-module-object-in-node-js
 var singleton = function singleton() {
-
+    var mongodb = require('mongodb');
+    var MongoClient = mongodb.MongoClient;
     this.DbConnection = {};
 
-    this.setup=function(url) {    
+    this.setup=function(url) {
+    
         if (url == null) return;
             
         if (mongodb == null) return;
-        if (mongoURL == null) return;
-
-        var mongodb = require('mongodb');
-        if (mongodb == null) return;
-       mongodb.connect(mongoURL, function(err, conn) {
-          if (err) {
-            callback(err);
-            return;
-          }
       
-          this.DbConnection  = conn;
-          dbDetails.databaseName = db.databaseName;
-          dbDetails.url = mongoURLLabel;
-          dbDetails.type = 'MongoDB';      
-          console.log('Connected to MongoDB at: %s', mongoURL);
-        });
+        this.DbConnection = MongoClient.connect(url);
       };
       
 };
