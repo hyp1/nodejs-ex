@@ -2,7 +2,7 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-var instance = require('./database');
+//var instance = require('./database');
 
 Object.assign=require('object-assign')
 
@@ -39,11 +39,12 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
-var initDb = function(instance,callback) {
+var initDb = function(callback) {
   if (mongoURL == null) return;
 
   var mongodb = require('mongodb');
   if (mongodb == null) return;
+
   mongodb.connect(mongoURL, function(err, conn) {
     if (err) {
       callback(err);
@@ -57,7 +58,6 @@ var initDb = function(instance,callback) {
 
     console.log('Connected to MongoDB at: %s', mongoURL);
   });
-
 };
 
 
