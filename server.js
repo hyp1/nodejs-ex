@@ -42,7 +42,8 @@ var db = null,
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
     console.log(mongoURL,'mongoURL');
-    console.log(dbL,'DB');
+    console.log(db,'DB');
+    
 
     var initDb = function(callback) {
   if (mongoURL == null) return;
