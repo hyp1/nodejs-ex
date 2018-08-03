@@ -63,7 +63,9 @@ var initDb = function(callback) {
 */
 console.log(mongoURL,'MONGO');
 
-db=instance.setup(mongoURL);
+db=instance.setup(mongoURL,function(db){
+  console.log(db,'callback');
+});
 
 console.log(mongoURL,'MONGO');
 //mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
@@ -117,11 +119,11 @@ app.use(function(err, req, res, next){
   console.error(err.stack);
   res.status(500).send('Something bad happened!');
 });
-
+/*
 initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
-
+*/
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
 
