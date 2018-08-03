@@ -1,7 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var logs= require('./logs');
-
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
     console.log('Time: ', Date.now());
@@ -42,19 +40,6 @@ router.get('/count', function (req, res) {
   }else{
     res.send('{ pageCount: -1 }');
   }
-    /*
-    console.log("COUnt",db.DbConnection);
-    if (db.DbConnection) {
-        var col = db.collection('counts');
-        // Create a document with request IP and current time of request
-        col.insert({ip: req.ip, date: Date.now()});     
-        col.count(function(err, count ){
-        res.send('{ pageCount: ' + count + '}');
-      });
-    } else {
-      res.send('{ pageCount: -1 }');
-    }
-    */
 });
   
 router.get('/list', function (req, res) {

@@ -4,11 +4,19 @@ var express = require('express'),
     morgan  = require('morgan');
 
 var instance = require('./database');
+var logs= require('./logs');
+
 
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
+
+app.use('/', express.static('public'),function(req, res){
+  console.log(req.headers);
+  //res.sendFile(express.static('public')+'index.html');
+  res.sendFile('index.html', { root: __dirname +'/public'});
+});
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
     ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
@@ -35,7 +43,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 var db = null;
-function testDB(){
+function initDB(){
   instance.setup(mongoURL);
   db=instance.DbConnection;
   db.then(function(db) {
