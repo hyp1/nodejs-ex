@@ -115,7 +115,7 @@ initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
 */
-mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
+//mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
 instance.setup(mongoURL);
@@ -125,7 +125,7 @@ db=instance.DbConnection;
 
 db.then(function(db) {
   console.log(db);
-  db.collection('messages').find({}).toArray(function(err, resultArray){
+  db.collection('counts').find({}).toArray(function(err, resultArray){
   console.log(resultArray);  
 });
 });
