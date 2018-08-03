@@ -84,7 +84,7 @@ app.get('/', function (req, res) {
     res.render('index.html', { pageCountMessage : null});
   }
   */
- res.render('index.html', { pageCountMessage : null});
+ res.send('{ pageCount: -1 }');
 });
 
 app.get('/pagecount', function (req, res) {
@@ -129,7 +129,6 @@ db.then(function(db) {
   console.log(resultArray);  
 });
 });
-
 
 console.log(db);
 
