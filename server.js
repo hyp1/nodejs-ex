@@ -121,8 +121,8 @@ db=instance.setup(mongoURL);
 console.log(mongoURL,'MONGO');
 //mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
 
-db=instance.DbConnection;
-console.log(db);
+test=instance.DbConnection;
+console.log(test,);
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);

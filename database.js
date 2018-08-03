@@ -4,18 +4,15 @@ var mongodb = require('mongodb');
 https://stackoverflow.com/questions/33797732/global-module-object-in-node-js
 var singleton = function singleton() {//
 
-    var MongoClient = mongodb.MongoClient;
+    var MongoClient = mongodb.Db;
     this.DbConnection = {};
-    this.uurl=null;
     this.setup=function(url,callback) {
-    this.url=url;
-        if (this.url == null) return;
-            
-        if (mongodb == null) return;
-      
-        this.DbConnection = MongoClient.connect(url);
-        callback=this.DbConnection;
-        return;
+        console.log(url);
+        if (this.url == null) return;            
+        if (mongodb == null) return;      
+        DbConnection = MongoClient.connect(url);
+        callback=DbConnection;
+
       };
       
 };
