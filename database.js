@@ -1,4 +1,3 @@
-"use strict"
 var mongodb = require('mongodb');
 
 // database.js
@@ -7,14 +6,16 @@ var singleton = function singleton() {//
 
     var MongoClient = mongodb.MongoClient;
     this.DbConnection = {};
-
-    this.setup=function(url) {
-    
-        if (url == null) return;
+    this.uurl=null;
+    this.setup=function(url,callback) {
+    this.url=url;
+        if (this.url == null) return;
             
         if (mongodb == null) return;
       
         this.DbConnection = MongoClient.connect(url);
+        callback=this.DbConnection;
+        return;
       };
       
 };

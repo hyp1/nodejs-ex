@@ -2,7 +2,10 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-    
+
+var mongodb = require('mongodb');
+var instance = require('express');
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -33,7 +36,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
   }
 }
 
-
+/*
 var db = null,
     dbDetails = new Object();
 
@@ -57,11 +60,21 @@ var initDb = function(callback) {
     console.log('Connected to MongoDB at: %s', mongoURL);
   });
 };
+*/
 console.log(mongoURL,'MONGO');
+
+db=instance.setup(mongoURL);
+
+console.log(mongoURL,'MONGO');
+//mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
+
+db=instance.DbConnection;
+console.log(db);
 
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
+  /*
   if (!db) {
     initDb(function(err){});
   }
@@ -78,9 +91,11 @@ app.get('/', function (req, res) {
   } else {
     res.render('index.html', { pageCountMessage : null});
   }
+  */
 });
 
 app.get('/pagecount', function (req, res) {
+  /*
   // try to initialize the db on every request if it's not already
   // initialized.
   if (!db) {
@@ -93,6 +108,8 @@ app.get('/pagecount', function (req, res) {
   } else {
     res.send('{ pageCount: -1 }');
   }
+  */
+ res.send('{ pageCount: -1 }');
 });
 
 // error handling
