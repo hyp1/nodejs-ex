@@ -140,7 +140,14 @@ initDB();
 
 console.log(db);
 
-app.listen(port, ip);
+//app.listen(port, ip);
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
+http.listen(port,ip, function(req,res){
+  console.log('listening on *:' + port);
+});
+
 console.log('Server running on http://%s:%s', ip, port);
 
 module.exports = app ;
