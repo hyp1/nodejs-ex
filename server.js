@@ -66,6 +66,8 @@ var db = null,
   });
 };
 
+console.log(mongoURL,'MONGO!');
+
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
