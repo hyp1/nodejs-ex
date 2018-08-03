@@ -2,7 +2,9 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-    
+
+var singleton = require('./database');
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -35,9 +37,9 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
-    var singleton = require('./database');
-    singleton.setup(mongoURL);
-    var db=singleton.DbConnection;
+
+   // singleton.setup(mongoURL);
+   // var db=singleton.DbConnection;
 
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
@@ -71,6 +73,7 @@ console.log(mongoURL,'MONGO!');
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
+ /*
   if (!db) {
     initDb(function(err){});
   }
@@ -87,11 +90,14 @@ app.get('/', function (req, res) {
   } else {
     res.render('index.html', { pageCountMessage : null});
   }
+  */
+  res.render('index.html', { pageCountMessage : null});
 });
 
 app.get('/pagecount', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
+  /*
   if (!db) {
     initDb(function(err){});
   }
@@ -102,6 +108,8 @@ app.get('/pagecount', function (req, res) {
   } else {
     res.send('{ pageCount: -1 }');
   }
+  */
+  res.send('{ pageCount: -1 }');
 });
 
 // error handling
