@@ -39,7 +39,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
 
     db.setup(mongoURL);
-    db.DbConnection();
+    db.DbConnection;
     console.log(mongoURL,'mongoURL');
     console.log(db,'DB');
     
