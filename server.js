@@ -47,7 +47,7 @@ if(test==undefined)test='mongodb://127.0.0.1:27017';
     console.log(test,'mongoURL');
     console.log(db,'DB');
     
-    test.then(function(db) {
+    db.then(function(db) {
         var col = db.collection('messages');
         col.count(function(err, count){
           console.log('MSGCOUNT:'+count)
