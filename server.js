@@ -35,10 +35,14 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 var db = null,
     dbDetails = new Object();
 
+    var singleton = require('./database');
+    singleton.setup(mongoURL);
+    var db=singleton.DbConnection;
+
 
     //mongoURL='mongodb://robert:kimo2002@mongodb/sampledb';
     console.log(mongoURL,'mongoURL');
-
+    console.log(dbL,'DB');
 
     var initDb = function(callback) {
   if (mongoURL == null) return;
