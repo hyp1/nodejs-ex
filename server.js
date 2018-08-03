@@ -8,9 +8,9 @@ var logs= require('./logs');
 
 
 Object.assign=require('object-assign')
-
-app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
+
+app.use('/logs', logs);
 
 app.use('/', express.static('public'),function(req, res){
   console.log(req.headers);
