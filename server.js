@@ -2,8 +2,7 @@
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
-//var instance = require('./database');
-
+    
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -33,9 +32,6 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
-
-
-
 var db = null,
     dbDetails = new Object();
 
@@ -60,11 +56,9 @@ var initDb = function(callback) {
   });
 };
 
-
 app.get('/', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
-  /*
   if (!db) {
     initDb(function(err){});
   }
@@ -81,12 +75,9 @@ app.get('/', function (req, res) {
   } else {
     res.render('index.html', { pageCountMessage : null});
   }
-  */
- res.render('index.html', { pageCountMessage : null});
 });
 
 app.get('/pagecount', function (req, res) {
-  /*
   // try to initialize the db on every request if it's not already
   // initialized.
   if (!db) {
@@ -99,8 +90,6 @@ app.get('/pagecount', function (req, res) {
   } else {
     res.send('{ pageCount: -1 }');
   }
-  */
- res.send('{ pageCount: -1 }');
 });
 
 // error handling
@@ -109,17 +98,9 @@ app.use(function(err, req, res, next){
   res.status(500).send('Something bad happened!');
 });
 
-
-
-console.log(mongoURL,'MONGOA');
-
 initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
-
-console.log(mongoURL,'MONGOB');
-//mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83:27017/sampledb
-
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
