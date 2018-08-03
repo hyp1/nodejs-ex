@@ -121,7 +121,7 @@ console.log(mongoURL,'MONGO');
 instance.setup(mongoURL);
 console.log(mongoURL,'MONGO');
 
-db=instance.DbConnection();
+db=instance.DbConnection;
 
 db.then(function(db) {
   console.log(db);
