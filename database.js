@@ -1,21 +1,20 @@
 "use strict"
 var mongodb = require('mongodb');
-var mongourl = require('./server').mongoURL;
+
 // database.js
 //https://stackoverflow.com/questions/33797732/global-module-object-in-node-js
 var singleton = function singleton() {
 
-    var MongoClient = mongodb;
+    var m = mongodb;
     this.DbConnection = {};
 
     this.setup=function(url) {
-    console.log(url,'SETUP');
-    console.log(mongourl,'SETUPmongiURL');
+    
         if (url == null) return;
             
         if (mongodb == null) return;
       
-        this.DbConnection = MongoClient.connect(url);
+        this.DbConnection = m.connect(url);
       };
       
 };

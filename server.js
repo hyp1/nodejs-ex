@@ -33,9 +33,9 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
-var db = null;
 
-/*
+
+
 var db = null,
     dbDetails = new Object();
 
@@ -45,21 +45,8 @@ var initDb = function(callback) {
   var mongodb = require('mongodb');
   if (mongodb == null) return;
 
-  mongodb.connect(mongoURL, function(err, conn) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    db = conn;
-    dbDetails.databaseName = db.databaseName;
-    dbDetails.url = mongoURLLabel;
-    dbDetails.type = 'MongoDB';
-
-    console.log('Connected to MongoDB at: %s', mongoURL);
-  });
+console.log(mongoURL);
 };
-*/
 
 
 app.get('/', function (req, res) {
@@ -83,6 +70,7 @@ app.get('/', function (req, res) {
     res.render('index.html', { pageCountMessage : null});
   }
   */
+ res.render('index.html', { pageCountMessage : null});
 });
 
 app.get('/pagecount', function (req, res) {
@@ -108,11 +96,10 @@ app.use(function(err, req, res, next){
   console.error(err.stack);
   res.status(500).send('Something bad happened!');
 });
-/*
+
 initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
-*/
 
 console.log(mongoURL,'MONGO');
 
