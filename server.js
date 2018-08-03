@@ -7,8 +7,9 @@ var instance = require('./database');
 var logs= require('./logs');
 
 
-Object.assign=require('object-assign')
-app.use(morgan('combined'))
+Object.assign=require('object-assign');
+app.engine('html', require('ejs').renderFile);
+app.use(morgan('combined'));
 
 app.use('/logs', logs);
 
