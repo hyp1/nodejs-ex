@@ -44,7 +44,19 @@ var initDb = function(instance,callback) {
 
   var mongodb = require('mongodb');
   if (mongodb == null) return;
-  instance.setup(mongoURL);
+  mongodb.connect(mongoURL, function(err, conn) {
+    if (err) {
+      callback(err);
+      return;
+    }
+
+    db = conn;
+    dbDetails.databaseName = db.databaseName;
+    dbDetails.url = mongoURLLabel;
+    dbDetails.type = 'MongoDB';
+
+    console.log('Connected to MongoDB at: %s', mongoURL);
+  });
 
 };
 
@@ -101,7 +113,7 @@ app.use(function(err, req, res, next){
 
 console.log(mongoURL,'MONGOA');
 
-initDb(function(instance,err){
+initDb(function(err){
   console.log('Error connecting to Mongo. Message:\n'+err);
 });
 
