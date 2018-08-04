@@ -43,6 +43,11 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
+mongoURL= process.env.MONGO_URL ||  'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
+console.log(mongoURL,'MONGO');
+
+
+
 var db = null;
 function initDB(){
   instance.setup(mongoURL);
@@ -54,37 +59,8 @@ function initDB(){
 });
 });
 }
-/*
-var db = null,
-    dbDetails = new Object();
-
-var initDb = function(callback) {
-  if (mongoURL == null) return;
-
-  var mongodb = require('mongodb');
-  if (mongodb == null) return;
-
-  mongodb.connect(mongoURL, function(err, conn) {
-    if (err) {
-      callback(err);
-      return;
-    }
-
-    db = conn;
-    dbDetails.databaseName = db.databaseName;
-    dbDetails.url = mongoURLLabel;
-    dbDetails.type = 'MongoDB';
-
-    console.log('Connected to MongoDB at: %s', mongoURL);
-  });
-};
-*/
 
 
-
-
-mongoURL= 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
-console.log(mongoURL,'MONGO');
 
 
 initDB();
@@ -101,4 +77,16 @@ http.listen(port,ip, function(req,res){
 
 console.log('Server running on http://%s:%s', ip, port);
 
+
+exports.sayHelloInSpanish = function() {
+  return "Hola";
+};
+
+exports.app=function(){
+
+  exports.dataLog = function(msg) {
+  console.log( "HELLO"+msg);
+}
+
+}
 module.exports = app ;

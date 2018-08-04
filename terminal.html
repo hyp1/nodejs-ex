@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="shortcut icon" href="https://awri.ch/html/favicon.ico" type="image/vnd.microsoft.icon" />
+<meta itemprop="image" content="http://awri.ch/sites/all/themes/awri_jqm/images/home_2.jpg" />
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
+<title>AWRI - Rechtsfrage Service</title>
+
+<script src="//cdn.bootcss.com/socket.io/2.1.0/socket.io.dev.js"></script>
+<style>
+
+@font-face { /* http://emojione.com/developers/ */
+  font-family: Emojione;
+  src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
+       url("emojione-android.ttf") format("truetype");      
+}
+
+@font-face {
+    font-family: Emojione;
+    src: local("Arial");
+    unicode-range: U+0000-00FF;
+}
+  
+body,html,li{
+    font-family: Emojione;
+}
+
+#terminal,#cmd{
+background: black;
+color:white;
+}
+#cmd{
+width:100%;
+}
+</style>
+
+</head>
+
+<body onload="init()">
+  <h1>Terminal</h1>
+  ch mit Emojis: 👌 😊 ❤️ 😉 😉 
+  <ul id='terminal'>
+<li>line 1</li>
+<li>line 2</li>      
+</ul>
+<input id="cmd" type="text">
+<script>
+
+function init(){
+
+document.getElementById('cmd').addEventListener("keypress", function(e){
+    if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+        //sendMessage()
+        sendMessageTo(1)
+        return false;
+    } else {
+        return true;
+    }  
+});
+
+document.getElementById('cmd').focus();
+
+}
+
+
+function sendMessage(){
+    if(document.getElementById('cmd').value.length<2)return;
+    socket.emit('message', document.getElementById('cmd').value);
+    document.getElementById('cmd').value="";
+    document.getElementById('cmd').focus();        
+}
+
+function sendMessageTo(uid){
+   // if(document.getElementById('priv').value.length<2)return;
+var txt = document.getElementById('cmd').value;
+   socket.emit('private message', {to:uid,msg:document.getElementById('cmd').value});
+    document.getElementById('cmd').value="";
+    document.getElementById('cmd').focus();        
+}
+
+var notifications=false;
+var socket;
+
+socket = io.connect('http://localhost:8080');
+socket.emit('connection name',{uid:0,name:'test'});
+
+socket.on('message', function(msg){
+    console.log(msg)
+
+    var ul=document.getElementById('terminal');
+    var li = document.createElement("li");
+    li.appendChild(document.createTextNode(getFormattedDate(msg._time)+' : '+msg._params.name+':  '+msg._msg));
+    ul.appendChild(li);
+
+    window.scrollTo(0, document.body.scrollHeight);
+});
+
+socket.on('private message', function(msg){
+    //      console.log(socket.handshake.headers.host.split(":").shift());
+//          $('#messages').append($('<li>').html(getFormattedDate(msg.time)+': '+msg._params.name+': '+msg.tag+msg.txt));
+//          window.scrollTo(0, document.body.scrollHeight);
+});
+
+socket.on('new user', function(msg){
+    var ul=document.getElementById('terminal');
+         var li = document.createElement("li");
+  li.appendChild(document.createTextNode(getFormattedDate(msg._time)+' : '+msg._params.name+':  '+msg._msg));
+  ul.appendChild(li);
+
+});
+
+function getFormattedDate(time) {
+    var date = new Date(time);
+
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var min = date.getMinutes();
+    var sec = date.getSeconds();
+
+    month = (month < 10 ? "0" : "") + month;
+    day = (day < 10 ? "0" : "") + day;
+    hour = (hour < 10 ? "0" : "") + hour;
+    min = (min < 10 ? "0" : "") + min;
+    sec = (sec < 10 ? "0" : "") + sec;
+
+    var str =  day + "."+ month + "."  +date.getFullYear() + " " +  hour + ":" + min + ":" + sec;
+
+    return str;
+}
+</script>
+
+</body>
+</html>

@@ -1,39 +1,44 @@
 var express = require('express');
 var router = express.Router();
 var singleton = require('./database');
+var db=singleton.DbConnection;  
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
-    console.log('Time: ', Date.now());
+ // console.log("openDB"); 
+  console.log('Time: ', Date.now());
     next();
+ //   console.log("closeDB"); 
   });
   // define the home page route
   router.get('/', function(req, res) {
-    db=singleton.DbConnection;
+//    db=singleton.DbConnection;
     if (db) {
     db.then(function(db) {
-      console.log(db);
     var col = db.collection('counts');
     // Create a document with request IP and current time of request
-    col.insert({ip: req.ip, date: Date.now()});
+      col.insert({ip: req.ip, date: Date.now()});
       })
 
       res.send('Chat Server Log Page');
     }else{
       res.send('Fehler,');
     }
+    console.log("closeDB"); 
   });
   // define the about route
   router.get('/about', function(req, res) {
+    var app=  require('./server');
+    app.dataLog('Hurra :-)');
+  //  serverLog('About Chat Server called');
     res.send('About Chat Server');
   });
 
 
 router.get('/count', function (req, res) {
     // try to initialize the db on every request if it's not already initialized.
-    db=singleton.DbConnection;
+//    db=singleton.DbConnection;
     if (db) {
     db.then(function(db) {
-      console.log(db);
       db.collection('messages').find({}).toArray(function(err, resultArray){
         res.json( resultArray );  
         });
@@ -51,7 +56,6 @@ db=singleton.DbConnection;
 
 if (db) {
 db.then(function(db) {
-  console.log(db);
   db.collection('counts').find({}).toArray(function(err, resultArray){
     res.json( resultArray );  
     console.log( resultArray );  
@@ -69,7 +73,6 @@ router.get('/messages', function (req, res) {
   db=singleton.DbConnection;
   if (db) {
     db.then(function(db) {
-      console.log(db);
       db.collection('messages').find({}).toArray(function(err, resultArray){
         res.json( resultArray );  
         console.log( resultArray );  
@@ -80,8 +83,11 @@ router.get('/messages', function (req, res) {
     }
 });
 
-function logMessage(msg){
-  console.log("logMessage:"+msg.time+' '+msg.msg);
+
+exports.logMessage=function(msg){
+  console.log("logMessage:"+msg);
+  //console.log("logMessage:"+msg.time+' '+msg.msg);
+  /*
   db=singleton.DbConnection;
  
   db.then(function(db) {
@@ -93,7 +99,8 @@ function logMessage(msg){
   });
 
 });
-
+*/
 }
+
 
 module.exports = router;
