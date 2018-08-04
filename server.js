@@ -72,9 +72,87 @@ http.listen(port, ip, function (req, res) {
   console.log('listening on *:' + port);
   console.log(process.env.MONGO_TEST,"MT")
 });
+/*
+CHAT STUFFF
+*/
+var clients = {};
 
-console.log('Server running on http://%s:%s', ip, port);
+io.sockets.on('connection', function (socket) {
+    var userName;
+    var uid;
+    //io.sockets.emit('connect', 'Hello World');
 
+  socket.on('connection name',function(user){
+   // console.log(msg);
+    console.log('ip:'+socket.handshake.address);
+
+    var d = new Date();
+    var n = d.getTime();
+    var message = {time:n,msg:user.name + " has joined."};
+  //  logMessage(message);
+
+    userName = user.name;
+    uid = user.uid;
+    clients[user.name] = socket;
+    console.log('clients['+user.name+']');
+    io.sockets.emit('new user', user.name + " has joined. "+uid);
+
+    Userlist();
+  });
+
+  socket.on('message', function(msg){
+    console.log(msg);
+    var d = new Date();
+    var n = d.getTime();
+    var message = {time:n,msg:msg};
+    io.sockets.emit('message', message);
+    //fromMsg = {from:userName, txt:msg.txt,time:n,tag:'*'}
+ //logMessage(message);
+  });
+
+  socket.on('private message', function(msg){
+    var d = new Date();
+    var n = d.getTime();
+    fromMsg = {from:userName, txt:msg.txt,time:n,tag:'*'}
+   // no client clients[NAME]);
+    if(clients[msg.to]!=undefined)clients[msg.to].emit('private message', fromMsg);
+    else    console.log("no recipient");
+    console.log(fromMsg);
+   //logMessage(fromMsg);
+  });
+
+  socket.on('disconnect', function(){
+    var d = new Date();
+    var n = d.getTime();
+    var message = {time:n,msg:userName+ " has disconnected."};
+    console.log('disconnected '+userName);
+    io.sockets.emit('message',  message);
+    delete clients[userName];
+
+  });
+
+ 
+}); //userName !!!
+
+function Userlist(){
+    var users=[]
+    for (var k in clients){
+        if (clients.hasOwnProperty(k)) {
+       users.push(k);
+             console.log("name is " + k + ", ip is" + clients[k].handshake.address);
+        }
+    }
+    io.sockets.emit('userlist', users );
+}
+
+
+app.get('/', function(req, res){
+    res.sendFile(__dirname + '/index.html');
+});
+ 
+app.get('/chat.html', function(req, res){
+    res.sendFile(__dirname + '/chat.html');
+});
 
 sayHelloInSpanish = function () {
   return "Hola";
