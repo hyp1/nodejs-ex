@@ -50,7 +50,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 console.log(mongoURL, 'MONGO VORHER');
 //mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL, 'MONGO');
-
+//console.log(process.env, 'MONGO VORHER');
 
 
 var db = null;
@@ -59,17 +59,9 @@ function initDB() {
   db = instance.DbConnection;
   if (!db) console.error('Keine Datenbank!')
   //db.then(function(db) {
-  //console.log(db);
-  // db.collection('counts').find({}).toArray(function(err, resultArray){
-  // console.log(resultArray);   
-  //});
+  // db.collection('counts').find({}).toArray(function(err, resultArray){console.log(resultArray)});
   //});
 }
-
-
-
-
-initDB();
 
 
 //app.listen(port, ip);
@@ -88,12 +80,21 @@ sayHelloInSpanish = function () {
   return "Hola";
 };
 
-serverLog = function (msg) {
-  //return 'asd'+msg;
-  console.log("HELLO" + msg);
+exports=function (app) {
+  return function performTest() {
+    var test = require('./file1')(app, db, conf);
+    test();
+  }
 }
 
+initDB();
 
+module.exports = function(conf){
+  return function test() {
+    console.log("YAY");
+  }
+
+}
 
 module.exports = app; //express
 //console.log(module);

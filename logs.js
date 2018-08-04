@@ -134,5 +134,10 @@ exports.logMessage=function(msg){
 */
 }
 
-
+module.exports = function(app, db, conf){
+  return function performTest() {
+    var test = require('./server')(app, db, conf);
+    test();
+  }
+}
 module.exports = router;
