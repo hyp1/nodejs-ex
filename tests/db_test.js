@@ -18,7 +18,7 @@ describe('DBTESTS',function(){
         console.log("afterEach");
          done()
     });
-
+/*
       
     it('counts should be a collection', function(done){
      var   expect   = chai.expect;
@@ -42,7 +42,7 @@ describe('DBTESTS',function(){
     
   
     });
-    
+    */
 
     it('should return the square root of a given positive number', function() {
             expect(Math.sqrt(25)).to.be.equal(5);
