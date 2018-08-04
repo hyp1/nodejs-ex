@@ -9,7 +9,7 @@ var path = require('path')
  
 var rfs = require('rotating-file-stream')
 var app = express()
-var logDirectory = path.join(__dirname, 'log')
+var logDirectory = path.join(__dirname, 'logs')
  // ensure log directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
  
@@ -61,7 +61,7 @@ router.use(function timeLog(req, res, next) {
     res.send('About Chat Server');
   });
 
-router.get('/count', function (req, res) {
+router.get('/messages', function (req, res) {
     // try to initialize the db on every request if it's not already initialized.
 //    db=singleton.DbConnection;
     if (db) {
@@ -75,7 +75,7 @@ router.get('/count', function (req, res) {
   }
 });
   
-router.get('/list', function (req, res) {
+router.get('/counts', function (req, res) {
    
 if (db) {
 db.then(function(db) {
