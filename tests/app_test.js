@@ -11,17 +11,17 @@ describe('Basic routes tests', function() {
 
     it('GET to / should return 200', function(done){
         chai.request(reqServer)
-        .get('/')
+        .get('/indwex.html')
         .end(function(err, res) {
+            console.log(res)
             res.should.have.status(200);
             done();
         })
-
     })
 
-    it('GET to /logs should return 200', function(done){
+    it('GET to /about should return 200', function(done){
         chai.request(reqServer)
-        .get('/logs')
+        .get('/index.html')
         .end(function(err, res) {
             res.should.have.status(200);
             done();

@@ -92,7 +92,5 @@ exports.serverLog = function(msg) {
   console.log( "HELLO"+msg);
 }
 
-exports.app = function() {
-  return app;
-};
-//module.exports = app ;
+
+module.exports = app ;
