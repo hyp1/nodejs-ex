@@ -66,14 +66,24 @@ function initDB() {
 
 //app.listen(port, ip);
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
-
 http.listen(port, ip, function (req, res) {
   console.log('listening on *:' + port);
   console.log(process.env.MONGO_TEST,"MT")
 });
+io = require('socket.io').listen(http)
+
 
 console.log('Server running on http://%s:%s', ip, port);
+
+const {Server} = require("./chatserver");
+chat=new Server(io);
+
+var proc=function(data){
+console.log(data,"Process");
+}
+chat.run(proc);
+console.log("...chat server started.");
+
 
 
 sayHelloInSpanish = function () {
@@ -88,7 +98,7 @@ exports=function (app) {
 }
 
 initDB();
-
+/*
 var clients = {};
 logs=[];
 
@@ -118,28 +128,10 @@ io.on('connection', function(socket){
     console.log('chat message:' + msg);
   });
 
-  socket.on('private message', function(msg){
-    console.log(msg);
-    var d = new Date();
-    var n = d.getTime();
-    fromMsg = {from:userName, txt:msg.txt,time:n,tag:'*'}
-   // no client clients[NAME]);
-    if(clients[msg.to]!=undefined)clients[msg.to].emit('private message', fromMsg);
-    else    console.log("no recipient");
-    console.log(fromMsg);
-  });
 
-  socket.on('disconnect', function(){
-    var d = new Date();
-    var n = d.getTime();
-    var message = {time:n,msg:userName+ " has disconnected."};
-    console.log('disconnected '+userName);
-    io.sockets.emit('message',  message);
-    delete clients[userName];
-
-  });
 
 });
+*/
 
 module.exports = app; //express
 //console.log(module);

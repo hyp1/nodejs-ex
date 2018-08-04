@@ -9,7 +9,6 @@
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
 
-
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements 
 https://stackoverflow.com/questions/15891535/html5shiv-not-working-in-ie8
 -->
@@ -67,7 +66,7 @@ body, div#content{
           <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a> <a href="https://awri.ch/html/search.html" data-ajax="none" data-rel="external" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-search">Suche</a>
           <h1 id="user">User</h1>
       </div>
-      <div data-role="content">
+      <div data-role="content" style="float:left;">
           <h2>AWRI Chat</h2>
 
                 <div data-role="controlgroup" data-type="horizontal">    
@@ -81,7 +80,7 @@ body, div#content{
                     <ul id="messages"></ul>
          
              </div>       
-           <div id="log"></div>
+             <div id="log"></div>
 
         <div data-role="footer" data-position="fixed">
 <input type="text" id="msg" value="">
@@ -90,8 +89,10 @@ body, div#content{
 <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />
 <label for="checkbox-mini-0">Nachrichten</label>
 </fieldset> 
-</div>
+<ul id="users"></ul>
+</div>  
   </div>
+  <div id="div2" style="margin-bottom:300px;width:20%;float:right;height:100%;background-color:red" data-role="content">asdasdasd</div>
 
 <script>
 var notifications=false;
@@ -433,8 +434,9 @@ socket = io.connect();
 //socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
 
   socket.on('message', function(msg){
+      console.log(msg)
          // console.log(socket.handshake.headers.host.split(":").shift());
-         var li=$('<li>').html(getFormattedDate(msg.time)+' '+msg.msg);
+         var li=$('<li>').html(getFormattedDate(msg._time)+' : '+msg._params.name+':  '+msg._msg);
 
           $('#messages').append(li);
   if(notifications)notify(msg.msg);
@@ -442,32 +444,38 @@ socket = io.connect();
         });
 
 socket.on('private message', function(msg){
+    console.log(msg)
     //      console.log(socket.handshake.headers.host.split(":").shift());
-          $('#messages').append($('<li>').html(getFormattedDate(msg.time)+' '+msg.tag+msg.txt));
+          $('#messages').append($('<li>').html(getFormattedDate(msg._time)+': '+msg._params.name+': '+msg._msg));
           window.scrollTo(0, document.body.scrollHeight);
 });
 
 socket.on('new user', function(msg){
+    alert("NEW")
     //      console.log(socket.handshake.headers.host.split(":").shift());
           $('#messages').append($('<li>').html(msg));
           window.scrollTo(0, document.body.scrollHeight);
 });
 
-/*
+
 socket.on('userlist', function(users){
    //      console.log(socket.handshake.headers.host.split(":").shift());
 var cnt=0;
 $('#users').empty();
     users.forEach(user=> {
-        $('#users').append($('<li id="'+cnt+'" onclick="setPriv(this);">').html(''+user.name+''));
+        console.log(user.name);
+        $('#users').append($('<li id="'+cnt+'" onclick="setPriv(this);">').html(user.uid+' - '+user.name));
+        appendLine(user.uid+' - '+user.name);    
         cnt++;
     });
 });
 
-*/
+function appendLine(line){
+    $('#messages').append('<li id="'+cnt+'" onclick="setPriv(this);">').html(line); 
+}
 
 $('#bmessage').click(function(){
-sendMessage();
+    sendMessage();
  });
 
 
@@ -497,7 +505,7 @@ function sendMessage(){
   if($('#msg').val().length<3)return false;
   //if($('#name').val()==""){
 
-         socket.emit('message',  $('#user').text()+':'+$('#msg').val());
+         socket.emit('message', $('#msg').val());
           $('#msg').val('' );
           $('#msg').focus();
           
