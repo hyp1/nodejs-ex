@@ -16,7 +16,23 @@ var singleton = function singleton() {
       
         this.DbConnection = MongoClient.connect(url);
       };
-      
+
+
+    this.insert=function(table,data){
+        this.DbConnection.then(function(db) {
+    var col = db.collection(table);
+    // Create a document with request IP and current time of request
+    col.insert(data);
+    col.count(function(err, count){
+      console.log('DBINSERT '+JSON.stringify(data)+' COUNT:'+count)
+       return count;
+    });
+
+},table,data);
+
+      }
+
+    
 };
 
 singleton.instance = null;
@@ -27,5 +43,11 @@ singleton.getInstance = function(){
     }
     return this.instance;
 };
+
+singleton.insert = function(){
+    //    console.log())=
+        return 
+    };
+  
 
 module.exports = singleton.getInstance();

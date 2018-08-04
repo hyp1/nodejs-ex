@@ -6,6 +6,7 @@ var fs = require('fs')
 var morgan = require('morgan')
 var path = require('path')
  
+var exp=require('./server');
 
 var rfs = require('rotating-file-stream')
 var app = express()
@@ -19,12 +20,13 @@ var accessLogStream = rfs('access.log', {
   path: logDirectory
 })
 // create a write stream (in append mode)
-var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), {flags: 'a'})
+var accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log'), {flags: 'a'})
  
 // setup the logger
+Object.assign = require('object-assign');
 router.use(morgan('combined', {stream: accessLogStream}))
+app.use(morgan('combined', {stream: accessLogStream}))
 
-console.log(app.ACCESSLOG,"ACCESSLOG");
 
 var db=singleton.DbConnection; 
 
@@ -32,32 +34,24 @@ var db=singleton.DbConnection;
 router.use(function timeLog(req, res, next) {
  // console.log("openDB"); 
   console.log('Time: ', Date.now());
+  //console.log(ACCESSLOG,"ACCESSLOG");
     next();
- //   console.log("closeDB"); 
   });
   // define the home page route
   router.get('/', function(req, res) {
-    db=singleton.DbConnection;
-
     if (db) {
-    db.then(function(db) {
-    var col = db.collection('counts');
-    var line={ip: req.ip, date: Date.now()};
-      col.insert(line);
-   var appLog=require('./server');
-    appLog.serverLog(line);
-      })
-
-      res.send('Added Log Message'+{ip: req.ip, date: Date.now()});
+     db=singleton.DbConnection;
+singleton.insert('counts',{ip:1,date:Date.now()});
+res.send('Added Log Message'+JSON.stringify({ip: req.ip, date: Date.now()}));
     }else{
-      res.send('Fehler,');
+      res.send('Fehler:keine Datenbank');
     }
-    console.log("closeDB"); 
+    
   });
   // define the about route
   router.get('/about', function(req, res) {
- 
-  //  serverLog('About Chat Server called');
+  console.log(req.query.tagId);
+    //  serverLog('About Chat Server called');
     res.send('About Chat Server');
   });
 
