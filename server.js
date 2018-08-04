@@ -1,4 +1,7 @@
 //  OpenShift sample Node application
+var ACCESLOG=true;
+var DBLOG=true;
+
 var express = require('express'),
     app     = express(),
     morgan  = require('morgan');
@@ -9,7 +12,8 @@ var logs= require('./logs');
 
 Object.assign=require('object-assign');
 app.engine('html', require('ejs').renderFile);
-app.use(morgan('combined'));
+
+if(ACCESLOG)app.use(morgan('combined'));
 
 app.use('/logs', logs);
 
@@ -43,6 +47,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
+console.log(mongoURL,'MONGO VORHER');
 mongoURL= process.env.MONGO_URL ||  'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL,'MONGO');
 
@@ -52,12 +57,13 @@ var db = null;
 function initDB(){
   instance.setup(mongoURL);
   db=instance.DbConnection;
-  db.then(function(db) {
-  console.log(db);
-  db.collection('counts').find({}).toArray(function(err, resultArray){
-  console.log(resultArray);  
-});
-});
+  if(!db)console.error('Keine Datenbank!')
+  //db.then(function(db) {
+  //console.log(db);
+ // db.collection('counts').find({}).toArray(function(err, resultArray){
+ // console.log(resultArray);   
+//});
+//});
 }
 
 
@@ -65,7 +71,6 @@ function initDB(){
 
 initDB();
 
-console.log(db);
 
 //app.listen(port, ip);
 var http = require('http').Server(app);
@@ -82,11 +87,12 @@ exports.sayHelloInSpanish = function() {
   return "Hola";
 };
 
-exports.app=function(){
-
-  exports.dataLog = function(msg) {
+exports.serverLog = function(msg) {
+ //return 'asd'+msg;
   console.log( "HELLO"+msg);
 }
 
-}
-module.exports = app ;
+exports.app = function() {
+  return app;
+};
+//module.exports = app ;
