@@ -3,7 +3,7 @@
 const express = require('express');
 const app     = express();
 const http = require('http').Server(app);
-const io = require('socket.io').listen(http)
+//const io = require('socket.io').listen(http)
 const {LogMessage,Message} = require('./message')
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
@@ -18,11 +18,10 @@ class Server {
     constructor(io) {   
       if(_server)return _server;
       this.time = Date.now();
-      this._io = io;
       this._sockets=null;
       var  _clients;
       _server=this;
-      console.log("server constructed: "+this._port);
+      console.log(io.name,"Chatserver constructed: ");
     } 
     
     get time() {
@@ -84,11 +83,11 @@ class Server {
       };
 
  run(proc){
-    this._sockets=this._io.sockets;
+    this._sockets=io.sockets;
    
     let sequenceNumberByClient = new Map();
 
-this._io.on("connection", (socket) => {
+ io.on("connection", (socket) => {
     var uid=-1;
     var userName= ''+new Date().getTime();
  
@@ -169,7 +168,7 @@ function sendMessage(txt){
 function broadcastMessage(msg){
     msg.setType(0)
     msg.setParams({from:uid,name:userName})
-    io.sockets.emit('message', msg)    
+    io.emit('message', msg)    
 }    
 
 function sendList(list){
@@ -177,7 +176,7 @@ function sendList(list){
 }
       
 function broadcastList(){
-    io.sockets.emit('userlist',_makeList());
+    this.io.sockets.emit('userlist',_makeList());
 }
       
 
