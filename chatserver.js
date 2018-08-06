@@ -96,7 +96,7 @@ class Server {
   
 
      console.log('Chatserver running: '+this._port)
-    this._sockets=io.sockets;
+    this._sockets=_io.sockets;
    
     let sequenceNumberByClient = new Map();
 

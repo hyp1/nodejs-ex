@@ -1,4 +1,5 @@
-require('../server');
+const {Server} = require("../chatserver");
+
 
 var express = require('express');
 var app     = express();
@@ -8,14 +9,25 @@ var chai     = require('chai'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
 
+    io = require('socket.io').listen(server)
 
+    
+    chat=new Server(io);
+    
+    var proc=function(data){
+    console.log(data,"Process");
+    }
+    chat.run(proc);
+    console.log("...chat server started.");
+
+    
 chai.use(chaiHTTP);
 reqServer = process.env.HTTP_TEST_SERVER || server
 
 describe('Basic routes tests', function() {
 
 var io = require('socket.io-client');
-var socketURL = 'http://localhost:8080/';
+var socketURL = 'http://localhost:3030/';
 
 var options ={
   transports: ['websocket'],
