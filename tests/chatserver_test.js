@@ -15,7 +15,7 @@ reqServer = process.env.HTTP_TEST_SERVER || server
 describe('Basic routes tests', function() {
 
 var io = require('socket.io-client');
-var socketURL = 'http://localhost:3331/';
+var socketURL = 'http://localhost:8080/';
 
 var options ={
   transports: ['websocket'],
