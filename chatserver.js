@@ -27,7 +27,7 @@ class Server {
       var  _clients;
       _server=this;
       this._port=port;      
-      console.log(io.name,"Chatserver constructed: ");
+      console.log(this.port,"Chatserver constructed: ");
     } 
     
     get time() {
