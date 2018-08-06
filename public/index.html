@@ -434,8 +434,7 @@ socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
 //socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com' ); 
 //  
 
-
-socket = io.connect('http://0.0.0.0:3331');
+socket = io.connect(location.protocol+'//'+location.hostname+':3331');
 //socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/');
 //socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
 
