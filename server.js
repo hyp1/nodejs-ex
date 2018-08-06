@@ -87,7 +87,7 @@ io = require('socket.io').listen(http)
 console.log('Server running on http://%s:%s', ip, port);
 
 const {Server} = require("./chatserver");
-chat=new Server(3331);
+chat=new Server(io);
 
 var proc=function(data){
 console.log(data,"Process");

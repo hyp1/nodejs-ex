@@ -16,18 +16,20 @@ const bot=new AWRIBot;
 
 
 var _server=null;
+var _io=null;
 
 var clients=[];
 
 class Server {
-    constructor(port) {   
+    constructor(io) {   
       if(_server)return _server;
       this.time = Date.now();
       this._sockets=null;
       var  _clients;
       _server=this;
-      this._port=port;      
-      console.log(this._port,"Chatserver constructed: ");
+      _io=io;
+         
+      console.log(_io,"Chatserver constructed: ");
     } 
     
     get time() {
@@ -91,14 +93,14 @@ class Server {
       };
 
  run(proc){
-    var io = require('socket.io').listen(http);
-     io.listen(this._port);
+  
+
      console.log('Chatserver running: '+this._port)
     this._sockets=io.sockets;
    
     let sequenceNumberByClient = new Map();
 
- io.on("connection", (socket) => {
+ _io.on("connection", (socket) => {
     var uid=-1;
     var userName= ''+new Date().getTime();
     var user=new User(1,'BLAH');

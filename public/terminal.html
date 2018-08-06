@@ -84,7 +84,7 @@ var notifications=false;
 var socket;
 
 
-socket = io.connect('https://localhost:3331');
+socket = io.connect();
 socket.emit('connection name',{uid:0,name:'test'});
 
 socket.on('message', function(msg){
