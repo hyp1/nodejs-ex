@@ -6,8 +6,13 @@ const http = require('http').Server(app);
 //const io = require('socket.io').listen(http)
 const {LogMessage,Message} = require('./message')
 
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0'
+
+const {AWRIBot} = require('./awribot');
+const {User} = require('./drupalconnect');
+
+const bot=new AWRIBot;
+
+
 
 
 var _server=null;
@@ -15,12 +20,13 @@ var _server=null;
 var clients=[];
 
 class Server {
-    constructor(io) {   
+    constructor(port) {   
       if(_server)return _server;
       this.time = Date.now();
       this._sockets=null;
       var  _clients;
       _server=this;
+      this._port=port;      
       console.log(io.name,"Chatserver constructed: ");
     } 
     
@@ -57,7 +63,8 @@ class Server {
         return this._indo;
   }
 
-    print() {
+    log(msg) {
+       // this._sockets.emit('message',msg);
       console.log(this.time+', ' + this.name + ', : ' + this.info);
     }
 
@@ -78,11 +85,15 @@ class Server {
         this.clients;
     };
 
-    print() {
+   static log(msg) {
+    sockets.emit('message',msg)
         console.log('SERVER:\time:'+ this.time+'\nid:'+ this.id+'\ntype:'+ + this.name+'\info:'+ + this.info+'\nparams:'+ + this.params + '' );
       };
 
  run(proc){
+    var io = require('socket.io').listen(http);
+     io.listen(this._port);
+     console.log('Chatserver running: '+this._port)
     this._sockets=io.sockets;
    
     let sequenceNumberByClient = new Map();
@@ -90,15 +101,22 @@ class Server {
  io.on("connection", (socket) => {
     var uid=-1;
     var userName= ''+new Date().getTime();
- 
+    var user=new User(1,'BLAH');
     userName='User'+userName.substring(6,userName.length);
     
-   socket.emit('ping','pong');
+   //socket.emit('ping',new Date().getTime());
 
     socket.on('connection name',function(client){
-    console.log(client);  
-    userName=client.name;
-    uid=client.uid;
+  //  console.log(client);  
+     userName=client.name;
+     uid=client.uid;
+     user.uid=uid;
+     user.name=userName;
+     user.socket=socket;
+     bot.run(user);
+
+//    console.log(bot)
+    
     client.socket=socket;
     clients[uid]=client;
     const  msg=new Message()

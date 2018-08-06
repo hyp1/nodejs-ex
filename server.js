@@ -9,7 +9,15 @@ var express = require('express'),
 var instance = require('./database');
 var logs = require('./logs');
 
+function print(msg){
+  var d = new Date();
+  var n = d.getTime();
+  var message = {_time:n,_msg:msg, _params: { from: -1, name: 'User6220307' }};
+  //if(msg._msg.startsWith('/bot'))bot._parseBotCommand(msg.substring(5,msg.length))
 
+  io.sockets.emit('message', message);
+console.log(message)
+}
 Object.assign = require('object-assign');
 //app.engine('html', require('ejs').renderFile); //console log modules unten!
 
@@ -20,7 +28,7 @@ app.use('/logs', logs);
 app.use('/', express.static('public'), function (req, res) {
   //console.log(req.headers);
   //res.sendFile(express.static('public')+'index.html');
-  res.sendFile('index.html', { root: __dirname + '/public' });
+  //res.sendFile('index.html', { root: __dirname + '/public' });
 });
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
@@ -49,7 +57,10 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 }
 //console.log(mongoURL, 'MONGO VORHER');
 //mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
-console.log(mongoURL, 'MONGO');
+console.log(mongoURL, 'MONGO_URL(constructed)');
+console.log(port, 'NODEJS_ip');
+console.log(port, 'NODEJS_PORT');
+
 //console.log(process.env, 'MONGO VORHER');
 
 
@@ -68,7 +79,7 @@ function initDB() {
 var http = require('http').Server(app);
 http.listen(port, ip, function (req, res) {
   console.log('listening on *:' + port);
-  console.log(process.env.MONGO_TEST,"MT")
+  console.log(process.env.MONGO_TEST,"process.env.MONGO_TEST")
 });
 io = require('socket.io').listen(http)
 
@@ -76,7 +87,7 @@ io = require('socket.io').listen(http)
 console.log('Server running on http://%s:%s', ip, port);
 
 const {Server} = require("./chatserver");
-chat=new Server(io);
+chat=new Server(3331);
 
 var proc=function(data){
 console.log(data,"Process");

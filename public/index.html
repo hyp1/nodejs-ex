@@ -62,10 +62,16 @@ body, div#content{
 
 <body onload="">
   <div data-role="page" id="index">
+        <div data-role="panel" id="users" data-display="overlay" data-position="right">
+                <h3>Mitglieder Online</h3>
+                <a href="#myheader" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back" data-rel="close">Close panel</a>
+            </div><!-- /panel -->
+     
       <div data-role="header" data-position="fixed">
-          <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a> <a href="https://awri.ch/html/search.html" data-ajax="none" data-rel="external" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-search">Suche</a>
+          <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a>
           <h1 id="user">User</h1>
-      </div>
+          <a href="#users" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
+        </div>
       <div data-role="content" style="float:left;">
           <h2>AWRI Chat</h2>
 

@@ -1,35 +1,21 @@
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
+require('../server');
 
+var express = require('express');
+var app     = express();
+var server = require('http').Server(app);
 
-var server   = require('../server'),
-    chai     = require('chai'),
+var chai     = require('chai'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
 
-chai.use(chaiHTTP);
 
+chai.use(chaiHTTP);
 reqServer = process.env.HTTP_TEST_SERVER || server
 
 describe('Basic routes tests', function() {
 
-    it('GET to / should return 200', function(done){
-        chai.request(reqServer)
-        .get('/')
-        .end(function(err, res) {
-            res.should.have.status(200);
-            done();
-        })
-    })
-
-})
-
-
-
-
 var io = require('socket.io-client');
-
-var socketURL = 'http://'+ip+':'+port;
+var socketURL = 'http://localhost:3331/';
 
 var options ={
   transports: ['websocket'],
@@ -41,16 +27,33 @@ var chatUser2 = {'uid':'1','name':'Sally'};
 var chatUser3 = {'uid':'1','name':'Dana'};
 
 
-describe("Websockets Chat Server",function(){
+describe("Websockets Chat Server Tests",function(){
+
+    it('should be able to connect  "'+socketURL+'" should be true', function(done){
+      var chat = io.connect(socketURL,options);
+      chat.on('connect', function(){
+      chat.connected.should.equal(true);
+      done();
+      });          
+    });
+
+    it('should be able to send connection name  "'+socketURL+'"', function(done){
+      var chat = io.connect(socketURL,options);
+      chat.on('connect', function(){
+      chat.connected.should.equal(true);
+      done();
+      });          
+    });
+
 
     it('Should be able to broadcast messages', function(done){
         var client1, client2, client3;
         var message = 'Hello World';
         var messages = 0;
       
-        var checkMessage = function(client){
-          console.log('message',client);
+        var checkMessage = function(client){      
           client.on('message', function(msg){
+            console.log('message',msg);
             message.should.equal(msg._msg);
             client.disconnect();
             messages++;
@@ -59,27 +62,19 @@ describe("Websockets Chat Server",function(){
             };
           });
         };
-      
-        client1 = io.connect(socketURL, options);
-        checkMessage(client1);
-      
-        client1.on('connect', function(data){
-          client2 = io.connect(socketURL, options);
-          checkMessage(client2);
-      
-          client2.on('connect', function(data){
-            client3 = io.connect(socketURL, options);
-            checkMessage(client3);
-      
-            client3.on('connect', function(data){
-              client2.send(message);
-            });
-          });
-        });
-        done();
-      });
+
+        var chat = io.connect(socketURL,options);
+        chat.on('connect', function(){
+            chat.emit('connection name test');        
+            chat.on('message', function(msg){
+            console.log(msg)
+            })
+        })
+         done();
+    }); 
+});
   
-      /*
+  /* 
       it('Should be able to send private messages', function(done){
         var client1, client2, client3;
         var message = {to: chatUser1.name, txt:'Tome conected'};
