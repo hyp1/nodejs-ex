@@ -58,7 +58,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 //console.log(mongoURL, 'MONGO VORHER');
 //mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL, 'MONGO_URL(constructed)');
-console.log(port, 'NODEJS_ip');
+console.log(ip, 'NODEJS_IP');
 console.log(port, 'NODEJS_PORT');
 
 //console.log(process.env, 'MONGO VORHER');
