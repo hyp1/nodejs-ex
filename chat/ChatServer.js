@@ -27,7 +27,7 @@ app.use('/', express.static('public'), function (req, res) {
 
 var _server=null;
 var _clients=null;
-var _msgBufferSize=3;
+var _msgBufferSize=15; //15 Zeilen
 
 class ChatServer {
     constructor(io) {   
@@ -156,7 +156,7 @@ class ChatServer {
         function _flushMsgBuffer(){
             console.log('_flushMsgBuffer')
             MsgBuffer.forEach(_cmd => {
-               _server.sendMessage(user._sid,_cmd);
+                io.to(user._sid).emit(_cmd.cmd,_cmd);
             });
         }
        
