@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -8,6 +7,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
+
 
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements 
 https://stackoverflow.com/questions/15891535/html5shiv-not-working-in-ie8
@@ -25,7 +25,7 @@ https://stackoverflow.com/questions/36016327/how-to-make-promises-work-in-ie11
     <img src="http://kimo2007.dnshome.de:8888/2018/servicesneu/cookie/setCookie.php?uid=<?php print $user->uid;?>&sessname=<?php print session_name();?>&sessid=<?php print session_id();?>" style="display:none;" />
 
 -->
-<script src="//cdn.bootcss.com/socket.io/2.1.0/socket.io.dev.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="app/bluebird.min.js"></script>
 <script src="app/jquery-1.11.1.min.js"></script>
 <script	src="app/jquery.mobile-1.4.5.min.js"></script> 
@@ -56,67 +56,77 @@ ul {
 body, div#content{
     font-family: Emojione;
 }
+ul{
+    list-style-type: none;  
+}
+ li.selected{
+background-color:orange;
+}
 </style>
 
 </head>
 
 <body onload="">
   <div data-role="page" id="index">
-        <div data-role="panel" id="users" data-display="overlay" data-position="right">
-                <h3>Mitglieder Online</h3>
-                <a href="#myheader" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back" data-rel="close">Close panel</a>
-            </div><!-- /panel -->
-     
-      <div data-role="header" data-position="fixed">
-          <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a>
-          <h1 id="user">User</h1>
-          <a href="#users" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
-        </div>
-      <div data-role="content" style="float:left;">
-          <h2>AWRI Chat</h2>
-
-                <div data-role="controlgroup" data-type="horizontal">    
-                  <button title="connect" id="bconnect" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-action" onclick="connect()" disabled>Connect</button>                   
-          
-              </div>
-              <input type="text" id="name" value="" disabled>
-                    <input type="hidden" id="token" value="token" disabled>
         
-              <div data-role="fieldcontain">
-                    <ul id="messages"></ul>
-         
-             </div>       
-             <div id="log"></div>
+        <div data-role="panel" id="myheader" data-display="overlay" data-position="right">
+                <h3>Mitglieder Online</h3>
+                <ul id="users"></ul>
+                <a href="#" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back" data-rel="close">Schliessen</a>
+        </div><!-- // Panel -->
+            
+        <div data-role="header" data-position="fixed">
+            <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a>
+            <h1 id="user">User</h1>
+            <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
+        </div> <!--// Header -->
+        
+        <div data-role="content" style="float:left;">
+            <h2>AWRI Chat</h2>
+            <div data-role="controlgroup" data-type="horizontal">    
+                <button title="connect" id="bconnect" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-action" onclick="connect()" disabled>Connect</button>                             
+            </div>
+            <div data-role="fieldcontain">    
+                <input type="text" id="name" value="" disabled>
+                <input type="hidden" id="token" value="token" disabled>        
+            </div>
+            <div data-role="fieldcontain">
+                <ul id="messages"></ul> 
+            </div> <!--// Content -->      
+        
+            <div id="log"></div>
 
         <div data-role="footer" data-position="fixed">
-<input type="text" id="msg" value="">
-<fieldset data-role="controlgroup" data-type="horizontal">
-              <input type="button" onclick="sendMessage();" id="sendr" value="Senden">  
-<input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />
-<label for="checkbox-mini-0">Nachrichten</label>
-</fieldset> 
-<ul id="users"></ul>
-</div>  
-  </div>
-  <div id="div2" style="margin-bottom:300px;width:20%;float:right;height:100%;background-color:red" data-role="content">asdasdasd</div>
+            <input type="text" id="msg" value="">
+            <fieldset data-role="controlgroup" data-type="horizontal">
+                <input type="button" onclick="sendMessage();" id="sendr" value="Senden">  
+                <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />
+                <label for="checkbox-mini-0">Nachrichten</label>
+                <input type="hidden" id="private" value="-1" disabled>          
+            </fieldset> 
+            <input type="text" id="private-name" value="" disabled>
+        </div>  <!--// Footer -->
+    </div><!--// Page -->
 
 <script>
-var notifications=false;
-    var socket;
-
+var notifications=false; //browser notifications
+var private=false;      //private msg toggle
+var socket=null;        //Websocket
 
 $(function() {
     document.getElementById('msg').focus();
 
-$("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
-getToken();
-//whosOnline();
+    $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
+    
+    getToken();
+    //whosOnline();
 
 //Enter
 $("#msg").keypress(function (e) {
     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
         //document.getElementById('sendr').click();
-        sendMessage();
+        if(private)sendPrivateMessage();
+        else sendMessage();
         return false;
     } else {
         return true;
@@ -125,6 +135,362 @@ $("#msg").keypress(function (e) {
 
 }); //jQuery
 
+
+/*
+POST awri_services_resources/whos_online
+Content-Type	application/json
+X-CSRF-Token	XXXXYYYYZZZZ
+function awri_services_whos_online(options) {
+	  try {
+	    options.method = 'POST';
+	    options.path = 'awri_services_resources/whos_online';
+	    options.service = 'awri_services';
+        options.resource = 'whos_online';
+        options.contentType = 'application/json'; //WICHTIG custom service
+	    Drupal.services.call(options);
+	  }
+	  catch (error) {
+	    console.log('my_module_get_user_count - ' + error);
+	  }
+	}
+var users=[];
+function whosOnline(){
+	awri_services_whos_online({
+    success: function(result) {
+   //     log('whosOnline',result);
+      var res = JSON.parse(result[0]);
+
+  
+      users.push(res.authenticated_users);
+      console.log(users,'users');
+    //  alert(users.length);
+      for(i=0;i<users.length;i++){
+        console.log(users[i].uid,'WhosOnline');
+      }
+     // console.log(,'ausers');
+      //var msg = 'There are ' + user_count + ' registered user(s)!'
+      //alert(msg);
+    },error: function(e) {
+    	console.log(e.status+' - '+e.statusText);
+    	//alert(e.status+' - '+e.statusText);
+      }
+});
+}
+*/
+
+
+function DoConnect() {
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.withCredentials = true;
+    xmlhttp.crossDomain = true;
+    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
+    xmlhttp.setRequestHeader("Content-Type","application/json");
+//refused zu set unsafe header "Cookie"
+//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
+//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
+    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value);
+//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
+
+    xmlhttp.onreadystatechange = function ()
+    {
+        if(xmlhttp.status==200&&xmlhttp.readyState==4){
+            alert("DoConnect OK");
+        }
+    };
+
+    xmlhttp.send();
+}
+
+
+function getToken() {
+var xmlhttp = new XMLHttpRequest();
+    xmlhttp.withCredentials = true;
+    xmlhttp.open("GET",Drupal.settings.site_path+"/services/session/token", true);
+    xmlhttp.onreadystatechange = function ()
+    {     
+        if(xmlhttp.status==200&&xmlhttp.readyState==4){
+            Drupal.sessid=xmlhttp.responseText;
+            document.getElementById('token').value=xmlhttp.responseText;
+            getUser();
+        }
+    };
+    xmlhttp.send();
+}
+
+
+function getUser() {
+    document.getElementById('name').value=user.name;    
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.withCredentials = true;
+    xmlhttp.crossDomain = true;
+    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
+    xmlhttp.setRequestHeader("Content-Type","application/json");
+//refused zu set unsafe header "Cookie"
+//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
+//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
+    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
+//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
+
+    xmlhttp.onreadystatechange = function (){
+
+        if(xmlhttp.status==200&&xmlhttp.readyState==4){
+            var res=JSON.parse(xmlhttp.responseText);   
+            if(res.user.uid!=0){
+                user.uid=res.user.uid;
+                user.name=res.user.name;
+                user.roles=res.user.roles;
+                document.getElementById('name').value=user.name;    
+                loadUser(user.uid);
+            }
+        }       
+      //  alert(res.user.uid+' - '+res.user.name);
+    };
+
+    xmlhttp.send();
+}
+
+function loadUser(uid) {
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.withCredentials = true;
+    xmlhttp.crossDomain = true;
+    xmlhttp.open("GET",Drupal.settings.site_path + "/" + Drupal.settings.endpoint+"/user/" + uid + ".json", true);
+    xmlhttp.setRequestHeader("Content-Type","application/json");
+//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
+    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
+//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
+    xmlhttp.onreadystatechange = function (){
+        
+        if(xmlhttp.status==200&&xmlhttp.readyState==4){
+        var res=JSON.parse(xmlhttp.responseText);
+console.log(res);
+            if(user.uid!=0){
+                user.uid=uid;
+                user.name=res.name;
+                user.email=res.mail,
+                user.roles=res.roles,
+                user.fbid=res.field_fbid['und'][0].value;
+                user.picture='app/anonymous.png';
+                if(res.picture)user.picture=res.picture.url;
+                socket.emit('connection name',user);
+            }
+
+        document.getElementById('name').value=user.name;
+        setUser('user',user);
+        }    
+    };
+
+    xmlhttp.send();
+}
+
+function readCookie(){
+    uid=read_cookie('DRUPAL_UID');
+    name=read_cookie('sessname');
+    id=read_cookie('sessid');
+    token=read_cookie('token');
+    document.getElementById('uid').value=uid;
+    document.getElementById('sessname').value=name;
+    document.getElementById('sessid').value=id;
+    document.getElementById('token').value=token;
+}     
+
+function read_cookie(key)
+{
+    var result;
+    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+
+function log(func,msg){
+document.getElementById('log').innerHTML=document.getElementById('log').innerHTML+'<hr>'+func+':<br>'+msg;	
+}                 
+
+function clearlog(){
+document.getElementById('log').innerHTML='';	
+}                 
+
+
+
+
+
+
+
+/*
+socket = io.connect( 'https://test.com:33333' );
+socket = io.connect( 'ws://test.com' );
+socket = io.connect( 'wss://test.com' );      
+socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
+*/
+//localhost:8080
+//socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com' ); 
+//  
+
+
+var cmd=null;
+var msg=null;
+    
+console.log(location.protocol+'//'+location.hostname+':8080',"LOCATION");
+socket = io.connect(location.protocol+'//'+location.hostname+':8080');
+
+//socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/');
+//socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
+
+socket.on('connected', function(cmd){
+    console.log(cmd);
+    var cm=cmd._cmd;
+    var cd=cmd._data;
+    //var msg=inp._data;
+    console.log(cd);
+    $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' id['+cd.uid+'] ist mit AWRIChat verbunden.'));
+    //window.scrollTo(0, document.body.scrollHeight);
+});
+  
+socket.on('message', function(cmd){
+    cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+': '+cmd._data._txt;
+    appendMessage(cmd);
+
+
+  //   window.scrollTo(0, document.body.scrollHeight);
+});
+
+socket.on('private message', function(cmd){
+     cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+'->'+cmd._data._params.to+':'+cmd._data._txt;
+    console.log(cmd);
+     appendMessage(cmd);
+     if(notifications)notify(cmd._data._txt);
+});
+
+function appendMessage(msg){
+    var cmd=msg._cmd;
+    var data=msg._data;
+    var li=$('<li/>');
+    if(data._color)li.attr('style','color:'+ data._color);
+    if(data._from==$('#name'))data._from="Du";
+    li.html(msg._data._txt);
+          $('#messages').append(li);
+          window.scrollTo(0, document.body.scrollHeight);
+};
+
+socket.on('userlist', function(inp){
+    $('#users').empty();
+
+    var data=inp._data;
+    var cmd=inp._cmd;
+        data.forEach(user => {
+            img='';
+            if(user.picture)img='<span><img src="'+user.picture+'" width="30" height="30"></span>';
+            var li=$('<li/>');
+            li.attr('id', user._uid);
+            li.attr('name', user._name);
+            li.attr('onclick', 'setPriv(this);');
+            li.html(img+''+user._name);
+            $('#users').append(li);       
+    });   
+});
+
+
+$('#bmessage').click(function(){
+    sendMessage();
+});
+
+
+function setPriv(li){
+    if($('#users .selected').attr('id')==li.id)return unsetPriv();
+    var name=$('#users .selected').attr('name');
+
+    $('#private').val(li.id);
+    $('#private-name').val($(li).attr('name'));
+    //alert(li.privatename);
+    $('#users  li').removeClass('selected');
+    //$('li[id='+li.id+']').addClass('selected');
+    $(li).addClass('selected');
+    $('#message').focus();  
+    private=true;
+};
+
+function unsetPriv(){
+    $('#private').val(-1);
+    $('#private-name').val('');
+    $('#users li').removeClass('selected');
+    $('#message').focus();  
+    private=false;
+};
+
+
+function sendMessage(){   
+  if($('#msg').val().length<3)return false;
+    data={
+    cmd:'message',
+    data:{
+        from:$('#name').val(), 
+        txt:$('#msg').val(), 
+        }
+    }
+    socket.emit('message', data);
+    $('#msg').val('' );
+    $('#msg').focus();
+};
+
+
+function sendPrivateMessage(){
+ if($('#msg').val().length<3)return false;
+  var d = new Date();
+  var n = d.getTime();
+  var message = {time:n,from: $('#name').val(),to: $('#private').val(), txt: $('#msg').val(),color:'red'};
+    cmd={
+        _cmd:'private message',
+        _data:message,
+    }
+
+    socket.emit('private message', cmd); 
+ //nicht nur senden, auch local anzeigen!
+    var li= $('<li>');
+    li.attr('style','color:blue;');
+    li.html(getFormattedDate(n)+' Du->'+$('#private-name').val()+': '+message.txt);
+    $('#messages').append(li);
+    $('#msg').val('');
+    $('#msg').focus();                           
+};
+
+/************************************************************************ 
+Datums Formatierung
+************************************************************************/ 
+
+function getFormattedDate(time) {
+    var date = new Date(time);
+
+    var year = date.getFullYear() 
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var min = date.getMinutes();
+    var sec = date.getSeconds();
+
+    month = (month < 10 ? "0" : "") + month;
+    day = (day < 10 ? "0" : "") + day;
+    hour = (hour < 10 ? "0" : "") + hour;
+    min = (min < 10 ? "0" : "") + min;
+    sec = (sec < 10 ? "0" : "") + sec;
+
+    var today = new Date();
+    var tyear = ''+today.getFullYear();
+    var tmonth = today.getMonth() + 1;
+    var tday = today.getDate();
+
+    tmonth = (tmonth < 10 ? "0" : "") + tmonth;
+    tday = (tday < 10 ? "0" : "") + tday;
+
+    var str =  day + "."+ month + "."  +year + " " +  hour + ":" + min + ":" + sec;
+    var rep = tday  +"."+tmonth+"."+tyear;
+
+//    tyear=tyear.substring(2,4);
+//    alert(tyear);
+    if(tday+tmonth+tyear==day+month+year)str=str.replace(rep,''); 
+    
+    return str;
+}
+
+/************************************************************************ 
+Notifications
+************************************************************************/ 
 
 window.addEventListener('load', function () {
   // At first, let's check if we have permission for notification
@@ -191,375 +557,6 @@ cnt++;
       alert(mesg);
     }
   };
-
-/*
-POST awri_services_resources/whos_online
-Content-Type	application/json
-X-CSRF-Token	G5w_5WcG0wIG3YME7AJ_Fy47bDnStYBfX57beXIG_lM
-*/
-function awri_services_whos_online(options) {
-	  try {
-	    options.method = 'POST';
-	    options.path = 'awri_services_resources/whos_online';
-	    options.service = 'awri_services';
-        options.resource = 'whos_online';
-        options.contentType = 'application/json'; //WICHTIG custom service
-	    Drupal.services.call(options);
-	  }
-	  catch (error) {
-	    console.log('my_module_get_user_count - ' + error);
-	  }
-	}
-var users=[];
-function whosOnline(){
-	awri_services_whos_online({
-    success: function(result) {
-   //     log('whosOnline',result);
-      var res = JSON.parse(result[0]);
-
-  
-      users.push(res.authenticated_users);
-      console.log(users,'users');
-    //  alert(users.length);
-      for(i=0;i<users.length;i++){
-        console.log(users[i].uid,'WhosOnline');
-      }
-     // console.log(,'ausers');
-      //var msg = 'There are ' + user_count + ' registered user(s)!'
-      //alert(msg);
-    },error: function(e) {
-    	console.log(e.status+' - '+e.statusText);
-    	//alert(e.status+' - '+e.statusText);
-      }
-});
-}
-
-
-
-
-/*
-function jsonreq() {
-var xmlhttp = new XMLHttpRequest();
-xmlhttp.withCredentials = true;
-xmlhttp.open("GET",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/user/"+read_cookie('DRUPAL_UID')+'.json', true);
-xmlhttp.setRequestHeader("Content-Type","application/json");
-//refused zu set unsafe header "Cookie"
-//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
-xmlhttp.onreadystatechange = function ()
-    {
-        stateChanged(xmlhttp);
-    };
-xmlhttp.send();
-}
-function stateChanged(res){
-
-    if(res.status==200&&res.readyState==4){
-    console.log(res.response);
-    alert(res.responseText);
-}
-   // log(res.response,'stateChanged');
-
-};
-*/
-
-function DoConnect() {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//refused zu set unsafe header "Cookie"
-//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value);
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-
-    xmlhttp.onreadystatechange = function ()
-    {
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            alert("DoConnect OK");
-        }
-    };
-
-    xmlhttp.send();
-}
-
-
-function getToken() {
-var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.open("GET",Drupal.settings.site_path+"/services/session/token", true);
-    xmlhttp.onreadystatechange = function ()
-    {     
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            Drupal.sessid=xmlhttp.responseText;
-            document.getElementById('token').value=xmlhttp.responseText;
-            getUser();
-        }
-    };
-    xmlhttp.send();
-}
-
-
-function getUser() {
-    document.getElementById('name').value=user.name;    
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//refused zu set unsafe header "Cookie"
-//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-
-    xmlhttp.onreadystatechange = function (){
-
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            var res=JSON.parse(xmlhttp.responseText);   
-            if(res.user.uid!=0){
-                user.uid=res.user.uid;
-                user.name=res.user.name;
-                document.getElementById('name').value=user.name;    
-                loadUser(user.uid);
-            }
-        }       
-      //  alert(res.user.uid+' - '+res.user.name);
-    };
-
-    xmlhttp.send();
-}
-
-function loadUser(uid) {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("GET",Drupal.settings.site_path + "/" + Drupal.settings.endpoint+"/user/" + uid + ".json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-    xmlhttp.onreadystatechange = function (){
-        
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-        var res=JSON.parse(xmlhttp.responseText);
-
-            if(user.uid!=0){
-                user.uid=uid;
-                user.name=res.name;
-                user.email=res.mail,
-                user.roles=res.roles,
-                user.fbid=res.field_fbid['und'][0].value;
-                if(res.picture)user.picture=res.picture.url;
-                socket.emit('connection name',{'uid': user.uid,'name': user.name});
-            }
-
-        document.getElementById('name').value=user.name;
-        setUser('user',user);
-        }    
-    };
-
-    xmlhttp.send();
-}
-
-function readCookie(){
-    uid=read_cookie('DRUPAL_UID');
-    name=read_cookie('sessname');
-    id=read_cookie('sessid');
-    token=read_cookie('token');
-    document.getElementById('uid').value=uid;
-    document.getElementById('sessname').value=name;
-    document.getElementById('sessid').value=id;
-    document.getElementById('token').value=token;
-}     
-
-function read_cookie(key)
-{
-    var result;
-    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
-}
-
-function log(func,msg){
-document.getElementById('log').innerHTML=document.getElementById('log').innerHTML+'<hr>'+func+':<br>'+msg;	
-}                 
-
-function clearlog(){
-document.getElementById('log').innerHTML='';	
-}                 
-
-
-
-function syntaxHighlight(json) {
-    if (typeof json != 'string') {
-         json = JSON.stringify(json, undefined, 2);
-    }
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        var cls = 'number';
-        if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-                cls = 'key';
-            } else {
-                cls = 'string';
-            }
-        } else if (/true|false/.test(match)) {
-            cls = 'boolean';
-        } else if (/null/.test(match)) {
-            cls = 'null';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-    });
-}
-
-
-
-
-  var showprivatemsg=false;
-  var socket; 
-  var name=  'Unbekannt' ;
-
-  $(function () {
-//sertthe user from url parameter
-
-  });
-
-/*
-socket = io.connect( 'https://test.com:33333' );
-socket = io.connect( 'ws://test.com' );
-socket = io.connect( 'wss://test.com' );      
-socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
-*/
-//localhost:8080
-//socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com' ); 
-//  
-
-
-//socket = io.connect(location.protocol+'//localhost:3331');
-socket = io.connect();
-//socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
-
-  socket.on('message', function(msg){
-      console.log(msg)
-         // console.log(socket.handshake.headers.host.split(":").shift());
-         var li=$('<li>').html(getFormattedDate(msg._time)+' : '+msg._params.name+':  '+msg._msg);
-
-          $('#messages').append(li);
-  if(notifications)notify(msg.msg);
-          window.scrollTo(0, document.body.scrollHeight);
-        });
-
-socket.on('private message', function(msg){
-    console.log(msg)
-    //      console.log(socket.handshake.headers.host.split(":").shift());
-          $('#messages').append($('<li>').html(getFormattedDate(msg._time)+': '+msg._params.name+': '+msg._msg));
-          window.scrollTo(0, document.body.scrollHeight);
-});
-
-socket.on('new user', function(msg){
-    alert("NEW")
-    //      console.log(socket.handshake.headers.host.split(":").shift());
-          $('#messages').append($('<li>').html(msg));
-          window.scrollTo(0, document.body.scrollHeight);
-});
-
-
-socket.on('userlist', function(users){
-   //      console.log(socket.handshake.headers.host.split(":").shift());
-var cnt=0;
-$('#users').empty();
-    users.forEach(user=> {
-        console.log(user.name);
-        $('#users').append($('<li id="'+cnt+'" onclick="setPriv(this);">').html(user.uid+' - '+user.name));
-        appendLine(user.uid+' - '+user.name);    
-        cnt++;
-    });
-});
-
-function appendLine(line){
-    $('#messages').append('<li id="'+cnt+'" onclick="setPriv(this);">').html(line); 
-}
-
-$('#bmessage').click(function(){
-    sendMessage();
- });
-
-
- $('#bpriv').click(function(){
-   $('#name').val('');
-   $('#users li').removeClass('selected');
-   return false;
-});
-
-
-function setPriv(div){
-    $('#name').val(div.innerHTML);
-    $('#users li').removeClass('selected');
-    $('li[id='+div.id+']').addClass('selected');
-    $('#message').focus();  
-};
-
-
-function unsetPriv(){
-    $('#name').val('');
-    $('#users li').removeClass('selected');
-    $('#message').focus();  
-};
-
-
-function sendMessage(){
-  if($('#msg').val().length<3)return false;
-  //if($('#name').val()==""){
-
-         socket.emit('message', $('#msg').val());
-          $('#msg').val('' );
-          $('#msg').focus();
-          
-
-  //      } else sendPrivateMessage();
-
-};
-
-
-function sendPrivateMessage(){
- if($('#message').val().length<3)return false;
-  var d = new Date();
-  var n = d.getTime();
-  var message = {time:n,tag:'*',to: $('#name').val(), txt: $('#user').text()+':'+$('#message').val()};
-
-  socket.emit('private message', message); 
-    
-   //show private msg localy?
-  if(showprivatemsg)
-       $('#messages').append($('<li>').html(getFormattedDate(message.time)+' '+message.tag+message.txt));
-                         
-  $('#message').val('');
-  $('#message').focus();  
-return false;       
-};
-
-
-function getFormattedDate(time) {
-    var date = new Date(time);
-
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    var hour = date.getHours();
-    var min = date.getMinutes();
-    var sec = date.getSeconds();
-
-    month = (month < 10 ? "0" : "") + month;
-    day = (day < 10 ? "0" : "") + day;
-    hour = (hour < 10 ? "0" : "") + hour;
-    min = (min < 10 ? "0" : "") + min;
-    sec = (sec < 10 ? "0" : "") + sec;
-
-    var str =  day + "."+ month + "."  +date.getFullYear() + " " +  hour + ":" + min + ":" + sec;
-
-    /*alert(str);*/
-
-    return str;
-}
 </script>
 
 </body>

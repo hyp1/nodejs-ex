@@ -1,9 +1,10 @@
 var express = require('express');
+var morgan = require('morgan');
 var router = express.Router();
 var singleton = require('./database');
 
 var fs = require('fs')
-var morgan = require('morgan')
+//var morgan = require('morgan')
 var path = require('path')
  
 var exp=require('./server');
@@ -23,12 +24,12 @@ var accessLogStream = rfs('access.log', {
 var accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log'), {flags: 'a'})
  
 // setup the logger
-Object.assign = require('object-assign');
-router.use(morgan('combined', {stream: accessLogStream}))
+//Object.assign = require('object-assign');
+//router.use(morgan('combined', {stream: accessLogStream}))
 app.use(morgan('combined', {stream: accessLogStream}))
 
 
-var db=singleton.DbConnection; 
+
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
@@ -39,13 +40,7 @@ router.use(function timeLog(req, res, next) {
   });
   // define the home page route
   router.get('/', function(req, res) {
-    if (db) {
-     db=singleton.DbConnection;
-singleton.insert('counts',{ip:1,date:Date.now()});
-res.send('Added Log Message'+JSON.stringify({ip: req.ip, date: Date.now()}));
-    }else{
-      res.send('Fehler:keine Datenbank');
-    }
+      res.send('Nix');
     
   });
   // define the about route
@@ -57,7 +52,7 @@ res.send('Added Log Message'+JSON.stringify({ip: req.ip, date: Date.now()}));
 
 router.get('/messages', function (req, res) {
     // try to initialize the db on every request if it's not already initialized.
-//    db=singleton.DbConnection;
+    db=singleton.DbConnection;
     if (db) {
     db.then(function(db) {
       db.collection('messages').find({}).toArray(function(err, resultArray){
@@ -70,13 +65,38 @@ router.get('/messages', function (req, res) {
 });
   
 router.get('/counts', function (req, res) {
-   
+  db=singleton.DbConnection;
 if (db) {
 db.then(function(db) {
   db.collection('counts').find({}).toArray(function(err, resultArray){
     res.json( resultArray );  
     console.log( resultArray );  
     });
+});
+} else {
+  res.send('no database');
+}
+
+});
+
+router.get('/stats', function (req, res) {
+  db=singleton.DbConnection;
+if (db) {
+db.then(function(db) {
+  var col = db.collection('messages');
+  // Create a document with request IP and current time of request
+var msgcnt,hitcnt=0;
+col.count(function(err, count){
+   msgcnt=count;
+   console.log(count);
+});
+col2 = db.collection('counts');
+col2.count(function(err, count){
+ hitcnt=count;
+ console.log(hitcnt);
+});
+res.json({messages:msgcnt,hits:hitcnt});
+
 });
 } else {
   res.send('no database');

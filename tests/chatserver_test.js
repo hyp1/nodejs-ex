@@ -1,5 +1,4 @@
-const {Server} = require("../chatserver");
-
+require("../server");
 
 var express = require('express');
 var app     = express();
@@ -9,25 +8,13 @@ var chai     = require('chai'),
     chaiHTTP = require('chai-http'),
     should   = chai.should();
 
-    io = require('socket.io').listen(server)
-
-    
-    chat=new Server(io);
-    
-    var proc=function(data){
-    console.log(data,"Process");
-    }
-    chat.run(proc);
-    console.log("...chat server started.");
-
-    
+      
 chai.use(chaiHTTP);
 reqServer = process.env.HTTP_TEST_SERVER || server
 
-describe('Basic routes tests', function() {
 
 var io = require('socket.io-client');
-var socketURL = 'http://localhost:3030/';
+var socketURL = 'http://localhost:8080';
 
 var options ={
   transports: ['websocket'],
@@ -45,7 +32,9 @@ describe("Websockets Chat Server Tests",function(){
       var chat = io.connect(socketURL,options);
       chat.on('connect', function(){
       chat.connected.should.equal(true);
+      chat.disconnect();
       done();
+
       });          
     });
 
@@ -53,6 +42,7 @@ describe("Websockets Chat Server Tests",function(){
       var chat = io.connect(socketURL,options);
       chat.on('connect', function(){
       chat.connected.should.equal(true);
+      chat.disconnect();
       done();
       });          
     });
@@ -62,16 +52,29 @@ describe("Websockets Chat Server Tests",function(){
         var client1, client2, client3;
         var message = 'Hello World';
         var messages = 0;
-      
+        var completeTest = function(){
+           messages.should.equal(0);
+           client1.disconnect();
+           client2.disconnect();
+           client3.disconnect();
+           done();
+           server.disconnect()
+         };
+       
         var checkMessage = function(client){      
           client.on('message', function(msg){
             console.log('message',msg);
             message.should.equal(msg._msg);
             client.disconnect();
             messages++;
+            if(client === client1){
+              setTimeout(completeTest, 40);
+            };/*
             if(messages === 3){
+              chat.disconnect();
               done();
             };
+            */
           });
         };
 
@@ -82,11 +85,14 @@ describe("Websockets Chat Server Tests",function(){
             console.log(msg)
             })
         })
-         done();
+        chat.disconnect();
+        done();    
     }); 
+
 });
   
-  /* 
+  /*
+   
       it('Should be able to send private messages', function(done){
         var client1, client2, client3;
         var message = {to: chatUser1.name, txt:'Tome conected'};
@@ -131,4 +137,4 @@ describe("Websockets Chat Server Tests",function(){
         });   
       });
 */
-});
+

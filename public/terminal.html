@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 
-<script src="//cdn.bootcss.com/socket.io/2.1.0/socket.io.dev.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <style>
 
 @font-face { /* http://emojione.com/developers/ */
@@ -53,7 +53,7 @@ function init(){
 document.getElementById('cmd').addEventListener("keypress", function(e){
     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
         //sendMessage()
-        sendMessageTo(1)
+        sendMessageTo()
         return false;
     } else {
         return true;
@@ -72,10 +72,10 @@ function sendMessage(){
     document.getElementById('cmd').focus();        
 }
 
-function sendMessageTo(uid){
+function sendMessageTo(){
    // if(document.getElementById('priv').value.length<2)return;
 var txt = document.getElementById('cmd').value;
-   socket.emit('private message', {to:uid,msg:document.getElementById('cmd').value});
+   socket.emit('private message', {to:'1',msg:document.getElementById('cmd').value});
     document.getElementById('cmd').value="";
     document.getElementById('cmd').focus();        
 }
@@ -83,9 +83,10 @@ var txt = document.getElementById('cmd').value;
 var notifications=false;
 var socket;
 
+socket = io.connect(location.protocol+'//'+location.hostname+':8080');
 
-socket = io.connect();
-socket.emit('connection name',{uid:0,name:'test'});
+
+socket.emit('connection name',{uid:'111',name:'HALLO'});
 
 socket.on('message', function(msg){
     console.log(msg)

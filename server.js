@@ -1,37 +1,13 @@
-//  OpenShift sample Node application
+const express = require('express');
+const app     = express();
+const http = require('http').Server(app);
+var serveIndex = require('serve-index')
 
-const {Server} = require("./chatserver");
-var ACCESSLOG = true;
-var DBLOG = true;
+const logs = require('./logs');
 
-var express = require('express'),
-  app = express(),
-  morgan = require('morgan');
 
-var instance = require('./database');
-var logs = require('./logs');
-
-function print(msg){
-  var d = new Date();
-  var n = d.getTime();
-  var message = {_time:n,_msg:msg, _params: { from: -1, name: 'User6220307' }};
-  //if(msg._msg.startsWith('/bot'))bot._parseBotCommand(msg.substring(5,msg.length))
-
-  io.sockets.emit('message', message);
-console.log(message)
-}
-Object.assign = require('object-assign');
-//app.engine('html', require('ejs').renderFile); //console log modules unten!
-
-//if (ACCESSLOG) app.use(morgan('combined'));
-
-app.use('/logs', logs);
-
-app.use('/', express.static('public'), function (req, res) {
-  //console.log(req.headers);
-  //res.sendFile(express.static('public')+'index.html');
-  //res.sendFile('index.html', { root: __dirname + '/public' });
-});
+//var port=8080,ip='127.0.0.1';
+const {ChatServer} = require('./chat/ChatServer');
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
   ip = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
@@ -63,87 +39,60 @@ console.log(mongoURL, 'MONGO_URL(constructed)');
 console.log(ip, 'NODEJS_IP');
 console.log(port, 'NODEJS_PORT');
 
-//console.log(process.env, 'MONGO VORHER');
+
+var singleton = require('./database');
+mongoURL='mongodb://127.0.0.1:27017';
+singleton.setup(mongoURL);
 
 
-var db = null;
-function initDB() {
-  instance.setup(mongoURL);
-  db = instance.DbConnection;
-  if (!db) console.error('Keine Datenbank!')
-  //db.then(function(db) {
-  // db.collection('counts').find({}).toArray(function(err, resultArray){console.log(resultArray)});
-  //});
-}
+
+app.use('/logs', logs);
+app.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': true}))
+
+app.use('/', express.static('public'), function (req, res) {
+    //console.log(req.headers);
+    //res.sendFile(express.static('public')+'index.html');
+    res.sendFile('index.html', { root: __dirname + '/public' });
+  });
+  
 
 
-//app.listen(port, ip);
-var http = require('http').Server(app);
-http.listen(port, ip, function (req, res) {
+  http.listen(8080, function (req, res) {
   console.log('listening on *:' + port);
-  console.log(process.env.MONGO_TEST,"process.env.MONGO_TEST")
 });
 io = require('socket.io').listen(http)
+chat=new ChatServer(io);
 
 
-console.log('Server running on http://%s:%s', ip, port);
 
-chat=new Server(io);
-
-var proc=function(data){
-console.log(data,"Process");
+processCommand=function(cmd){
+    console.log(cmd.cmd,'server.js: processCommand');
+    if(cmd._cmd=='message')logMessage(cmd._data);
+    if(cmd.data=='userlist'){
+        console.log("**************LIST****************");
+      /*
+        var users =  chat.userList();
+        console.log(users,'processCommand');
+    */
+    }    
 }
-chat.run(proc);
-console.log("...chat server started.");
+chat.start(processCommand);
 
 
-
-sayHelloInSpanish = function () {
-  return "Hola";
-};
-
-exports=function (app) {
-  return function performTest() {
-    var test = require('./file1')(app, db, conf);
-    test();
+function logMessage(msg){
+    db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {
+        var col = db.collection('messages');
+        // Create a document with request IP and current time of request
+        col.insert(msg);
+        col.count(function(err, count){
+          console.log('Messages logged::'+count)
+      });
+    });
+  }else{
+    res.send('no database');
   }
 }
 
-initDB();
-/*
-var clients = {};
-logs=[];
-
-io.on('connection', function(socket){
-  console.log('connection:' + socket);
-
-  socket.on('connection name',function(user){
-    console.log('ip:'+socket.handshake.address);
-    userName = user.name;
-    clients[user.name] = socket;
-    console.log('clients['+user.name+']');
-    io.sockets.emit('new user', user.name + " has joined.");
-
-  });
-
-  socket.on('message', function(msg){
-    console.log(msg);
-    var d = new Date();
-    var n = d.getTime();
-    var message = {time:n,msg:msg};
-    io.emit('message', message);
-  });  
-
-
-  socket.on('private message', function(msg){
-    io.emit('chat message', msg);
-    console.log('chat message:' + msg);
-  });
-
-
-
-});
-*/
-
-module.exports = app; //express
-//console.log(module);
+module.exports = app;
