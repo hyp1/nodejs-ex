@@ -67,6 +67,11 @@ chat=new ChatServer(io);
 processCommand=function(cmd){
     console.log(cmd.cmd,'server.js: processCommand');
     if(cmd._cmd=='message')logMessage(cmd._data);
+    if(cmd._cmd=='private message')logMessage(cmd._data);
+    if(cmd._cmd=='connected')logMessage(cmd._data);
+    if(cmd.data.startsWith('/')){
+     parseCommand(cmd._data);
+    }
     if(cmd.data=='userlist'){
     //    console.log("**************LIST****************");
       /*        var users =  chat.userList();
@@ -76,21 +81,9 @@ processCommand=function(cmd){
 }
 chat.start(processCommand);
 
+function parseCommand(cmd){
+  console.log("parsing command data"+cmd);
+}
 
-function logMessage(msg){
-  /*
-    db=singleton.DbConnection;
-    if (db) {
-    db.then(function(db) {
-        var col = db.collection('messages');
-        // Create a document with request IP and current time of request
-        col.insert(msg);
-        col.count(function(err, count){
-          console.log('Messages logged::'+count)
-      });
-    });*/
-    var res=singleton.insert('messages',msg);
-  
-  }
 
 module.exports = app;

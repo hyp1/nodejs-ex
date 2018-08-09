@@ -4,24 +4,20 @@ class ChatMessage {
   constructor() {
       this._type    = 0;
       this._time    = Date.now();
-      this._color   = '#000000';
       this._from     = "Unbekannt";
   }
   get color() {
     return this._color;
   }
+
   set color(color) {
         this._color= color;
   } 
-  get color() {
-      return this._color;      
-  }
-  set color(color) {
-      this._color= color;
-  }             
+
   set type(type) {
       this._type = type;
   }
+
   get type() {
        return this._type;
   }
@@ -33,15 +29,15 @@ class ChatMessage {
   }
   set params(params) {
         this._params = params;
-   }
+    }
    get params() {
         return this._params;
    }
 
    set from(from) {
     this._from = from;
-}
- get from() {
+    }
+     get from() {
     return this._from;
 }
    setFrom(from) {
@@ -82,10 +78,8 @@ class ChatMessage {
 
   getParam() {
     return this._params;
-};
-  print() {
-        console.log(this._time+', ' + this._type + ', : ' + this._txt);
-  };
+    };
+  
 }
    
 class LogMessage extends ChatMessage {

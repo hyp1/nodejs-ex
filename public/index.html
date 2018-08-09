@@ -8,25 +8,7 @@
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
 
-
-<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements 
-https://stackoverflow.com/questions/15891535/html5shiv-not-working-in-ie8
--->
-
-<!--[if lt IE 9]>
-<script src="app/html5shiv.js"></script>
-<![endif]-->
-
-<!-- 
-https://stackoverflow.com/questions/36016327/how-to-make-promises-work-in-ie11
-    Bluebird ES5 für IE (kein ES6 arrows =>)
-
-    https://subinsb.com/set-same-cookie-on-different-domains/
-    <img src="http://kimo2007.dnshome.de:8888/2018/servicesneu/cookie/setCookie.php?uid=<?php print $user->uid;?>&sessname=<?php print session_name();?>&sessid=<?php print session_id();?>" style="display:none;" />
-
--->
 <script src="/socket.io/socket.io.js"></script>
-<script src="app/bluebird.min.js"></script>
 <script src="app/jquery-1.11.1.min.js"></script>
 <script	src="app/jquery.mobile-1.4.5.min.js"></script> 
 <script src="app/jdrupal.js"></script>
@@ -53,7 +35,7 @@ ul {
     unicode-range: U+0000-00FF;
 }
   
-body, div#content{
+body, html{
     font-family: Emojione;
 }
 ul{
@@ -62,13 +44,14 @@ ul{
  li.selected{
 background-color:orange;
 }
+
 </style>
 
 </head>
 
 <body onload="">
   <div data-role="page" id="index">
-        
+
         <div data-role="panel" id="myheader" data-display="overlay" data-position="right">
                 <h3>Mitglieder Online</h3>
                 <ul id="users"></ul>
@@ -76,25 +59,13 @@ background-color:orange;
         </div><!-- // Panel -->
             
         <div data-role="header" data-position="fixed">
-            <a href="#" onclick="window.history.back();" data-ajax="none" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-back">Zurück</a>
-            <h1 id="user">User</h1>
+                <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a>               <h1 id="user">User</h1>
             <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
         <div data-role="content" style="float:left;">
-            <h2>AWRI Chat</h2>
-            <div data-role="controlgroup" data-type="horizontal">    
-                <button title="connect" id="bconnect" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-icon-action" onclick="connect()" disabled>Connect</button>                             
-            </div>
-            <div data-role="fieldcontain">    
-                <input type="text" id="name" value="" disabled>
-                <input type="hidden" id="token" value="token" disabled>        
-            </div>
-            <div data-role="fieldcontain">
-                <ul id="messages"></ul> 
-            </div> <!--// Content -->      
-        
-            <div id="log"></div>
+                 <ul id="messages"></ul> 
+        </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
             <input type="text" id="msg" value="">
@@ -102,17 +73,33 @@ background-color:orange;
                 <input type="button" onclick="sendMessage();" id="sendr" value="Senden">  
                 <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />
                 <label for="checkbox-mini-0">Nachrichten</label>
-                <input type="hidden" id="private" value="-1" disabled>          
+                <input type="hidden" id="private" value="-1" disabled>
+                <span id="actualcolor" style="color:#333; border:1 solid black;" onclick=setColor(this);>O</span>          
+
+                <span class="color" style="color:#333; background-color:#333; border:1 solid black;" onclick=setColor(this);>X</span>          
+                <span class="color" style="color:#a70301; background-color:#a70301;  border: 1px solid black;" onclick="setColor(this);">X</span>
+                <span class="color" style="color:#0000aa; background-color:#0000aa; border:1 solid black;" onclick=setColor(this);>X</span>          
+                <span class="color" style="color:#555555; background-color:#555555; border: 1px solid black;" onclick="setColor(this);">X</span>
+<span style="border: 1px solid black;" onclick="putSmiley(this);">😊</span>
+<span style="border: 1px solid black;" onclick="putSmiley(this);">❤️</span>
+<span style="border: 1px solid black;" onclick="putSmiley(this);">😯</span>
+<span style="border: 1px solid black;" onclick="putSmiley(this);">👌</span>
+
             </fieldset> 
-            <input type="text" id="private-name" value="" disabled>
-        </div>  <!--// Footer -->
+           </div>  <!--// Footer -->
     </div><!--// Page -->
+    <div data-role="fieldcontain">    
+            <input type="hidden" id="name" value="" disabled>
+            <input type="hidden" id="token" value="token" disabled>
+            <input type="text" id="private-name" value="" disabled>        
+        </div>
+    
 
 <script>
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
 var socket=null;        //Websocket
-
+var color ='#333';
 $(function() {
     document.getElementById('msg').focus();
 
@@ -135,6 +122,32 @@ $("#msg").keypress(function (e) {
 
 }); //jQuery
 
+help=[
+    '<h2>Willkommen im AWRI Chat<h3>',
+    'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
+    'können sie nur als anonymer Benutzer an unserer Duskussion teilnehmen.',
+    'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
+    '...Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
+];
+
+(function(){
+    help.forEach(line => {
+    console.log(line);
+    $('#messages').append('<li>'+line+'</li>');
+});
+})();
+
+function setColor(c){
+    var actualcol=$('#actualcolor');
+  actualcol.attr('style','color:'+c.style.color);
+    color=actualcol.css('color');
+}
+
+function putSmiley(c){
+    var smiley=($(c).text())
+    var txt=$('#msg').val();
+    $('#msg').val(txt+smiley);
+}
 
 /*
 POST awri_services_resources/whos_online
@@ -326,11 +339,13 @@ socket.on('connected', function(cmd){
     var cd=cmd._data;
     //var msg=inp._data;
     console.log(cd);
-    $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' id['+cd.uid+'] ist mit AWRIChat verbunden.'));
+    $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' ist nun im AWRIChat.'));
     window.scrollTo(0, document.body.scrollHeight);
 });
   
 socket.on('message', function(cmd){
+    console.log(cmd);
+
     cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+': '+cmd._data._txt;
     appendMessage(cmd);
 
@@ -340,8 +355,7 @@ socket.on('message', function(cmd){
 
 socket.on('private message', function(cmd){
      cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+'->'+cmd._data._params.to+':'+cmd._data._txt;
-    console.log(cmd);
-     appendMessage(cmd);
+         appendMessage(cmd);
      if(notifications)notify(cmd._data._txt);
 });
 
@@ -409,6 +423,7 @@ function sendMessage(){
     data:{
         from:$('#name').val(), 
         txt:$('#msg').val(), 
+        color:color,
         }
     }
     socket.emit('message', data);

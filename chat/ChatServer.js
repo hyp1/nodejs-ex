@@ -37,7 +37,7 @@ class ChatServer {
       this._sockets=io;
       _server=this;
       _clients=[];
-      console.log("Chat_server on port %s constructed.",this._io);
+      console.log("AWRI Chat Server constructed and running...");
     } 
   
     stop(){
@@ -67,13 +67,12 @@ class ChatServer {
       //         _flushMsgBuffer();    // wird nicht geflusht wenn sich der User direkt einloggt, sonst bekommt er die Daten 2x 
             });     
              
-             socket.on('message',function(msg){
-                console.log(msg);
+             socket.on('message',function(msg){                
                 _msg=new ChatMessage();
                 _cmd=new ChatCommand();        
                 _msg.txt=msg.data.txt;
                 _msg.from=msg.data.from;
-                if(msg.color !== undefined)_msg.setColor(msg.color);
+                if(msg.data.color !== undefined)_msg.setColor(msg.data.color);
                 _cmd.cmd='message';
                 _cmd.data=_msg;                
                 _server.broadcastCommand(_cmd)              
