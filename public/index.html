@@ -34,7 +34,7 @@ https://stackoverflow.com/questions/36016327/how-to-make-promises-work-in-ie11
 <script src="app/user.js"></script>
 <style>
 .ui-icon-loading {
-    background: url('30.gif'); 
+    background: url('app/30.gif'); 
 	background-size: 2.875em 2.875em;
 }
 ul {
@@ -44,7 +44,7 @@ ul {
 @font-face { /* http://emojione.com/developers/ */
   font-family: Emojione;
   src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
-       url("emojione-android.ttf") format("truetype");      
+       url("app/emojione-android.ttf") format("truetype");      
 }
 
 @font-face {
@@ -307,31 +307,18 @@ function clearlog(){
 document.getElementById('log').innerHTML='';	
 }                 
 
-
-
-
-
-
-
-/*
+/* Examples
 socket = io.connect( 'https://test.com:33333' );
 socket = io.connect( 'ws://test.com' );
 socket = io.connect( 'wss://test.com' );      
-socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
+socket = io.connect( 'ws://test.com:3030');
 */
-//localhost:8080
-//socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com' ); 
-//  
-
 
 var cmd=null;
 var msg=null;
     
-console.log(location.protocol+'//'+location.hostname+':8080',"LOCATION");
-socket = io.connect(); //autodiscovery
-
 //socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/');
-//socket = io.connect( 'ws://kimo2007.dnshome.de:3030');
+socket = io.connect(); //autodiscovery
 
 socket.on('connected', function(cmd){
     console.log(cmd);
