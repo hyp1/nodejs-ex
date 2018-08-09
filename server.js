@@ -41,7 +41,6 @@ console.log(port, 'NODEJS_PORT');
 
 
 var singleton = require('./database');
-mongoURL='mongodb://127.0.0.1:27017';
 singleton.setup(mongoURL);
 
 
