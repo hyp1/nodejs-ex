@@ -27,7 +27,7 @@ app.use('/', express.static('public'), function (req, res) {
 
 var _server=null;
 var _clients=null;
-
+var _msgBufferSize=3;
 
 class ChatServer {
     constructor(io) {   
@@ -37,7 +37,6 @@ class ChatServer {
       this._sockets=io;
       _server=this;
       _clients=[];
-      this._MsgBuffer;
       console.log("Chat_server on port %s constructed.",this._io);
     } 
   
@@ -57,7 +56,7 @@ class ChatServer {
         var _cmd=new ChatCommand();
         io.of('/')
             .on('connection', function (socket) { 
-            console.log("rooms: ", io.nsps["/"].adapter.rooms);  
+          //  console.log("rooms: ", io.nsps["/"].adapter.rooms);  
             _connection();  //connect
             _userlist();
             _flushMsgBuffer();
@@ -77,9 +76,9 @@ class ChatServer {
                 if(msg.color !== undefined)_msg.setColor(msg.color);
                 _cmd.cmd='message';
                 _cmd.data=_msg;                
-                _server.broadcastCommand(_cmd)
-                MsgBuffer.push(_cmd);                    
-              });
+                _server.broadcastCommand(_cmd)              
+                _addToMsgBuffer(_cmd);                               
+            });
               
               //{ from: 'ME', to: 3, txt: 'asdasdasdasd' } 
             socket.on('private message',function(privcmd){ 
@@ -94,8 +93,7 @@ class ChatServer {
                _msg.setParam({to:_clients[dat._data.to].name});
                _cmd.data=_msg;
                _server.sendMessage(sid,_cmd);
-               MsgBuffer.push(_cmd);                    
-
+               _addToMsgBuffer(_cmd);                               
                //_server.sendMessage(_clients[dat.data.to].sid,_cmd);
             });  
             
@@ -162,6 +160,12 @@ class ChatServer {
             });
         }
        
+        function _addToMsgBuffer(cmd){
+            console.log('_addToMsgBuffer')
+            if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
+            MsgBuffer.push(cmd);
+        }
+
     }) //connection socket
 
    
@@ -171,6 +175,7 @@ class ChatServer {
     console.info('chat:broadcastCommand');  
         io.emit(_cmd.cmd,_cmd);
        if(processCommand)processCommand(_cmd);
+           
     }
 
     sendCommand(sid,_cmd){

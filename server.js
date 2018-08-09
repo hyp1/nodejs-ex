@@ -33,6 +33,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
+
 //console.log(mongoURL, 'MONGO VORHER');
 //mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
 console.log(mongoURL, 'MONGO_URL(constructed)');
@@ -68,9 +69,8 @@ processCommand=function(cmd){
     console.log(cmd.cmd,'server.js: processCommand');
     if(cmd._cmd=='message')logMessage(cmd._data);
     if(cmd.data=='userlist'){
-        console.log("**************LIST****************");
-      /*
-        var users =  chat.userList();
+    //    console.log("**************LIST****************");
+      /*        var users =  chat.userList();
         console.log(users,'processCommand');
     */
     }    
@@ -79,6 +79,7 @@ chat.start(processCommand);
 
 
 function logMessage(msg){
+  /*
     db=singleton.DbConnection;
     if (db) {
     db.then(function(db) {
@@ -88,10 +89,9 @@ function logMessage(msg){
         col.count(function(err, count){
           console.log('Messages logged::'+count)
       });
-    });
-  }else{
-    res.send('no database');
+    });*/
+    var res=singleton.insert('messages',msg);
+  
   }
-}
 
 module.exports = app;

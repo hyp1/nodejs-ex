@@ -24,7 +24,7 @@ var accessLogStream = rfs('access.log', {
 var accessLogStream = fs.createWriteStream(path.join(logDirectory, 'access.log'), {flags: 'a'})
  
 // setup the logger
-//Object.assign = require('object-assign');
+Object.assign = require('object-assign');
 //router.use(morgan('combined', {stream: accessLogStream}))
 app.use(morgan('combined', {stream: accessLogStream}))
 
@@ -34,13 +34,13 @@ app.use(morgan('combined', {stream: accessLogStream}))
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {
  // console.log("openDB"); 
-  console.log('Time: ', Date.now());
+ // console.log('Time: ', Date.now());
   //console.log(ACCESSLOG,"ACCESSLOG");
     next();
   });
   // define the home page route
   router.get('/', function(req, res) {
-      res.send('Nix');
+      res.send('Hier gibt es leider nichts zu sehen! :-)');
     
   });
   // define the about route

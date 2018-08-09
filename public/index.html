@@ -340,7 +340,7 @@ socket.on('connected', function(cmd){
     //var msg=inp._data;
     console.log(cd);
     $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' id['+cd.uid+'] ist mit AWRIChat verbunden.'));
-    //window.scrollTo(0, document.body.scrollHeight);
+    window.scrollTo(0, document.body.scrollHeight);
 });
   
 socket.on('message', function(cmd){
