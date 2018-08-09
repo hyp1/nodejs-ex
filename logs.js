@@ -1,6 +1,7 @@
 var express = require('express');
 var morgan = require('morgan');
 var router = express.Router();
+var serveIndex = require('serve-index')
 var singleton = require('./database');
 
 var fs = require('fs')
@@ -30,6 +31,7 @@ app.use(morgan('combined', {stream: accessLogStream}))
 
 
 
+router.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': true}))
 
 // middleware that is specific to this router
 router.use(function timeLog(req, res, next) {

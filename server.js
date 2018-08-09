@@ -1,7 +1,6 @@
 const express = require('express');
 const app     = express();
 const http = require('http').Server(app);
-var serveIndex = require('serve-index')
 
 const logs = require('./logs');
 
@@ -47,7 +46,7 @@ singleton.setup(mongoURL);
 
 
 app.use('/logs', logs);
-app.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': true}))
+//app.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': true}))
 
 app.use('/', express.static('public'), function (req, res) {
     //console.log(req.headers);

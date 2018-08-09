@@ -161,8 +161,7 @@ class ChatServer {
         }
        
         function _addToMsgBuffer(cmd){
-            console.log('_addToMsgBuffer')
-            if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
+           if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
             MsgBuffer.push(cmd);
         }
 
