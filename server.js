@@ -2,8 +2,10 @@ const express = require('express');
 const app     = express();
 const http = require('http').Server(app);
 
-const logs = require('./logs');
+var WEBLOG = process.env.WEBLOG || 0;
+var DBLOG = process.env.DBLOG || 0;
 
+const logs = require('./logs');
 
 //var port=8080,ip='127.0.0.1';
 const {ChatServer} = require('./chat/ChatServer');
@@ -87,7 +89,6 @@ function parseCommand(cmd){
 
 function logMessage(msg){
     var res=singleton.insert('messages',msg);
-console.log('%d messages in MongoDB',res); 
   }
 
-module.exports = app;
+module.exports = app,WEBLOG,DBLOG;

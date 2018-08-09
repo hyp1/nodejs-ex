@@ -37,7 +37,9 @@ router.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': t
 router.use(function timeLog(req, res, next) {
  // console.log("openDB"); 
  // console.log('Time: ', Date.now());
-  //console.log(ACCESSLOG,"ACCESSLOG");
+  console.log(WEBLOG,"WEBLOG");
+  console.log(DBLOG,"DBLOG");
+  
     next();
   });
   // define the home page route

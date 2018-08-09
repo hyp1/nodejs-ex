@@ -35,9 +35,14 @@ ul {
     unicode-range: U+0000-00FF;
 }
   
-body, html{
+body, html,{
     font-family: Emojione;
 }
+
+.emojis{
+    font-family: Emojione;
+}
+
 ul{
     list-style-type: none;  
 }
@@ -63,35 +68,48 @@ background-color:orange;
             <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
-        <div data-role="content" style="float:left;">
+        <div data-role="content" class="emojis" style="float:left;">
                  <ul id="messages"></ul> 
+    
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
-            <input type="text" id="msg" value="">
-            <fieldset data-role="controlgroup" data-type="horizontal">
-                <input type="button" onclick="sendMessage();" id="sendr" value="Senden">  
-                <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />
-                <label for="checkbox-mini-0">Nachrichten</label>
-                <input type="hidden" id="private" value="-1" disabled>
-                <span id="actualcolor" style="color:#333; border:1 solid black;" onclick=setColor(this);>O</span>          
 
-                <span class="color" style="color:#333; background-color:#333; border:1 solid black;" onclick=setColor(this);>X</span>          
-                <span class="color" style="color:#a70301; background-color:#a70301;  border: 1px solid black;" onclick="setColor(this);">X</span>
-                <span class="color" style="color:#0000aa; background-color:#0000aa; border:1 solid black;" onclick=setColor(this);>X</span>          
-                <span class="color" style="color:#555555; background-color:#555555; border: 1px solid black;" onclick="setColor(this);">X</span>
-<span style="border: 1px solid black;" onclick="putSmiley(this);">😊</span>
-<span style="border: 1px solid black;" onclick="putSmiley(this);">❤️</span>
-<span style="border: 1px solid black;" onclick="putSmiley(this);">😯</span>
-<span style="border: 1px solid black;" onclick="putSmiley(this);">👌</span>
-
-            </fieldset> 
-           </div>  <!--// Footer -->
+                <input class="emojis" type="text" id="msg" value="">
+<fieldset class="ui-grid-a">
+                <div class="ui-block-a">
+                        <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <button class="color" style="background-color:#333;" onclick=setColor(this);>&nbsp;</button>          
+                        <button class="color" style=" background-color:#a70301;" onclick="setColor(this);">&nbsp;</button>
+                        <button class="color" style="background-color:#0000aa;" onclick=setColor(this);>&nbsp;</button>          
+                        <button class="color" style="background-color:#555555;" onclick="setColor(this);">&nbsp;</button>
+        
+                        <button class="emojis" onclick="putSmiley(this);">😊</button>
+                        <button class="emojis" onclick="putSmiley(this);">❤️</button>
+                        <button class="emojis" onclick="putSmiley(this);">😯</button>
+                        <button class="emojis" onclick="putSmiley(this);">👌</button>
+                        <button class="emojis" onclick="putSmiley(this);">🤦</button>
+                        <button class="emojis" onclick="putSmiley(this);">🙏</button>                         
+                        <button class="color" id="actualcolor" style="background-color:#333" onclick=setColor(this);>🖊️</button>                             
+                        </fieldset>         
+                    </div>
+            <div class="ui-block-b">
+                    <div data-role="controlgroup" data-type="horizontal">
+                        <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">Benachrichtigen an/aus</label>
+                        <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
+                        <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendMessage();"  value="Senden"></button>  
+                    </div>
+            </div>
+        </fieldset>
+       
+         </div>  <!--// Footer -->
     </div><!--// Page -->
     <div data-role="fieldcontain">    
             <input type="hidden" id="name" value="" disabled>
             <input type="hidden" id="token" value="token" disabled>
-            <input type="text" id="private-name" value="" disabled>        
+            <input type="hidden" id="private-name" value="" disabled>
+            <input type="hidden" id="private" value="-1" disabled>
+          
         </div>
     
 
@@ -139,8 +157,8 @@ help=[
 
 function setColor(c){
     var actualcol=$('#actualcolor');
-  actualcol.attr('style','color:'+c.style.color);
-    color=actualcol.css('color');
+    actualcol.attr('style','background-color:'+c.style['background-color']);
+    color=c.style['background-color'];
 }
 
 function putSmiley(c){
@@ -334,23 +352,15 @@ var msg=null;
 socket = io.connect(); //autodiscovery
 
 socket.on('connected', function(cmd){
-    console.log(cmd);
     var cm=cmd._cmd;
     var cd=cmd._data;
-    //var msg=inp._data;
-    console.log(cd);
     $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' ist nun im AWRIChat.'));
     window.scrollTo(0, document.body.scrollHeight);
 });
   
 socket.on('message', function(cmd){
-    console.log(cmd);
-
     cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+': '+cmd._data._txt;
     appendMessage(cmd);
-
-
-  //   window.scrollTo(0, document.body.scrollHeight);
 });
 
 socket.on('private message', function(cmd){
