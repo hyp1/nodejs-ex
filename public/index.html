@@ -349,7 +349,8 @@ var cmd=null;
 var msg=null;
     
 //socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/');
-socket = io.connect(); //autodiscovery
+//socket = io.connect(); //autodiscovery
+socket = io.connect( Drupal.settings.chatserver );
 
 socket.on('connected', function(cmd){
     var cm=cmd._cmd;

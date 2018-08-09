@@ -2,6 +2,8 @@ Drupal.settings.site_path = "https://awri.ch";
 Drupal.settings.endpoint = "drupalgap";
 Drupal.settings.file_public_path = 'sites/default/files';
 Drupal.settings.timeout=3000;
+//Drupal.settings.chatserver='https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/';
+Drupal.settings.chatserver='';
 
 //Drupal.settings.file_private_path = 'system/files';
 
