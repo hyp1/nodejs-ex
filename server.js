@@ -85,5 +85,9 @@ function parseCommand(cmd){
   console.log("parsing command data"+cmd);
 }
 
+function logMessage(msg){
+    var res=singleton.insert('messages',msg);
+console.log('%d messages in MongoDB',res); 
+  }
 
 module.exports = app;

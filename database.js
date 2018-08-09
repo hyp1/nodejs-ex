@@ -21,10 +21,10 @@ var singleton = function singleton() {
         var col = db.collection(table);
         // Create a document with request IP and current time of request
         col.insert(data).then(function(data){
-            console.log(data," database:DBInsert ok");
+    //        console.log(data," database:DBInsert ok");
 
         }).catch(function(err){
-            console.error("database:DBInsert error flushBuffer key exists");
+    //        console.error("database:DBInsert error flushBuffer key exists");
 
         });
             col.count(function(err, count){
