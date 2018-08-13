@@ -147,7 +147,7 @@ help=[
     '...Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
 
-var chat=new ChatClient(location.protocol,location.hostname,8080);
+var chat=new ChatClient();
 
 function onchatconnected(user){
     console.log(user);
