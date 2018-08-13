@@ -1,0 +1,37 @@
+.ui-icon-loading {
+    background: url('app/30.gif'); 
+	background-size: 2.875em 2.875em;
+}
+ul {
+    list-style-type: none;
+}
+
+#users li{
+    cursor:pointer;
+}
+@font-face { /* http://emojione.com/developers/ */
+  font-family: Emojione;
+  src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
+       url("app/emojione-android.ttf") format("truetype");      
+}
+
+@font-face {
+    font-family: Emojione;
+    src: local("Arial");
+    unicode-range: U+0000-00FF;
+}
+  
+body, html,{
+    font-family: Emojione;
+}
+
+.emojis{
+    font-family: Emojione;
+}
+
+ul{
+    list-style-type: none;  
+}
+ li.selected{
+background-color:orange;
+}

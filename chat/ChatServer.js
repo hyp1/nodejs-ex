@@ -98,7 +98,7 @@ class ChatServer {
           
           socket.on('disconnect',function(cli){
             console.log(cli,'disconnected');
-            delete _clients[_user._uid];
+           // delete _clients[_user._uid];
             })
           
             socket.on('command',function(cmd){

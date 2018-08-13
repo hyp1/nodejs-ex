@@ -21,7 +21,7 @@ class ChatClient{
     connect(user){
     if(this._protocol&&this._host&&this.port){
         console.info(this._protocol + '//' + this._host + ':'+this._port+this._ns,'CHAT SERVER URL')
-        this._socket=io.connect(this._protocol + '//' + this._host + ':'+this._port+this._ns);
+        this._socket=io.connect(this._protocol&&this._host + ':'+this._port+this._ns);
     }else  this._socket=io.connect();
     
     this._socket.emit('connection name',user);      

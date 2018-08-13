@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
+<link rel="stylesheet" href="app/awri_chat.css" />
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="app/jquery-1.11.1.min.js"></script>
@@ -14,44 +15,6 @@
 <script src="app/chat_client.js"></script>
 >
 <style>
-.ui-icon-loading {
-    background: url('app/30.gif'); 
-	background-size: 2.875em 2.875em;
-}
-ul {
-    list-style-type: none;
-}
-
-#users li{
-    cursor:pointer;
-}
-@font-face { /* http://emojione.com/developers/ */
-  font-family: Emojione;
-  src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
-       url("app/emojione-android.ttf") format("truetype");      
-}
-
-@font-face {
-    font-family: Emojione;
-    src: local("Arial");
-    unicode-range: U+0000-00FF;
-}
-  
-body, html,{
-    font-family: Emojione;
-}
-
-.emojis{
-    font-family: Emojione;
-}
-
-ul{
-    list-style-type: none;  
-}
- li.selected{
-background-color:orange;
-}
-
 </style>
 
 </head>
@@ -143,12 +106,18 @@ $("#msg").keypress(function (e) {
 }); //jQuery
 
 help=[
-    '<h2>Willkommen im AWRI Chat<h3>',
+    '<h2>Willkommen im AWRI Chat</h2>',
     'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
-    'können sie nur als anonymer Benutzer an unserer Duskussion teilnehmen.',
+    'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
     '...Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
+
+(function(){
+    help.forEach(line => {
+    $('#messages').append('<li>'+line+'</li>');
+});
+})();
 
 var chat=new ChatClient();
 
@@ -162,7 +131,8 @@ function onchatconnected(user){
 
 function onchatmessage(msg){
     console.log(msg,'onchatmessage');
-appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"> '+msg._from.name+': '+msg._txt,msg._color);
+    if(notifications&&msg._to.uid==variable_get('user')._uid)notify(getFormattedDate(msg._time)+': '+msg._from.name+': '+msg._txt,msg._from.picture)
+    appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"/> '+msg._from.name+': '+msg._txt,msg._color);
 }
 
 function onchatuserlist(data){
@@ -208,8 +178,7 @@ function onchatcommand(data){
 }
 
 function sendText(txt){
-
-    msg=new ChatMessage();
+var msg=new ChatMessage();
 msg.setColor(color);
 msg.setFrom($('#uid').val());
 msg.setText($('#msg').val());
@@ -288,13 +257,14 @@ function setColor(c){
 }
 
 
-       function appendLine(text="",color="#333"){
-            ul = document.getElementById('messages');
-            li = document.createElement('li');
-            li.style.color=color;
-            li.innerHTML=text;
-            ul.appendChild(li);    
-        }
+function appendLine(text="",color="#333"){
+    ul = document.getElementById('messages');
+    li = document.createElement('li');
+    li.style.color=color;
+    li.innerHTML=text;
+    ul.appendChild(li); 
+    window.scrollTo(0, document.body.scrollHeight);   
+}
 
 function putSmiley(c){
     var smiley=($(c).text())
@@ -395,7 +365,7 @@ notifications= $('input[type="checkbox"]').prop("checked");
 });
 
 cnt=0;
-function notify(mesg){
+function notify(mesg,img){
 cnt++;
     // If the user agreed to get notified
     // Let's try to send ten notifications
@@ -405,7 +375,7 @@ cnt++;
       var interval = window.setInterval(function () {
         // Thanks to the tag, we should only see the "Hi! 9" notification 
    if (i++ == 9) {      
-  var n = new Notification(mesg,{tag: 'soManyNotification'});
+  var n = new Notification(mesg,{tag: 'soManyNotification',image:img});
           //window.clearInterval(interval);
 }      
 }, 200);
