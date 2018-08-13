@@ -3,18 +3,18 @@ Socket io websockets chat _server
 socket.ui library
 https://socket.io/docs/
 
-->connect 
-<-connected name {uid,name}
-->connection name {uid,name}
-->message {cmd:'message' data:{from:'',txt:'',}
-->private message {cmd:'privatemessage' data:{from:'',to:'':txt:'',}
-->command {name:'',params:''}
+-> connect 
+-> connection name {_uid,_name}
+<- connected name {_uid,_name}
+-> message {cmd:'message' data:{from:'',txt:'',}
+-> private message {cmd:'privatemessage' data:{from:'',to:'':txt:'',}
+-> command {cmd:'',data:''}
+<- command data{cmd:'',data:''}
 */
-
 'use strict';
 const express = require('express');
-const app     = express();
-const http = require('http').Server(app);  
+const app     = express(); 
+
 
 const {LogMessage,ChatMessage} = require('./ChatMessage');
 const {ChatCommand} = require('./ChatCommand');
@@ -26,7 +26,9 @@ app.use('/', express.static('public'), function (req, res) {
 
 
 var _server=null;
-var _clients=null;
+var _clients=[];
+
+var MsgBuffer=[];
 var _msgBufferSize=15; //15 Zeilen
 
 class ChatServer {
@@ -36,7 +38,7 @@ class ChatServer {
       this.time = Date.now();
       this._sockets=io;
       _server=this;
-      _clients=[];
+      //_clients=[];
       console.log("AWRI Chat Server constructed and running...");
     } 
   
@@ -51,183 +53,166 @@ class ChatServer {
 
         var MsgBuffer = [];
  
-        let user = ChatUser;                
+        let _user = ChatUser;                
         var _msg=new ChatMessage();
         var _cmd=new ChatCommand();
-        io.of('/')
-            .on('connection', function (socket) { 
-          //  console.log("rooms: ", io.nsps["/"].adapter.rooms);  
-            _connection();  //connect
-            _userlist();
-            _flushMsgBuffer();
-            
-            socket.on('connection name',function(name){              //{uid,name}
-               _connection_name(name);                                      
-               _userlist();
-      //         _flushMsgBuffer();    // wird nicht geflusht wenn sich der User direkt einloggt, sonst bekommt er die Daten 2x 
-            });     
+        io.of('/').on('connection', function(socket){
+
+            _user=new ChatUser(); 
+            _user.sid=socket.id;
+                socket.on('connection name',function(user){
+                  console.info(user._name,'ChatServer.connection name');
+                if(user._uid==undefined||user._uid==0){socket.emit('connect name','Sie sind anonym verbunden. Bitte geben sie einen Benutzernamen ein.',function(answer){
+                
+                  _user.setName(answer.name);
+
+                socket.emit('connected',_user);  
+                //addClient(_user);
+                _clients[_user._uid]=_user;
+             //   console.log(_user,'connected');
+                _server._broadcastUserlist();
+                _server._flushMsgBuffer(socket);  
+              });
+              } else{
+                console.info(user._name,'ChatServer.connection name(authenticated)');
+                _user.setName(user._name);
+                _user._uid=user._uid;
+                _user._token=user.token;
+                _user._session=user.session;
+                _user._roles=user.roles;
+                _user._email=user.email;
+                _user._fbid=user.fbid;
+                if(user.fbid)_user._picture='https://graph.facebook.com/'+user.fbid+'/picture?type=small';
+                if(user.picture)_user._picture=user.picture.url;
+                socket.emit('connected',_user);   
+                console.log(_user,'connected' );
+                _clients[_user._uid]=_user;
+                _server._broadcastUserlist();
+                _server._flushMsgBuffer(socket);
+              }    
+             // user=new ChatUser();
              
-             socket.on('message',function(msg){                
-                _msg=new ChatMessage();
-                _cmd=new ChatCommand();        
-                _msg.txt=msg.data.txt;
-                _msg.from=msg.data.from;
-                if(msg.data.color !== undefined)_msg.setColor(msg.data.color);
-                _cmd.cmd='message';
-                _cmd.data=_msg;                
-                _server.broadcastCommand(_cmd)              
-                _addToMsgBuffer(_cmd);                               
-            });
-              
-              //{ from: 'ME', to: 3, txt: 'asdasdasdasd' } 
-            socket.on('private message',function(privcmd){ 
-               _cmd=new ChatCommand();
-               _msg=new ChatMessage();
-               var dat=privcmd;              
-               var sid=   _server._getSidByUid(dat._data.to); 
-               _cmd.cmd="private message",
-               _msg.setText(dat._data.txt);
-               _msg.setFrom(dat._data.from);
-               _msg.setColor(dat._data.color);
-               _msg.setParam({to:_clients[dat._data.to].name});
-               _cmd.data=_msg;
-               _server.sendMessage(sid,_cmd);
-               _addToMsgBuffer(_cmd);                               
-               //_server.sendMessage(_clients[dat.data.to].sid,_cmd);
-            });  
-            
-            socket.on('userlist',function(){   
-               _userlist();
+          })//connection name
+          
+          socket.on('disconnect',function(cli){
+            console.log(cli,'disconnected');
+            delete _clients[_user._uid];
             })
-
-            socket.on('disconnect',function(){  
-                console.log(user.name+ 'disconnected'); 
-                _clients.pop(user);
-             })
- 
-
-             socket.on('command',function(cmddata){   
-                if(cmddata.data.name=='listusers'){
-                    _cmd=new ChatCommand();
-                    _cmd.cmd='userlist';
-                    _cmd.data=_server.userList();
-                    _server.broadcastCommand(_cmd);
-                     }          
-    
-                if(processCommand)processCommand(cmddata); 
-            });        
-
-   
-
-        function  _connection(){
-            user=new ChatUser();
-            user._sid=socket.id;
-         //   _clients.push(user); //KEINE SOCKET ID WEITERGEBEN AN ANONOYMOUS????
-            _clients[user.uid]=user;
-            var _cmd=new ChatCommand();
-            _cmd.cmd='connected';
-            _cmd.data={uid:user.uid,name:user.name};            
-           _server.broadcastCommand(_cmd);
-        };
-
-        function _connection_name(newuser){
-            _clients.pop(user);
-            user.uid=newuser.uid;
-            user.name=newuser.name;
-            user.fbid=newuser.fbid;
-            user.picture=newuser.picture;
-            user._roles=newuser.roles;
-            user._sid=socket.id;
-            var _cmd=new ChatCommand();       
-            _cmd.cmd='connected';
-            _cmd.data={uid:user.uid,name:user.name,picture:user.picture};
-            _clients[user.uid]=user;
-            _server.broadcastCommand(_cmd);
-        }
-        
-        function _userlist(){
-            _cmd=new ChatCommand();
-            _cmd.cmd='userlist';
-            _cmd.data=_server.userList();
-            _server.broadcastCommand(_cmd);
-        }
-
-        function _flushMsgBuffer(){
-            console.log('_flushMsgBuffer')
-            MsgBuffer.forEach(_cmd => {
-                io.to(user._sid).emit(_cmd.cmd,_cmd);
+          
+            socket.on('command',function(cmd){
+              _server.execute(socket,cmd); //class ChatCommand
             });
-        }
-       
-        function _addToMsgBuffer(cmd){
-           if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
-            MsgBuffer.push(cmd);
-        }
-
-    }) //connection socket
-
+   
+        }) //connection socket
    
     } //run
- 
-    broadcastCommand(_cmd){
-    console.info('chat:broadcastCommand');  
-        io.emit(_cmd.cmd,_cmd);
-       if(processCommand)processCommand(_cmd);
-           
-    }
 
-    sendCommand(sid,_cmd){
-        console.info('chat:sendCommand');  
-        io.to(sid).emit(_cmd.cmd,_cmd);
-        if(processCommand)processCommand(_cmd);
-    }
-
-    broadcastMessage(_cmd){
-        console.info('chat:broadcastMessage');  
-        io.emit(_cmd.cmd,_cmd);
-        if(processCommand)processCommand(_cmd);
-    }
-
-    sendMessage(sid,_cmd){
-        console.info('chat:sendMessage'); 
-        io.to(sid).emit(_cmd.cmd,_cmd);
-        if(processCommand)processCommand(_cmd);
-    }
-
-    replyClient(sid,_cmd){
-        io.to(sid).emit(_cmd.cmd,_cmd);
-        if(processCommand)processCommand(_cmd);
-    }
-
-    replyServer(reply){
-        io.send(reply);
-        if(processCommand)processCommand(reply);
-    }
-
-    error(sid,error){
-        io.to(sid).send(error);
-        if(processCommand)callb(error);
-    }
-
-    _getSidByUid(uid){
-    var sid=null;
-        _clients.forEach(client => {
-            if(uid==client._uid){
-                sid =client._sid
-            }      
+    execute(socket,cmd){
+        console.info(cmd._cmd,'ChatServer.execute');
+        if(cmd._cmd=='userlist'){
+       // var _cmd=new ChatCommand(cmd._cmd,cmd._data);
+        var clts=_server.getClients();
+        cmd._data=clts;
+        socket.emit('command data',cmd);
+      
+        }else
+        if(cmd._cmd=='message'){
+          var f=_server.clientByUID(cmd._data._from);
+            if(f==null){
+              //sendError(socket,'Sorry, keinen empfänger gefunden!');
+              console.log('message: Kein sender! : '+ cmd._data._from);
+            return; 
+              //throw new Exception("Fehler beim verpacken der privaten Nachricht");     
+            }
+        var  _msg=new ChatMessage();
+          _msg.setText(cmd._data._txt)
+          _msg.setFrom({uid:f._uid,name:f._name,picture:f._picture})
+          _msg.setColor(cmd._data._color)
+          cmd._data=_msg;
+          io.emit('command data',cmd);
+          this._addToMsgBuffer(cmd);
+          }
+          else
+          if(cmd._cmd=='private message'){
+          var  _msg=new ChatMessage();
+            _msg.setText(cmd._data._txt);
+            var f=_server.clientByUID(cmd._data._from);
+            var t=_server.clientByUID(cmd._data._to);
+            if(f==null){
+              console.log('private message: Kein sender! : '+ cmd._data._from);
+            return; 
+            }    
+            if(t==null){
+              io.to(f.sid).emit('error','Fehler; keinen Empfänger gefunden.')
+              console.log('private message: Kein empfänger! : '+ cmd._data._to);
+            return; 
+              //throw new Exception("Fehler beim verpacken der privaten Nachricht");     
+            }
+            _msg.setTo({uid:t._uid,name:t._name,picture:t._picture});
+            _msg.setFrom({
+              uid:f._uid,
+              name:f._name,
+              picture:f._picture});
+              _msg.setColor(cmd._data._color);
+              cmd._data=_msg;
+            console.log("sendin from:",f._sid);
+            console.log("sendin to:",t._sid);
+            _server.sendCommandToUID(t._uid,cmd);
+            }else
+            socket.emit('command data',cmd);
+            if(processCommand)processCommand(cmd); 
+            //else socket.emit('error','Befehl nicht erkannt'); //private msg 
+      }  
+    
+    _flushMsgBuffer(socket){
+        console.info(MsgBuffer.length,'ChatServer._flushMsgBuffer');
+        MsgBuffer.forEach(_cmd => {
+            socket.emit('command data',_cmd);
         });
-    return sid;   
+    }
+   
+    _addToMsgBuffer(cmd){
+       if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
+        MsgBuffer.push(cmd);
+    }
+    
+    _broadcastUserlist(){
+        var clts=this.getClients();
+        var _cmd=new ChatCommand('userlist',clts);
+        io.emit('command data',_cmd);
+      }
+
+    sendCommandToUID(uid,cmd){
+        var t=clientByUID(uid);
+        io.to(t._sid).emit('command data',cmd);      
+      }
+      
+      
+    getClients(){
+      var clts=[];
+      _clients.forEach(c => {
+          var clt={uid:c._uid,
+                name:c._name,
+                picture:c._picture}
+          if(clt)clts.push(clt);
+          });
+    return clts;  
     }
 
-    userList(){
-        console.info('chat:userList'); 
-        var ret=[];
-        _clients.forEach(client => {
-       if(client)ret.push(client);    
-        });
-        return ret;
+
+    clientByUID(uid){
+        var client=null;;
+        _clients.forEach(c => {
+          if(uid==c._uid)client=c;
+        });      
+        return client;
     }
+
+    sendCommandToUID(uid,cmd){
+        var t=_server.clientByUID(uid);
+        io.to(t._sid).emit('command data',cmd);  
+      }
+
 }//class
 
-exports.userList=ChatServer.userList;
 module.exports= {_server,ChatServer};

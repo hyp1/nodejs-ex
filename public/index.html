@@ -11,9 +11,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="app/jquery-1.11.1.min.js"></script>
 <script	src="app/jquery.mobile-1.4.5.min.js"></script> 
-<script src="app/jdrupal.js"></script>
-<script src="app/app.js"></script>
-<script src="app/user.js"></script>
+<script src="app/chat_client.js"></script>
+>
 <style>
 .ui-icon-loading {
     background: url('app/30.gif'); 
@@ -64,13 +63,13 @@ background-color:orange;
         </div><!-- // Panel -->
             
         <div data-role="header" data-position="fixed">
-                <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a>               <h1 id="user">User</h1>
+                <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a>
+                <h1 id="user">User</h1>
             <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
         <div data-role="content" class="emojis" style="float:left;">
                  <ul id="messages"></ul> 
-    
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
@@ -104,11 +103,13 @@ background-color:orange;
        
          </div>  <!--// Footer -->
     </div><!--// Page -->
-    <div data-role="fieldcontain">    
-            <input type="hidden" id="name" value="" disabled>
+    <div data-role="fieldcontain"> 
+            <input type="text" id="uid" value="" disabled>   
+            <input type="text" id="name" value="" disabled>
+            <input type="text" id="private-name" disabled>
+            <input type="text" id="private" disabled>
             <input type="hidden" id="token" value="token" disabled>
-            <input type="hidden" id="private-name" value="" disabled>
-            <input type="hidden" id="private" value="-1" disabled>
+        
           
         </div>
     
@@ -116,22 +117,20 @@ background-color:orange;
 <script>
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
-var socket=null;        //Websocket
 var color ='#333';
 $(function() {
     document.getElementById('msg').focus();
 
     $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
     
-    getToken();
-    //whosOnline();
 
 //Enter
 $("#msg").keypress(function (e) {
     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
         //document.getElementById('sendr').click();
-        if(private)sendPrivateMessage();
-        else sendMessage();
+        //if(private)sendPrivateMessage();
+        //else 
+        sendText();
         return false;
     } else {
         return true;
@@ -148,262 +147,40 @@ help=[
     '...Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
 
-(function(){
-    help.forEach(line => {
-    console.log(line);
-    $('#messages').append('<li>'+line+'</li>');
-});
-})();
+var chat=new ChatClient(location.protocol,location.hostname,8080);
 
-function setColor(c){
-    var actualcol=$('#actualcolor');
-    actualcol.attr('style','background-color:'+c.style['background-color']);
-    color=c.style['background-color'];
+function onchatconnected(user){
+    console.log(user);
+    console.log(user,'onchatconnected');
+    variable_set('user',user);
+    $('#uid').val(user._uid);
+    $('#name').val(user._name);
+    $('#user').html('<img src="'+user._picture+'" width="20" height="20"/>'+user._name);
+    appendLine(user._name+': connected','green');
 }
 
-function putSmiley(c){
-    var smiley=($(c).text())
-    var txt=$('#msg').val();
-    $('#msg').val(txt+smiley);
+function onchatmessage(msg){
+    console.log(msg,'onchatmessage');
+appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"> '+msg._from.name+': '+msg._txt,msg._color);
 }
 
-/*
-POST awri_services_resources/whos_online
-Content-Type	application/json
-X-CSRF-Token	XXXXYYYYZZZZ
-function awri_services_whos_online(options) {
-	  try {
-	    options.method = 'POST';
-	    options.path = 'awri_services_resources/whos_online';
-	    options.service = 'awri_services';
-        options.resource = 'whos_online';
-        options.contentType = 'application/json'; //WICHTIG custom service
-	    Drupal.services.call(options);
-	  }
-	  catch (error) {
-	    console.log('my_module_get_user_count - ' + error);
-	  }
-	}
-var users=[];
-function whosOnline(){
-	awri_services_whos_online({
-    success: function(result) {
-   //     log('whosOnline',result);
-      var res = JSON.parse(result[0]);
-
-  
-      users.push(res.authenticated_users);
-      console.log(users,'users');
-    //  alert(users.length);
-      for(i=0;i<users.length;i++){
-        console.log(users[i].uid,'WhosOnline');
-      }
-     // console.log(,'ausers');
-      //var msg = 'There are ' + user_count + ' registered user(s)!'
-      //alert(msg);
-    },error: function(e) {
-    	console.log(e.status+' - '+e.statusText);
-    	//alert(e.status+' - '+e.statusText);
-      }
-});
-}
-*/
-
-
-function DoConnect() {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//refused zu set unsafe header "Cookie"
-//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value);
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-
-    xmlhttp.onreadystatechange = function ()
-    {
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            alert("DoConnect OK");
-        }
-    };
-
-    xmlhttp.send();
-}
-
-
-function getToken() {
-var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.open("GET",Drupal.settings.site_path+"/services/session/token", true);
-    xmlhttp.onreadystatechange = function ()
-    {     
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            Drupal.sessid=xmlhttp.responseText;
-            document.getElementById('token').value=xmlhttp.responseText;
-            getUser();
-        }
-    };
-    xmlhttp.send();
-}
-
-
-function getUser() {
-    document.getElementById('name').value=user.name;    
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("POST",Drupal.settings.site_path+"/"+Drupal.settings.endpoint+"/system/connect.json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//refused zu set unsafe header "Cookie"
-//xmlhttp.setRequestHeader("Cookie",read_cookie('sessid')+"_"+read_cookie('sessname'));
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-
-    xmlhttp.onreadystatechange = function (){
-
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-            var res=JSON.parse(xmlhttp.responseText);   
-            if(res.user.uid!=0){
-                user.uid=res.user.uid;
-                user.name=res.user.name;
-                user.roles=res.user.roles;
-                document.getElementById('name').value=user.name;    
-                loadUser(user.uid);
-            }
-        }       
-      //  alert(res.user.uid+' - '+res.user.name);
-    };
-
-    xmlhttp.send();
-}
-
-function loadUser(uid) {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.withCredentials = true;
-    xmlhttp.crossDomain = true;
-    xmlhttp.open("GET",Drupal.settings.site_path + "/" + Drupal.settings.endpoint+"/user/" + uid + ".json", true);
-    xmlhttp.setRequestHeader("Content-Type","application/json");
-//xmlhttp.setRequestHeader("DRUPAL_UID",read_cookie('uid'));
-    xmlhttp.setRequestHeader("X-CSRF-Token",document.getElementById('token').value); //MUSS!!
-//xmlhttp.setRequestHeader("X-CSRF-Token",read_cookie('token'));
-    xmlhttp.onreadystatechange = function (){
-        
-        if(xmlhttp.status==200&&xmlhttp.readyState==4){
-        var res=JSON.parse(xmlhttp.responseText);
-console.log(res);
-            if(user.uid!=0){
-                user.uid=uid;
-                user.name=res.name;
-                user.email=res.mail,
-                user.roles=res.roles,
-                user.fbid=res.field_fbid['und'][0].value;
-                user.picture='app/anonymous.png';
-                if(res.picture)user.picture=res.picture.url;
-                socket.emit('connection name',user);
-            }
-
-        document.getElementById('name').value=user.name;
-        setUser('user',user);
-        }    
-    };
-
-    xmlhttp.send();
-}
-
-function readCookie(){
-    uid=read_cookie('DRUPAL_UID');
-    name=read_cookie('sessname');
-    id=read_cookie('sessid');
-    token=read_cookie('token');
-    document.getElementById('uid').value=uid;
-    document.getElementById('sessname').value=name;
-    document.getElementById('sessid').value=id;
-    document.getElementById('token').value=token;
-}     
-
-function read_cookie(key)
-{
-    var result;
-    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
-}
-
-function log(func,msg){
-document.getElementById('log').innerHTML=document.getElementById('log').innerHTML+'<hr>'+func+':<br>'+msg;	
-}                 
-
-function clearlog(){
-document.getElementById('log').innerHTML='';	
-}                 
-
-/* Examples
-socket = io.connect( 'https://test.com:33333' );
-socket = io.connect( 'ws://test.com' );
-socket = io.connect( 'wss://test.com' );      
-socket = io.connect( 'ws://test.com:3030');
-*/
-
-var cmd=null;
-var msg=null;
-    
-//socket = io.connect( 'https://nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com/');
-//socket = io.connect(); //autodiscovery
-socket = io.connect( Drupal.settings.chatserver );
-
-socket.on('connected', function(cmd){
-    var cm=cmd._cmd;
-    var cd=cmd._data;
-    $('#messages').append($('<li>').html(getFormattedDate(cmd._time)+' : '+cd.name+' ist nun im AWRIChat.'));
-    window.scrollTo(0, document.body.scrollHeight);
-});
-  
-socket.on('message', function(cmd){
-    cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+': '+cmd._data._txt;
-    appendMessage(cmd);
-});
-
-socket.on('private message', function(cmd){
-     cmd._data._txt= getFormattedDate(cmd._data._time)+': '+cmd._data._from+'->'+cmd._data._params.to+':'+cmd._data._txt;
-         appendMessage(cmd);
-     if(notifications)notify(cmd._data._txt);
-});
-
-function appendMessage(msg){
-    var cmd=msg._cmd;
-    var data=msg._data;
-    var li=$('<li/>');
-    if(data._color)li.attr('style','color:'+ data._color);
-    if(data._from==$('#name'))data._from="Du";
-    li.html(msg._data._txt);
-          $('#messages').append(li);
-          window.scrollTo(0, document.body.scrollHeight);
-};
-
-socket.on('userlist', function(inp){
-    $('#users').empty();
-
-    var data=inp._data;
-    var cmd=inp._cmd;
+function onchatuserlist(data){
+    console.log(data,'onchatlist');
+    ul = document.getElementById('users');
+        ul.innerHTML = "";
         data.forEach(user => {
-            img='';
-            if(user.picture)img='<span><img src="'+user.picture+'" width="30" height="30"></span>';
-            var li=$('<li/>');
-            li.attr('id', user._uid);
-            li.attr('name', user._name);
-            li.attr('onclick', 'setPriv(this);');
-            li.html(img+''+user._name);
-            $('#users').append(li);       
-    });   
-});
+        li = document.createElement('li');
+        li.setAttribute('onclick', 'setPriv(this);');
+        li.setAttribute('id', user.uid);
+        if($('#private').val()==user.uid)li.classList.add("selected");
+        li.setAttribute('name', user.name);
+        //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
+        li.innerHTML='<img src="'+user.picture+'" width="20" height="20"> ' + user.name;
+        ul.appendChild(li);
+        });
+}
 
-
-$('#bmessage').click(function(){
-    sendMessage();
-});
-
-
+var private=false;
 function setPriv(li){
     if($('#users .selected').attr('id')==li.id)return unsetPriv();
     var name=$('#users .selected').attr('name');
@@ -426,46 +203,123 @@ function unsetPriv(){
     private=false;
 };
 
+function onchatcommand(data){
+    console.log(data,'onchatcommand');
+}
 
-function sendMessage(){   
-  if($('#msg').val().length<3)return false;
-    data={
-    cmd:'message',
-    data:{
-        from:$('#name').val(), 
-        txt:$('#msg').val(), 
-        color:color,
+function sendText(txt){
+
+    msg=new ChatMessage();
+msg.setColor(color);
+msg.setFrom($('#uid').val());
+msg.setText($('#msg').val());
+if(private){
+    msg.setColor('red');
+    chat.sendPrivateMessage($('#private').val(),msg);
+    appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+variable_get('user')._picture+'" width="20" height="20"> Du an '+$('#private-name').val()+': '+msg._txt,msg._color)
+}
+else chat.sendMessage(msg);
+
+$('#msg').val("");
+$('#msg').focus();
+}
+
+function sendPrivateText(to,txt){
+msg=new ChatMessage();
+//msg.setTo(document.getElementById('To'.value);
+msg.setText(document.getElementById('sendPrivateMessage').value);
+chat.sendPrivateMessage(document.getElementById('To').value,msg);
+document.getElementById('sendPrivateMessage').value="";
+document.getElementById('sendPrivateMessage').focus();
+}
+
+
+
+/*
+var site="https://awri.ch";
+var endpoint="drupalgap";
+AWRI.setup(site,endpoint);
+
+(async function(){
+let res = await AWRI.token().catch(function(err){ alert(err); });
+
+let res2 = await AWRI.connect().catch(function(err){ alert(err); });
+
+//alert(res2.user.name);
+console.log(res2.user.name);
+chatuser =new ChatUser(res2.user.uid,res2.user.name); 
+//user._fbid = user.field_fbid['und'][0].value;
+chatuser._roles = res2.user.roles;
+chatuser._session = res2.session_name+'_'+res2.sessid;
+chatuser._token = res2.token;
+
+let res3 = await AWRI.loadUser(chatuser._uid).catch(function(err){  alert(err); });
+console.log(res3,"LOADUSER");
+chatuser.uid=res3.uid;
+chatuser._picture = res3.picture.url;
+chatuser._email = res3.mail;
+
+console.log(chatuser,"CHATUSER");
+$('#name').val(chatuser._name);
+$('#uid').val(chatuser._uid,chatuser);
+let searc= await AWRI.search('Miete').catch(function(err){alert(err);});
+console.log(searc,"SEARCH");
+
+let node= await AWRI.loadNode(16435).catch(function(err){alert(err);});
+console.log(node,"NODE");
+
+let comments= await AWRI.loadComments(16435).catch(function(err){alert(err);});
+console.log(comments,"ComemntsNODE");
+
+chat.connect(chatuser)
+})();
+
+(function(){
+    help.forEach(line => {
+    console.log(line);
+    $('#messages').append('<li>'+line+'</li>');
+});
+})();
+*/
+function setColor(c){
+    var actualcol=$('#actualcolor');
+    actualcol.attr('style','background-color:'+c.style['background-color']);
+    color=c.style['background-color'];
+}
+
+
+       function appendLine(text="",color="#333"){
+            ul = document.getElementById('messages');
+            li = document.createElement('li');
+            li.style.color=color;
+            li.innerHTML=text;
+            ul.appendChild(li);    
         }
-    }
-    socket.emit('message', data);
-    $('#msg').val('' );
-    $('#msg').focus();
-};
+
+function putSmiley(c){
+    var smiley=($(c).text())
+    var txt=$('#msg').val();
+    $('#msg').val(txt+smiley);
+}
 
 
-function sendPrivateMessage(){
- if($('#msg').val().length<3)return false;
-  var d = new Date();
-  var n = d.getTime();
-  var message = {time:n,from: $('#name').val(),to: $('#private').val(), txt: $('#msg').val(),color:'red'};
-    cmd={
-        _cmd:'private message',
-        _data:message,
-    }
+       function variable_set(key, value) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
 
-    socket.emit('private message', cmd); 
- //nicht nur senden, auch local anzeigen!
-    var li= $('<li>');
-    li.attr('style','color:blue;');
-    li.html(getFormattedDate(n)+' Du->'+$('#private-name').val()+': '+message.txt);
-    $('#messages').append(li);
-    $('#msg').val('');
-    $('#msg').focus();                           
-};
-
-/************************************************************************ 
-Datums Formatierung
-************************************************************************/ 
+        function variable_get(key, def = null) {
+            if (typeof (window.Storage) !== "undefined") {
+                item = JSON.parse(window.localStorage.getItem(key));
+                if (item == undefined) return def;
+                return item;
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
 
 function getFormattedDate(time) {
     var date = new Date(time);
@@ -501,9 +355,27 @@ function getFormattedDate(time) {
     return str;
 }
 
-/************************************************************************ 
-Notifications
-************************************************************************/ 
+function readCookie(){
+    uid=read_cookie('DRUPAL_UID');
+    name=read_cookie('sessname');
+    id=read_cookie('sessid');
+    token=read_cookie('token');
+    document.getElementById('uid').value=uid;
+    document.getElementById('sessname').value=name;
+    document.getElementById('sessid').value=id;
+    document.getElementById('token').value=token;
+}     
+
+function read_cookie(key)
+{
+    var result;
+    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+
+
+   /******************************************************/
+  /*   Notifications                                     */
+ /******************************************************/ 
 
 window.addEventListener('load', function () {
   // At first, let's check if we have permission for notification
@@ -570,6 +442,133 @@ cnt++;
       alert(mesg);
     }
   };
+
+
+   /******************************************************/
+  /*   AWRI Connect                                     */
+ /******************************************************/ 
+
+
+        var host = 'https://awri.ch';
+        var endpoint = 'drupalgap';
+
+    function token() {
+        return new Promise(function (resolve, reject) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.withCredentials = true;
+            xmlhttp.open("GET", "https://awri.ch/services/session/token", true);
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                    var token = xmlhttp.responseText;
+                    variable_set('token', token);
+                    return resolve(token);
+                }
+                if (xmlhttp.status != 200) rej(xmlhttp.status);
+            };
+            xmlhttp.send();
+        });
+    };            
+
+        function connect(token) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", host + "/" + endpoint + "/system/connect.json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", token);
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        obj = JSON.parse(response);                        
+                        user._name="unbekannt";
+                        user._uid=obj.user.uid;
+                        if(obj.user.name)user._name=obj.user.name;
+                        variable_set('user', user);
+                        // variabe_set()
+                     
+                             console.log(obj,'OBJ');
+
+                        //variable_set('user', user);
+                        variable_set('session', obj.session_name + '_' + obj.sessid);
+                        resolve(variable_get('user'));
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
+
+        function loaduser(uid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", host + "/" + endpoint + "/user/" + uid + ".json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var user = JSON.parse(xmlhttp.responseText);
+                        user._uid = user.uid;
+                        user._name = user.name;
+                        user._fbid = user.field_fbid['und'][0].value;
+                        user._picture = user.picture.url;
+                        user._email = user.mail;
+                        user._roles = user.roles;
+                        user._session = variable_get('session');
+                        user._token = variable_get('token');
+                        variable_set('user', user);
+                        return resolve(user);
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
+        (function main(){
+        token().then(function (token) {
+            console.log(token);
+            connect(token).then(function (user) {
+                console.log(user, 'connect');
+                if (user._uid !== 0)
+                    loaduser(user._uid).then(function (user) {
+                        variable_set('user', user);
+                        //   variable_set('session',user.session_name+'_'+user.sessid);
+                        console.log(user, 'loaduser');
+                        chat.connect( variable_get('user'));
+                    }).catch(function (err) { console.error(err, 'loaduser') })
+                else chat.connect(user);
+
+            }).catch(function (err) { console.error(err, 'connect') });
+        }).catch(function (err) { console.error(err, 'token') })
+    })();
+
+         function theme_node(node){
+            var n='<h1>'+node.nid+'</h1>';
+            n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
+            n+='<p>'+node.body['und'][0].safe_value+'</p>';
+            return n;
+        }
+        
+        function theme_fb_image(fbid){
+            return '<img src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
+        }
+
+        function theme_comments(comments){
+        var c='<button onclick="toggleComments();">+</button><div id="comments">'
+            comments.forEach(comment => {
+                console.log(comment,"c");
+                c+='<span><strong>'+comment.name+'</strong>'
+                c+=''+comment.comment_body['und'][0].safe_value+'</span>'
+
+            });
+        c+="</div>";
+        return c;
+        }
 </script>
 
 </body>

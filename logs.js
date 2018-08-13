@@ -37,8 +37,8 @@ router.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': t
 router.use(function timeLog(req, res, next) {
  // console.log("openDB"); 
  // console.log('Time: ', Date.now());
-  console.log(WEBLOG,"WEBLOG");
-  console.log(DBLOG,"DBLOG");
+  //console.log(process.env.WEBLOG,"WEBLOG");
+  //console.log(DBLOG,"DBLOG");
   
     next();
   });

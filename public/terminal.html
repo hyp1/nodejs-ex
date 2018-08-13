@@ -9,6 +9,7 @@
 <title>AWRI - Rechtsfrage Service</title>
 
 <script src="/socket.io/socket.io.js"></script>
+<script src="/app/chat_client.js"></script>
 <style>
 
 @font-face { /* http://emojione.com/developers/ */
@@ -40,6 +41,7 @@ width:100%;
 
 <body onload="init()">
   <h1>Terminal</h1>
+  <ul id='users'></ul>
   ch mit Emojis: 👌 😊 ❤️ 😉 😉 
   <ul id='terminal'>
 <li>line 1</li>
@@ -47,13 +49,50 @@ width:100%;
 </ul>
 <input id="cmd" type="text">
 <script>
+var chat=new ChatClient(location.protocol,location.hostname,8080);
+function onchatconnected(user){
+    console.log(user,'onchatvonnected');
+  //  appendLine(user._name+':  hat den Chat betreten','red');
+}
+function onchatmessage(msg){
+    console.log(msg,'onchatmessage');
+    var ul=document.getElementById('terminal');
+    var li = document.createElement("li");
+    li.appendChild(document.createTextNode(getFormattedDate(msg._time)+' : '+msg._from.name+':  '+msg._txt));
+    ul.appendChild(li);
+
+    window.scrollTo(0, document.body.scrollHeight);
+  //  appendLine(msg._time+': '+msg._from.name+': '+msg._txt,msg._color);
+}
+function onchatuserlist(data){
+    console.log(data,'onchatlist');
+    ul = document.getElementById('users');
+        ul.innerHTML = "";
+        data.forEach(user => {
+        li = document.createElement('li');
+        //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
+        li.innerHTML='<img src="'+user.picture+'" width="20" height="20">'+user.uid + ' ' + user.name;
+        ul.appendChild(li);
+        });
+}
+function onchatcommand(data){
+    console.log(data,'onchatcommand');
+}
+
+chat.connect({uid:4,name:'Robs'});
+
 
 function init(){
+
+cmd=new ChatCommand('userlist');
+chat.sendCommand(cmd);
+
+
 
 document.getElementById('cmd').addEventListener("keypress", function(e){
     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
         //sendMessage()
-        sendMessageTo()
+        sendText()
         return false;
     } else {
         return true;
@@ -62,6 +101,16 @@ document.getElementById('cmd').addEventListener("keypress", function(e){
 
 document.getElementById('cmd').focus();
 
+}
+
+
+function sendText(txt){
+msg=new ChatMessage();
+msg.setFrom(4);
+msg.setText(document.getElementById('cmd').value);
+chat.sendMessage(msg);
+document.getElementById('cmd').value="";
+document.getElementById('cmd').focus();
 }
 
 
@@ -86,7 +135,7 @@ var socket;
 socket = io.connect(location.protocol+'//'+location.hostname+':8080');
 
 
-socket.emit('connection name',{uid:'111',name:'HALLO'});
+//socket.emit('connection name',{uid:'111',name:'HALLO'});
 
 socket.on('message', function(msg){
     console.log(msg)

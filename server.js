@@ -67,11 +67,12 @@ chat=new ChatServer(io);
 
 
 processCommand=function(cmd){
-    console.log(cmd.cmd,'server.js: processCommand');
+    console.log(cmd,'server.js: processCommand');
     if(cmd._cmd=='message')logMessage(cmd._data);
     if(cmd._cmd=='private message')logMessage(cmd._data);
     if(cmd._cmd=='connected')logMessage(cmd._data);
-    if(cmd.data.startsWith('/')){
+    console.log(cmd._cmd);
+    if(cmd._cmd.startsWith('/')){
      parseCommand(cmd._data);
     }
     if(cmd.data=='userlist'){
