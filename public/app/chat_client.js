@@ -19,8 +19,10 @@ class ChatClient{
     }    
 
     connect(user){
-    console.info(this._protocol + '//' + this._host + ':'+this._port+this._ns,'URL')
-    this._socket=io.connect(this._protocol + '//' + this._host + ':'+this._port+this._ns);
+    if(this._protocol&&this._host&&this.port){
+        console.info(this._protocol + '//' + this._host + ':'+this._port+this._ns,'CHAT SERVER URL')
+        this._socket=io.connect(this._protocol + '//' + this._host + ':'+this._port+this._ns);
+    }else  this._socket=io.connect();
     
     this._socket.emit('connection name',user);      
     
@@ -37,15 +39,7 @@ class ChatClient{
                 return callback(user);            
         });
         this._socket.on('connected', function (user) {
-                    user = user;
-                  //  variable_set('user', user);
-                    console.log(user, 'connected');
-                    var msg=new ChatMessage();
-                    name:user.name;
-                    msg.setFrom({uid:user._uid,name:'AWRIClient'});
-                    msg.setText('Sie sind als ' + user._name + ' mit AWRI Chat verbunden.');
                     if(typeof onchatconnected === 'function')onchatconnected(user);  
-                    //appendLine("Sie sind als " + user._name + ' mit AWRI Chat verbunden.');
             })
                             
             this._socket.on('command data', function (cmd) {

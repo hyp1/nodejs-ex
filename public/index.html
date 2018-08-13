@@ -22,6 +22,9 @@ ul {
     list-style-type: none;
 }
 
+#users li{
+    cursor:pointer;
+}
 @font-face { /* http://emojione.com/developers/ */
   font-family: Emojione;
   src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
@@ -150,8 +153,6 @@ help=[
 var chat=new ChatClient();
 
 function onchatconnected(user){
-    console.log(user);
-    console.log(user,'onchatconnected');
     variable_set('user',user);
     $('#uid').val(user._uid);
     $('#name').val(user._name);
@@ -165,7 +166,6 @@ appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._fro
 }
 
 function onchatuserlist(data){
-    console.log(data,'onchatlist');
     ul = document.getElementById('users');
         ul.innerHTML = "";
         data.forEach(user => {
@@ -481,15 +481,12 @@ cnt++;
                     if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
                         var response = xmlhttp.responseText;
                         obj = JSON.parse(response);                        
-                        user._name="unbekannt";
                         user._uid=obj.user.uid;
+                        user._session=obj.session_name + '_' + obj.sessid;
+                        user._token=token;
+                        user._roles = user.roles;
                         if(obj.user.name)user._name=obj.user.name;
                         variable_set('user', user);
-                        // variabe_set()
-                     
-                             console.log(obj,'OBJ');
-
-                        //variable_set('user', user);
                         variable_set('session', obj.session_name + '_' + obj.sessid);
                         resolve(variable_get('user'));
                     }
@@ -511,15 +508,18 @@ cnt++;
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var user = JSON.parse(xmlhttp.responseText);
+                        var user = JSON.parse(xmlhttp.responseText);                
                         user._uid = user.uid;
                         user._name = user.name;
                         user._fbid = user.field_fbid['und'][0].value;
                         user._picture = user.picture.url;
                         user._email = user.mail;
-                        user._roles = user.roles;
-                        user._session = variable_get('session');
-                        user._token = variable_get('token');
+                        user._roles = user.roles; 
+                        user._session =variable_get('session');
+                        user._token =variable_get('token');
+                                           
+                      
+                    
                         variable_set('user', user);
                         return resolve(user);
                     }
@@ -530,15 +530,14 @@ cnt++;
         }
 
         (function main(){
-        token().then(function (token) {
-            console.log(token);
+        token().then(function (token) {           
             connect(token).then(function (user) {
-                console.log(user, 'connect');
+//                console.log(user, 'connect');
                 if (user._uid !== 0)
                     loaduser(user._uid).then(function (user) {
                         variable_set('user', user);
                         //   variable_set('session',user.session_name+'_'+user.sessid);
-                        console.log(user, 'loaduser');
+  //                      console.log(user, 'loaduser');
                         chat.connect( variable_get('user'));
                     }).catch(function (err) { console.error(err, 'loaduser') })
                 else chat.connect(user);

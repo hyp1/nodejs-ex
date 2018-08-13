@@ -75,18 +75,20 @@ class ChatServer {
               });
               } else{
                 console.info(user._name,'ChatServer.connection name(authenticated)');
+           //     console.log(user,'connected' );
                 _user.setName(user._name);
                 _user._uid=user._uid;
-                _user._token=user.token;
-                _user._session=user.session;
-                _user._roles=user.roles;
-                _user._email=user.email;
-                _user._fbid=user.fbid;
+                _user._token=user._token;
+                _user._session=user._session;
+                _user._roles=user._roles;
+                _user._email=user._email;
+                _user._fbid=user._fbid;
                 if(user.fbid)_user._picture='https://graph.facebook.com/'+user.fbid+'/picture?type=small';
                 if(user.picture)_user._picture=user.picture.url;
                 socket.emit('connected',_user);   
-                console.log(_user,'connected' );
                 _clients[_user._uid]=_user;
+         //       console.log(_user,'connected' );
+
                 _server._broadcastUserlist();
                 _server._flushMsgBuffer(socket);
               }    
