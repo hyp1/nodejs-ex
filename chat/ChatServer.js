@@ -89,13 +89,8 @@ class ChatServer {
 
               });
               } else{
-
-            this._user=new ChatUser(); 
                 console.info(user._name,'ChatServer.connection name(authenticated)');
-                console.log(socket.id,'SOCKET?ID?' );
                 this._user.setName(user._name);
-                this._user._sid=socket.id;
-                this._user._ip=socket.handshake.address;
                 this._user._uid=user._uid;
                 this._user._token=user._token;
                 this._user._session=user._session;

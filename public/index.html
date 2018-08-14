@@ -63,6 +63,7 @@
                     <div data-role="controlgroup" data-type="horizontal">
                         <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">☑️ </label>
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
+                        <input title="Chatnachrichten anhalten" type='button' href="#" onclick=""  value="🛑"></button>                        
                         <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"></button>  
                     </div>
             </div>
@@ -124,7 +125,7 @@ function cmdInfo(){
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
     'Bei erneutem laden des Browsers, werdem immer die letzten 15 Chat Nachrichten angezeigt.',
     'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
-    'Moderatoren haben <span color="blue">🛡</span>, Admins <span color="Red">🛡</span> ein solchen Präfix .',
+    'Moderatoren haben <span class="modsym">🛡</span>, Admins <span class="adminsym">⚔️</span> ein solchen Präfix .',
     'Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
 help.forEach(line => {
@@ -144,7 +145,8 @@ function cmdHelp(){
     '<strong>/whoami</strong> (zeigt ihre Benutzer Informationen)',
     '<strong>/beep</strong> (spielt den Benachrichtiguns Ton ab)',
     '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
-    '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)', 
+    '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
+    '<strong>/stats [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)', 
 ];
 help.forEach(line => {
     appendLine(line);
@@ -275,8 +277,8 @@ function onchatuserlist(data){
         li.setAttribute('id', user.uid);
         if($('#private').val()==user.uid)li.classList.add("selected");
 
-        if(user_has_role(user,'moderator'))user.name='<span style="color:blue;">🛡️</span>'+user.name;       
-        if(user_has_role(user,'administrator'))user.name='<span style="color:red;">🛡️</span>'+user.name;
+        if(user_has_role(user,'moderator'))user.name='<span class="adminsym">🛡️</span>'+user.name;       
+        if(user_has_role(user,'administrator'))user.name='<span class="adminsym">⚔️</span>'+user.name;
         
        li.setAttribute('name', user.name);
         //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
@@ -587,7 +589,7 @@ function playAudio(audiofile) {
 
          function theme_node(node){
             var n='<h1>'+node.nid+'</h1>';
-            n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
+           if(node.field_fbid) n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
             n+='<p>'+node.body['und'][0].safe_value+'</p>';
           //  n+='<div id="comments"></div>';
             return n;
