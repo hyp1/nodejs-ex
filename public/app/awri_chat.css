@@ -15,6 +15,14 @@ ul {
     font-family: Emojione;
 }
 
+#users li{
+    cursor:pointer;
+    float:left;
+    width:100%;
+    margin:3 -30px;
+    font-family: Emojione;
+}
+
 @font-face { /* http://emojione.com/developers/ */
   font-family: Emojione;
   src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
@@ -27,7 +35,7 @@ ul {
     unicode-range: U+0000-00FF;
 }
   
-body, html,{
+body, html, ul#messages{
     font-family: Emojione;
 }
 

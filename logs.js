@@ -123,6 +123,7 @@ router.get('/cleardb', function (req, res) {
   }
 });
 
+/*
 router.get('/messages', function (req, res) {
   // try to initialize the db on every request if it's not already
   // initialized.
@@ -138,7 +139,7 @@ router.get('/messages', function (req, res) {
       res.send('[]');
     }
 });
-
+*/
 
 exports.logMessage=function(msg){
   console.log("logMessage:"+msg);

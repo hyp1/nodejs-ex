@@ -124,6 +124,7 @@ function cmdInfo(){
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
     'Bei erneutem laden des Browsers, werdem immer die letzten 15 Chat Nachrichten angezeigt.',
     'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
+    'Moderatoren haben <span color="blue">🛡</span>, Admins <span color="Red">🛡</span> ein solchen Präfix .',
     'Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
 help.forEach(line => {
@@ -273,13 +274,19 @@ function onchatuserlist(data){
         li.setAttribute('onclick', 'setPriv(this);');
         li.setAttribute('id', user.uid);
         if($('#private').val()==user.uid)li.classList.add("selected");
-       if(user_has_role,'adminstrator')user.name='<span style="color:red;">🛡️</span>'+user.name;
-       else if(user_has_role,'moderator')user.name='<span style="color:blue;">🛡️</span>'+user.name;
-        li.setAttribute('name', user.name);
+
+        if(user_has_role(user,'moderator'))user.name='<span style="color:blue;">🛡️</span>'+user.name;       
+        if(user_has_role(user,'administrator'))user.name='<span style="color:red;">🛡️</span>'+user.name;
+        
+       li.setAttribute('name', user.name);
         //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
         li.innerHTML='<img src="'+user.picture+'" width="20" height="20"> ' + user.name;
         ul.appendChild(li);
         });
+}
+
+function onchatcommand(data){
+    console.log(data,'onchatcommand');
 }
 
 var private=false;
@@ -305,9 +312,6 @@ function unsetPriv(){
     private=false;
 };
 
-function onchatcommand(data){
-    console.log(data,'onchatcommand');
-}
 
 function sendText(txt){
 var msg=new ChatMessage();
@@ -567,10 +571,11 @@ function read_cookie(key)
 }
 
 function user_has_role(user,hasrole){
-    var k=Object.keys(user._roles);
+    var k=Object.keys(user.roles);
     let r=false;
     k.forEach(role => {
-        if(hasrole==user._roles[role])r=true;
+        console.log(user.roles[role]+' = '+ hasrole);
+        if(hasrole==user.roles[role])r=true;
     });
 return r;
 }
