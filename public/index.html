@@ -93,10 +93,9 @@ else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.start
 
 
 $(function() {
-    document.getElementById('msg').focus();
+    $('#msg').focus();
     $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
     
-
 //Enter
 $("#msg").keypress(function (e) {
     if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
@@ -112,6 +111,7 @@ $("#msg").keypress(function (e) {
 });
 
 }); //jQuery
+
 
 (function(){
     cmdInfo();
@@ -130,6 +130,7 @@ function cmdInfo(){
 help.forEach(line => {
     appendLine(line)
 });
+$('#msg').val('');
 }
 
 function cmdHelp(){
@@ -140,12 +141,14 @@ function cmdHelp(){
     '<strong>/info</strong> (zeigt Informationen über den Chat)',
     '<strong>/help</strong> (zeigt diese Hilfe)',
     '<strong>/clear</strong> (leert das Chat Fenster)',
-    '<strong>/whoami</strong> (leer das Chat Fenster)',
+    '<strong>/whoami</strong> (zeigt ihre Benutzer Informationen)',
+    '<strong>/beep</strong> (spielt den Benachrichtiguns Ton ab)',
     '<strong>/search [Text]</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
 ];
 help.forEach(line => {
-    appendLine(line)
+    appendLine(line);
 });
+$('#msg').val('');
 }
 
 function cmdWhoami(){
@@ -163,12 +166,19 @@ function cmdWhoami(){
         'Link: https://awri.ch/user/'+user._uid
     ]
     out.forEach(line => {
-       appendLine(line)
+       appendLine(line);
+       $('#msg').val('');
     });
 }
 
 function cmdClear(){
     $('#messages').html('');
+    $('#msg').val('');
+}
+
+function cmdBeep(){
+    playAudio(audiofile);
+    $('#msg').val('');
 }
 
 function cmdSearch(text){
@@ -180,7 +190,7 @@ searchNode(text).then(function(res){
 }).catch(function(err){
     appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
 });
-
+$('#msg').val('');
 }
 
 
@@ -190,6 +200,7 @@ function parseCommand(cmd){
    if(cmd=='info')cmdInfo();
    if(cmd=='clear')cmdClear();  
    if(cmd=='whoami')cmdWhoami();
+   if(cmd=='beep')cmdBeep();
    if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));    
 }
 
@@ -610,6 +621,14 @@ cnt++;
             });
         }
 
+function user_has_role(role){
+    let user=variable_get('user');
+    var k=Object.keys(user._roles);
+    k.forEach(role => {
+        if(role==user._roles[role])return true;
+    });
+return false;
+}
 
 function playAudio(audiofile) {
     var audio = new Audio(audiofile);
