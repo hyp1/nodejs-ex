@@ -1,7 +1,8 @@
 .ui-icon-loading {
-    background: url('app/30.gif'); 
+    background: url('30.gif'); 
 	background-size: 2.875em 2.875em;
 }
+
 ul {
     list-style-type: none;
 }
@@ -11,11 +12,13 @@ ul {
     float:left;
     width:100%;
     margin:3 -30px;
+    font-family: Emojione;
 }
+
 @font-face { /* http://emojione.com/developers/ */
   font-family: Emojione;
   src: local("EmojiOne BW"), local("EmojiOne"), local("Emoji One"), 
-       url("app/emojione-android.ttf") format("truetype");      
+       url("emojione-android.ttf") format("truetype");      
 }
 
 @font-face {

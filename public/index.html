@@ -35,14 +35,14 @@
             <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
-        <div data-role="content" class="emojis" style="float:left;">
-                 <ul id="messages"></ul> 
+        <div data-role="content" class="emojis, loader" style="float:left;">
+            <ul id="messages"></ul> 
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
 
                 <input class="emojis" type="text" id="msg" value="">
-<fieldset class="ui-grid-a">
+        <fieldset class="ui-grid-a">
                 <div class="ui-block-a">
                         <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
                         <button class="color" style="background-color:#333;" onclick=setColor(this);>&nbsp;</button>          
@@ -61,9 +61,9 @@
                     </div>
             <div class="ui-block-b">
                     <div data-role="controlgroup" data-type="horizontal">
-                        <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">Benachrichtigen an/aus</label>
+                        <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">☑️ </label>
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
-                        <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendMessage();"  value="Senden"></button>  
+                        <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"></button>  
                     </div>
             </div>
         </fieldset>
@@ -75,12 +75,9 @@
             <input type="text" id="name" value="" disabled>
             <input type="text" id="private-name" disabled>
             <input type="text" id="private" disabled>
-            <input type="hidden" id="token" value="token" disabled>
-        
-          
-        </div>
+            <input type="hidden" id="token" value="token" disabled>          
+    </div>
     
-
 <script>
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
@@ -93,6 +90,7 @@ else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.start
 
 
 $(function() {
+
     $('#msg').focus();
     $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
     
@@ -120,6 +118,7 @@ $("#msg").keypress(function (e) {
 function cmdInfo(){
     help=[
     '<h2>Willkommen im AWRI Chat</h2>',
+    'Dieser Chat ist mit der AWRI Datenbank verbunden.',
     'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
     'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
@@ -137,13 +136,14 @@ function cmdHelp(){
     help=[
     '<h2>Hilfe</h2>',
     'Chat Befehle beginnen mit einem Slash /[Befehl],',
-    'Befehle',
+    'Befehlsliste (Alle Benutzer)',
     '<strong>/info</strong> (zeigt Informationen über den Chat)',
     '<strong>/help</strong> (zeigt diese Hilfe)',
     '<strong>/clear</strong> (leert das Chat Fenster)',
     '<strong>/whoami</strong> (zeigt ihre Benutzer Informationen)',
     '<strong>/beep</strong> (spielt den Benachrichtiguns Ton ab)',
-    '<strong>/search [Text]</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
+    '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
+    '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)', 
 ];
 help.forEach(line => {
     appendLine(line);
@@ -163,12 +163,17 @@ function cmdWhoami(){
         'Id: '+user._uid,
         'Email: '+user._email,
         'Rollen: '+roles,
-        'Link: https://awri.ch/user/'+user._uid
+        'Link: https://awri.ch/user/'+user._uid,
+        'Bild:'+ user._picture,
     ]
     out.forEach(line => {
        appendLine(line);
        $('#msg').val('');
     });
+    console.log(user_has_role('administrator'),'ISADMIN?');
+    console.log(user_has_role('authenticated user'),'ISUSER?');
+    console.log(user_has_role('moderator'),'MODERATOR?');
+
 }
 
 function cmdClear(){
@@ -181,18 +186,58 @@ function cmdBeep(){
     $('#msg').val('');
 }
 
-function cmdSearch(text){
-searchNode(text).then(function(res){
-    console.log(res);
-    res.forEach(node => {
-        appendLine('<a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
-    });
-}).catch(function(err){
-    appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
+
+function showLoader(){
+    $.mobile.loading( 'show', {
+	text: 'Lade, bitte warten...',
+	textVisible: true,
+	theme: 'b',
+	html: ""
 });
+};
+
+function hideLoader(){
+    $.mobile.loading( 'hide');
+};
+
+function cmdSearch(text){
+showLoader();
+    searchNode(text).then(function(res){
+    console.log(res);
+        res.forEach(node => {
+        appendLine('<a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
+        });
+        hideLoader();
+    }).catch(function(err){
+        appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
+        hideLoader();
+    });
 $('#msg').val('');
 }
 
+function cmdShow(nid){
+    showLoader();   
+    showNode(nid).then(function(node){   
+    appendLine(theme_node(node));  
+    showComments(nid).then(function(res){
+                        appendLine(theme_comments(res));  
+                        }).catch(function(err){
+                            appendLine('Fehler: "'+err+'" !' ,'red');
+                        }); 
+    hideLoader();
+}).catch(function(err){
+    appendLine('Fehler: "'+err+'" !' ,'red');
+    hideLoader();
+});
+
+$.mobile.loading( "hide" );
+$('#msg').val('');
+}
+
+function cmdKick(uid){
+var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
+chat.sendCommand(cmd);
+}
 
 function parseCommand(cmd){
     console.log(cmd,'parseCommand');
@@ -201,7 +246,9 @@ function parseCommand(cmd){
    if(cmd=='clear')cmdClear();  
    if(cmd=='whoami')cmdWhoami();
    if(cmd=='beep')cmdBeep();
-   if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));    
+   if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));
+   if(cmd.startsWith('show'))cmdShow(cmd.substr(5,cmd.length));
+   if(cmd.startsWith('kick'))cmdKick(cmd.substr(5,cmd.length));           
 }
 
 function onchatconnected(user){
@@ -226,6 +273,8 @@ function onchatuserlist(data){
         li.setAttribute('onclick', 'setPriv(this);');
         li.setAttribute('id', user.uid);
         if($('#private').val()==user.uid)li.classList.add("selected");
+       if(user_has_role,'adminstrator')user.name='<span style="color:red;">🛡️</span>'+user.name;
+       else if(user_has_role,'moderator')user.name='<span style="color:blue;">🛡️</span>'+user.name;
         li.setAttribute('name', user.name);
         //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
         li.innerHTML='<img src="'+user.picture+'" width="20" height="20"> ' + user.name;
@@ -356,74 +405,20 @@ function putSmiley(c){
 }
 
 
-       function variable_set(key, value) {
-            if (typeof (window.Storage) !== "undefined") {
-                window.localStorage.setItem(key, JSON.stringify(value));
-            } else {
-                console.error('window.localStorage', 'ERROR');
-            }
-        }
-
-        function variable_get(key, def = null) {
-            if (typeof (window.Storage) !== "undefined") {
-                item = JSON.parse(window.localStorage.getItem(key));
-                if (item == undefined) return def;
-                return item;
-            } else {
-                console.error('window.localStorage', 'ERROR');
-            }
-        }
-
-function getFormattedDate(time) {
-    var date = new Date(time);
-
-    var year = date.getFullYear() 
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    var hour = date.getHours();
-    var min = date.getMinutes();
-    var sec = date.getSeconds();
-
-    month = (month < 10 ? "0" : "") + month;
-    day = (day < 10 ? "0" : "") + day;
-    hour = (hour < 10 ? "0" : "") + hour;
-    min = (min < 10 ? "0" : "") + min;
-    sec = (sec < 10 ? "0" : "") + sec;
-
-    var today = new Date();
-    var tyear = ''+today.getFullYear();
-    var tmonth = today.getMonth() + 1;
-    var tday = today.getDate();
-
-    tmonth = (tmonth < 10 ? "0" : "") + tmonth;
-    tday = (tday < 10 ? "0" : "") + tday;
-
-    var str =  day + "."+ month + "."  +year + " " +  hour + ":" + min + ":" + sec;
-    var rep = tday  +"."+tmonth+"."+tyear;
-
-//    tyear=tyear.substring(2,4);
-//    alert(tyear);
-    if(tday+tmonth+tyear==day+month+year)str=str.replace(rep,''); 
+function toggleComments(nid) {
+    var x = document.getElementById("comments-"+nid);
+    if (x.style.display === "none") {
+        x.style.display = "block";
+        $('#icon-'+nid).removeClass('ui-icon-plus');
+        $('#icon-'+nid).addClass('ui-icon-minus');
+    } else {
+        x.style.display = "none";
+        $('#icon-'+nid).removeClass('ui-icon-minus');
+        $('#icon-'+nid).addClass('ui-icon-plus');
+ 
+    }
+}
     
-    return str;
-}
-
-function readCookie(){
-    uid=read_cookie('DRUPAL_UID');
-    name=read_cookie('sessname');
-    id=read_cookie('sessid');
-    token=read_cookie('token');
-    document.getElementById('uid').value=uid;
-    document.getElementById('sessname').value=name;
-    document.getElementById('sessid').value=id;
-    document.getElementById('token').value=token;
-}     
-
-function read_cookie(key)
-{
-    var result;
-    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
-}
 
 
    /******************************************************/
@@ -499,6 +494,120 @@ cnt++;
 
 
    /******************************************************/
+  /*   Utility Funktionen                               */
+ /******************************************************/ 
+
+       function variable_set(key, value) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
+        function variable_get(key, def = null) {
+            if (typeof (window.Storage) !== "undefined") {
+                item = JSON.parse(window.localStorage.getItem(key));
+                if (item == undefined) return def;
+                return item;
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
+function getFormattedDate(time) {
+    var date = new Date(time);
+
+    var year = date.getFullYear() 
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var min = date.getMinutes();
+    var sec = date.getSeconds();
+
+    month = (month < 10 ? "0" : "") + month;
+    day = (day < 10 ? "0" : "") + day;
+    hour = (hour < 10 ? "0" : "") + hour;
+    min = (min < 10 ? "0" : "") + min;
+    sec = (sec < 10 ? "0" : "") + sec;
+
+    var today = new Date();
+    var tyear = ''+today.getFullYear();
+    var tmonth = today.getMonth() + 1;
+    var tday = today.getDate();
+
+    tmonth = (tmonth < 10 ? "0" : "") + tmonth;
+    tday = (tday < 10 ? "0" : "") + tday;
+
+    var str =  day + "."+ month + "."  +year + " " +  hour + ":" + min + ":" + sec;
+    var rep = tday  +"."+tmonth+"."+tyear;
+
+//    tyear=tyear.substring(2,4);
+//    alert(tyear);
+    if(tday+tmonth+tyear==day+month+year)str=str.replace(rep,''); 
+    
+    return str;
+}
+
+function readCookie(){
+    uid=read_cookie('DRUPAL_UID');
+    name=read_cookie('sessname');
+    id=read_cookie('sessid');
+    token=read_cookie('token');
+    document.getElementById('uid').value=uid;
+    document.getElementById('sessname').value=name;
+    document.getElementById('sessid').value=id;
+    document.getElementById('token').value=token;
+}     
+
+function read_cookie(key)
+{
+    var result;
+    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+
+function user_has_role(user,hasrole){
+    var k=Object.keys(user._roles);
+    let r=false;
+    k.forEach(role => {
+        if(hasrole==user._roles[role])r=true;
+    });
+return r;
+}
+
+function playAudio(audiofile) {
+    var audio = new Audio(audiofile);
+    audio.play();
+} 
+
+         function theme_node(node){
+            var n='<h1>'+node.nid+'</h1>';
+            n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
+            n+='<p>'+node.body['und'][0].safe_value+'</p>';
+          //  n+='<div id="comments"></div>';
+            return n;
+        }
+        
+        function theme_fb_image(fbid){
+            return '<img src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
+        }
+
+        function theme_comments(comments){
+            if(comments.length<1)return;
+            console.log(comments,"Comemnts");
+//        var c='<button id="comment-btn-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+');">+</button><div style="display:none;" id="comments-'+comments[0].nid+'">'
+            var c='<a id="icon-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+')" href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-plus ui-btn-icon-notext ui-btn-b ui-btn-inline">Plus</a><div style="display:none;" id="comments-'+comments[0].nid+'">'
+            comments.forEach(comment => {
+                console.log(comment,"c");
+                c+='<span><strong>'+comment.subject+'</strong>'
+                c+=''+comment.comment_body['und'][0].safe_value+'</span>'
+
+            });
+        c+="</div>";
+        return c;
+        }
+
+          /******************************************************/
   /*   AWRI Connect                                     */
  /******************************************************/ 
 
@@ -621,42 +730,49 @@ cnt++;
             });
         }
 
-function user_has_role(role){
-    let user=variable_get('user');
-    var k=Object.keys(user._roles);
-    k.forEach(role => {
-        if(role==user._roles[role])return true;
-    });
-return false;
-}
-
-function playAudio(audiofile) {
-    var audio = new Audio(audiofile);
-    audio.play();
-} 
-
-         function theme_node(node){
-            var n='<h1>'+node.nid+'</h1>';
-            n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
-            n+='<p>'+node.body['und'][0].safe_value+'</p>';
-            return n;
-        }
-        
-        function theme_fb_image(fbid){
-            return '<img src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
-        }
-
-        function theme_comments(comments){
-        var c='<button onclick="toggleComments();">+</button><div id="comments">'
-            comments.forEach(comment => {
-                console.log(comment,"c");
-                c+='<span><strong>'+comment.name+'</strong>'
-                c+=''+comment.comment_body['und'][0].safe_value+'</span>'
-
+  
+  
+  function showNode(nid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", host + "/" + endpoint + "/node/"+nid+".json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                              
+                        return resolve(result);
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
             });
-        c+="</div>";
-        return c;
         }
+
+        
+  function showComments(nid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", host + "/" + endpoint + "/comment.json?parameters[nid]="+nid+"&parameters[status]=1&pagesize=150", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                                                    
+                        return resolve(result);
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
 </script>
 
 </body>
