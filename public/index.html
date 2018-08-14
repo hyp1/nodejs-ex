@@ -9,7 +9,8 @@
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
 <link rel="stylesheet" href="app/awri_chat.css" />
 
-<script src="/socket.io/socket.io.js"></script>
+<script src=" //cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.slim.js"></script>
+<!-- <script src="/socket.io/socket.io.js"></script> -->
 <script src="app/jquery-1.11.1.min.js"></script>
 <script	src="app/jquery.mobile-1.4.5.min.js"></script> 
 <script src="app/chat_client.js"></script>
@@ -70,7 +71,6 @@
          </div>  <!--// Footer -->
     </div><!--// Page -->
     <div data-role="fieldcontain"> 
-            <audio id="notification" src="notification.mp3"></audio>   
             <input type="text" id="uid" value="" disabled>   
             <input type="text" id="name" value="" disabled>
             <input type="text" id="private-name" disabled>
@@ -85,11 +85,15 @@
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
 var color ='#333';
-var audiofile='notification.mp3';
+var audiofile='app/notification.mp3'; //notification Alarm
+var chat=null;
+//Hack für Openshift
+if(location.hostname==='localhost')chat=new ChatClient();
+else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
+
 
 $(function() {
     document.getElementById('msg').focus();
-
     $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
     
 
@@ -187,11 +191,7 @@ function parseCommand(cmd){
    if(cmd=='clear')cmdClear();  
    if(cmd=='whoami')cmdWhoami();
    if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));    
-
 }
-
-
-var chat=new ChatClient();
 
 function onchatconnected(user){
     variable_set('user',user);
@@ -203,7 +203,7 @@ function onchatconnected(user){
 
 function onchatmessage(msg){
     console.log(msg,'onchatmessage');
-    if(notifications&&msg._to.uid==variable_get('user')._uid)notify(getFormattedDate(msg._time)+': '+msg._from.name+': '+msg._txt,msg._from.picture,'http://localhost:8080/notification.mp3');
+    if(notifications&&msg._to.uid==variable_get('user')._uid)notify(getFormattedDate(msg._time)+': '+msg._from.name+': '+msg._txt,msg._from.picture,audiofile);
     appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"/> '+msg._from.name+': '+msg._txt,msg._color);
 }
 

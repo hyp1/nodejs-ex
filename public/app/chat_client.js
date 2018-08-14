@@ -19,11 +19,23 @@ class ChatClient{
     }    
 
     connect(user){
-    if(this._protocol&&this._host&&this.port){
+    
+    if(this._protocol&&this._host&&this._port&&this._ns){
         console.info(this._protocol + '//' + this._host + ':'+this._port+this._ns,'CHAT SERVER URL')
         this._socket=io.connect(this._protocol&&this._host + ':'+this._port+this._ns);
-    }else  this._socket=io.connect();
-    
+    }
+    if(this._protocol&&this._host&&this._port&&this._ns){
+        console.info(this._protocol + '//' + this._host + ':'+this._port,'CHAT SERVER URL')
+        this._socket=io.connect(this._protocol&&this._host + ':'+this._port);
+    } else 
+    if(this._protocol&&this._host){
+        console.info(this._protocol + '//' + this._host,'CHAT SERVER URL')
+        this._socket=io.connect(this._protocol&&this._host);
+    }
+    else{
+        console.info('CHAT SERVER NO URL AUTODISCOVERY')
+        this._socket=io.connect();
+    }  
     this._socket.emit('connection name',user);      
     
         this._socket.on('connect name', function (question, callback) {
