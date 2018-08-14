@@ -99,7 +99,8 @@ $("#msg").keypress(function (e) {
         //document.getElementById('sendr').click();
         //if(private)sendPrivateMessage();
         //else 
-        sendText();
+        if($('#msg').val().startsWith('/'))parseCommand($('#msg').val().substr(1,$('#msg').val().length));
+        else sendText();
         return false;
     } else {
         return true;
@@ -108,19 +109,87 @@ $("#msg").keypress(function (e) {
 
 }); //jQuery
 
-help=[
+(function(){
+    cmdInfo();
+})();
+
+function cmdInfo(){
+    help=[
     '<h2>Willkommen im AWRI Chat</h2>',
     'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
     'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
-    '...Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
+    'Bei erneutem laden des Browsers, werdem immer die letzten 15 Chat Nachrichten angezeigt.',
+    'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
+    'Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
 ];
-
-(function(){
-    help.forEach(line => {
-    $('#messages').append('<li>'+line+'</li>');
+help.forEach(line => {
+    appendLine(line)
 });
-})();
+}
+
+function cmdHelp(){
+    help=[
+    '<h2>Hilfe</h2>',
+    'Chat Befehle beginnen mit einem Slash /[Befehl],',
+    'Befehle',
+    '<strong>/info</strong> (zeigt Informationen über den Chat)',
+    '<strong>/help</strong> (zeigt diese Hilfe)',
+    '<strong>/clear</strong> (leert das Chat Fenster)',
+    '<strong>/whoami</strong> (leer das Chat Fenster)',
+    '<strong>/search [Text]</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
+];
+help.forEach(line => {
+    appendLine(line)
+});
+}
+
+function cmdWhoami(){
+    let user=variable_get('user');
+    var k=Object.keys(user._roles);
+    roles=''
+    k.forEach(role => {
+        roles+=user._roles[role]+',';
+    });
+    out=[
+        '<h2>'+user._name+'</h2>',
+        'Id: '+user._uid,
+        'Email: '+user._email,
+        'Rollen: '+roles,
+        'Link: https://awri.ch/user/'+user._uid
+    ]
+    out.forEach(line => {
+       appendLine(line)
+    });
+}
+
+function cmdClear(){
+    $('#messages').html('');
+}
+
+function cmdSearch(text){
+searchNode(text).then(function(res){
+    console.log(res);
+    res.forEach(node => {
+        appendLine('<a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
+    });
+}).catch(function(err){
+    appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
+});
+
+}
+
+
+function parseCommand(cmd){
+    console.log(cmd,'parseCommand');
+   if(cmd=='help'||cmd=='hilfe')cmdHelp();
+   if(cmd=='info')cmdInfo();
+   if(cmd=='clear')cmdClear();  
+   if(cmd=='whoami')cmdWhoami();
+   if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));    
+
+}
+
 
 var chat=new ChatClient();
 
@@ -520,6 +589,27 @@ cnt++;
         }).catch(function (err) { console.error(err, 'token') })
     })();
    
+
+     function searchNode(txt) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", host + "/" + endpoint + "/search_node/retrieve.json?keys="+txt, true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                                           
+                        return resolve(result);
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
 
 function playAudio(audiofile) {
     var audio = new Audio(audiofile);
