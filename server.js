@@ -51,7 +51,7 @@ app.use('/logs', logs);
 //Serverlogs für APP
 //console.log('@module',logs.accessLogStream);
 app.use(morgan('combined', {stream: logs.accessLogStream,skip: function (req, res) { 
-  return res.indexOf('kube-probe/') > -1 
+  return req.headers['user-agent'].indexOf('kube-probe/') > -1 
 }}))
 
 app.use('/', express.static('public'), function (req, res) {
