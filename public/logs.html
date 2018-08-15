@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+    <title>AWRI - Rechtsfrage Service</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app/chat_client.js"></script>
+    <script src="/app/awri_client.js"></script>
+
+    <style>
+        input#cmdline , ul#terminal
+            {
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="">
+        <h1>Messages:<%= messages %></h1>
+        <h1>Hits:<%= counts %></h1>
+
+
+</body>
+
+</html>

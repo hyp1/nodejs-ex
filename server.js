@@ -35,6 +35,7 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 
   }
 }
+const LOGGING=0;
 
 //console.log(mongoURL, 'MONGO VORHER');
 //mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
@@ -50,9 +51,13 @@ singleton.setup(mongoURL);
 app.use('/logs', logs);
 //Serverlogs für APP
 //console.log('@module',logs.accessLogStream);
+if(LOGGING)
 app.use(morgan('combined', {stream: logs.accessLogStream,skip: function (req, res) { 
   return req.headers['user-agent'].indexOf('kube-probe/') > -1 
 }}))
+
+
+app.engine('html', require('ejs').renderFile); //console log modules unten!
 
 app.use('/', express.static('public'), function (req, res) {
   //console.log(req.headers);
@@ -95,3 +100,4 @@ function logMessage(msg){
   }
 
 module.exports = app;
+module.exports.LOGGING=LOGGING;
