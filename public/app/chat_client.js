@@ -91,7 +91,11 @@ class ChatClient{
         var cmd=new ChatCommand('userlist');
         this._socket.emit('command',cmd)
     }
-    
+      
+    disconnect(){
+        this._socket.close();
+    }
+
 }//class
     
     

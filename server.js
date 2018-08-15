@@ -1,6 +1,7 @@
 const express = require('express');
 const app     = express();
 const http = require('http').Server(app);
+var morgan = require('morgan');
 
 var WEBLOG = process.env.WEBLOG || 0;
 var DBLOG = process.env.DBLOG || 0;
@@ -46,24 +47,23 @@ var singleton = require('./database');
 singleton.setup(mongoURL);
 
 
-
 app.use('/logs', logs);
-//app.use('/serverlogs', express.static('logs'), serveIndex('logs', {'icons': true}))
+//Serverlogs für APP
+//console.log('@module',logs.accessLogStream);
+app.use(morgan('combined', {stream: logs.accessLogStream}))
 
 app.use('/', express.static('public'), function (req, res) {
-    //console.log(req.headers);
-    //res.sendFile(express.static('public')+'index.html');
-    res.sendFile('index.html', { root: __dirname + '/public' });
-  });
-  
+  //console.log(req.headers);
+  //res.sendFile(express.static('public')+'index.html');
+  res.sendFile('index.html', { root: __dirname + '/public' });
+});
 
 
-  http.listen(8080, function (req, res) {
+http.listen(8080, function (req, res) {
   console.log('listening on *:' + port);
 });
 io = require('socket.io').listen(http)
 chat=new ChatServer(io);
-
 
 
 processCommand=function(cmd){
@@ -92,4 +92,4 @@ function logMessage(msg){
     var res=singleton.insert('messages',msg);
   }
 
-module.exports = app,WEBLOG,DBLOG;
+module.exports = app;

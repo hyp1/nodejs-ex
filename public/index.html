@@ -80,6 +80,10 @@
     </div>
     
 <script>
+
+var host = 'http://localhost/stage.awri.ch';
+var endpoint = 'drupalgap';
+
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
 var color ='#333';
@@ -118,7 +122,7 @@ $("#msg").keypress(function (e) {
 
 function cmdInfo(){
     help=[
-    '<h2>Willkommen im AWRI Chat</h2>',
+    '<h2>Willkommen im AWRI Chat</h2>'+l('AWRI','#',{onclick:"alert('Hallo')",id:'mylink'}),
     'Dieser Chat ist mit der AWRI Datenbank verbunden.',
     'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
     'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
@@ -158,24 +162,30 @@ function cmdWhoami(){
     let user=variable_get('user');
     var k=Object.keys(user._roles);
     roles=''
+  //  alert('Anon'+isAnon());
+  //  alert('Mod'+isModerator());
+  //  alert('Admin'+isAdmin());
+  let email=isAnon() ? '(nicht registriert)' : user._email;
+  let link=isAnon() ? '(nicht registriert)' :'https://awri.ch/user/'+user._uid;
+    
     k.forEach(role => {
         roles+=user._roles[role]+',';
     });
     out=[
         '<h2>'+user._name+'</h2>',
         'Id: '+user._uid,
-        'Email: '+user._email,
+        'Email: '+''+ email,
         'Rollen: '+roles,
-        'Link: https://awri.ch/user/'+user._uid,
+        'Konto-Link: '+ l(link,link+'/edit',{target:"_BLANK"}),
         'Bild:'+ user._picture,
     ]
     out.forEach(line => {
        appendLine(line);
        $('#msg').val('');
     });
-    console.log(user_has_role('administrator'),'ISADMIN?');
-    console.log(user_has_role('authenticated user'),'ISUSER?');
-    console.log(user_has_role('moderator'),'MODERATOR?');
+   // console.log(user_has_role('administrator'),'ISADMIN?');
+   // console.log(user_has_role('authenticated user'),'ISUSER?');
+   // console.log(user_has_role('moderator'),'MODERATOR?');
 
 }
 
@@ -242,6 +252,30 @@ var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid});
 chat.sendCommand(cmd);
 }
 
+function cmdLogin(str){
+    var cred=str.split(' ');
+    console.log(cred);
+    var user=cred[0];
+    var pass=cred[1];
+    login(user,pass).then(function(result){
+console.log(result);
+    }).catch(function(err){
+        console.log(err);
+    });
+//var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
+//chat.sendCommand(cmd);
+}
+
+function cmdLogout(){
+    logout().then(function(result){
+console.log(result);
+    }).catch(function(err){
+        console.log(err);
+    });
+//var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
+//chat.sendCommand(cmd);
+}
+
 function parseCommand(cmd){
     console.log(cmd,'parseCommand');
    if(cmd=='help'||cmd=='hilfe')cmdHelp();
@@ -252,6 +286,9 @@ function parseCommand(cmd){
    if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));
    if(cmd.startsWith('show'))cmdShow(cmd.substr(5,cmd.length));
    if(cmd.startsWith('kick'))cmdKick(cmd.substr(5,cmd.length));           
+   if(cmd.startsWith('login'))cmdLogin(cmd.substr(6,cmd.length));           
+   if(cmd.startsWith('logout'))cmdLogout(cmd.substr(7,cmd.length));           
+
 }
 
 function onchatconnected(user){
@@ -277,8 +314,8 @@ function onchatuserlist(data){
         li.setAttribute('id', user.uid);
         if($('#private').val()==user.uid)li.classList.add("selected");
 
-        if(user_has_role(user,'moderator'))user.name='<span class="adminsym">🛡️</span>'+user.name;       
-        if(user_has_role(user,'administrator'))user.name='<span class="adminsym">⚔️</span>'+user.name;
+        if(user_roles_has(user.roles,'moderator'))user.name='<span class="adminsym">🛡️</span>'+user.name;       
+        if(user_roles_has(user.roles,'administrator'))user.name='<span class="adminsym">⚔️</span>'+user.name;
         
        li.setAttribute('name', user.name);
         //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
@@ -521,6 +558,14 @@ cnt++;
             }
         }
 
+        function variable_del(key) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.removeItem(key);
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
 function getFormattedDate(time) {
     var date = new Date(time);
 
@@ -572,18 +617,59 @@ function read_cookie(key)
     return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
 }
 
-function user_has_role(user,hasrole){
-    var k=Object.keys(user.roles);
+function isAdmin(){
+var user=variable_get('user');
+if(user_has_role(user,'administrator'))return true;
+else return false;
+}
+
+function isModerator(){
+var user=variable_get('user');
+if(user_has_role(user,'moderator'))return true;
+else return false;
+}
+
+function isAnon(){
+var user=variable_get('user');
+if(!user_has_role(user,'anonymous user'))return false;
+else return true;
+}
+
+
+function user_roles_has(roles,hasrole){
+    let k=Object.keys(roles);
     let r=false;
     k.forEach(role => {
-        console.log(user.roles[role]+' = '+ hasrole);
-        if(hasrole==user.roles[role])r=true;
+        console.log(roles[role]+' = '+ hasrole);
+        if(hasrole==roles[role])r=true;
     });
 return r;
 }
 
+
+function user_has_role(user,hasrole){
+    let k=Object.keys(user._roles);
+    let r=false;
+    k.forEach(role => {
+        console.log(user._roles[role]+' = '+ hasrole);
+        if(hasrole==user._roles[role])r=true;
+    });
+return r;
+}
+
+function l(name,url,options={}){
+    let link='<a href="'+url+'" ';
+    let keys=Object.keys(options);
+    keys.forEach(key => {
+        var option=key+'="'+options[key]+'"';   
+         link=link+' '+option;
+    });
+    link+='>'+name+'</a>'
+return link;
+}
+
 function playAudio(audiofile) {
-    var audio = new Audio(audiofile);
+    let audio = new Audio(audiofile);
     audio.play();
 } 
 
@@ -618,43 +704,39 @@ function playAudio(audiofile) {
   /*   AWRI Connect                                     */
  /******************************************************/ 
 
-
-        var host = 'https://awri.ch';
-        var endpoint = 'drupalgap';
-
     function token() {
         return new Promise(function (resolve, reject) {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.withCredentials = true;
-            xmlhttp.open("GET", "https://awri.ch/services/session/token", true);
+            xmlhttp.open("GET",  host + "/services/session/token", true);
             xmlhttp.onreadystatechange = function () {
                 if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
                     var token = xmlhttp.responseText;
                     variable_set('token', token);
-                    return resolve(token);
+                    resolve(token);
                 }
-                if (xmlhttp.status != 200) rej(xmlhttp.status);
+                if (xmlhttp.status != 200) reject(xmlhttp.status);
             };
             xmlhttp.send();
         });
     };            
 
-        function connect(token) {
+        function connect() {
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;
                 xmlhttp.open("POST", host + "/" + endpoint + "/system/connect.json", true);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", token);
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
                         var response = xmlhttp.responseText;
                         obj = JSON.parse(response);                        
                         user._uid=obj.user.uid;
                         user._session=obj.session_name + '_' + obj.sessid;
-                        user._token=token;
-                        user._roles = user.roles;
+                        user._token=obj.token;
+                        user._roles = obj.user.roles;
                         if(obj.user.name)user._name=obj.user.name;
                         variable_set('user', user);
                         variable_set('session', obj.session_name + '_' + obj.sessid);
@@ -665,8 +747,76 @@ function playAudio(audiofile) {
                 xmlhttp.send();
             });
         }
+        
+        function logout() {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                //  console.log(postData,"LOGIN");
+                  
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", host + "/" + endpoint + "/user/logout.json");
+                xmlhttp.setRequestHeader("Content-Type", "application/json");                
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                  
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        variable_set('user',new ChatUser());
+                        resolve(response); 
+                        console.log(response)   
+                        chat.disconnect();                    
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };  
+                xmlhttp.send();
+            });      
+        }
 
-
+        function login(usr,pass) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                var postData = {        
+                    username: usr,
+                    password: pass
+                  }   
+                  chat.disconnect();
+                //  console.log(postData,"LOGIN");
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", host + "/" + endpoint + "/user/login.json");
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                
+                 xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                  
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        obj = JSON.parse(response);                        
+                        user._uid=obj.user.uid;
+                        user._session=obj.session_name + '_' + obj.sessid;
+                        user._token=obj.token;
+                        console.log(obj,"LOGIN");
+                        user._roles = obj.user.roles;
+                        if(obj.user.name)user._name=obj.user.name;
+                        
+                        variable_set('token', obj.token);
+                        variable_set('session', obj.session_name + '_' + obj.sessid);
+                        loaduser(user._uid).then(function(res){
+                            alert("GOT Loades")
+                            console.log(res);
+                           
+                           chat.connect(user);
+                            resolve(user);
+                        });
+                        
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };  
+                xmlhttp.send(JSON.stringify(postData));
+            });
+        }
+  
         function loaduser(uid) {
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
@@ -678,19 +828,19 @@ function playAudio(audiofile) {
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var user = JSON.parse(xmlhttp.responseText);                
-                        user._uid = user.uid;
-                        user._name = user.name;
-                        user._fbid = user.field_fbid['und'][0].value;
-                        user._picture = user.picture.url;
-                        user._email = user.mail;
-                        user._roles = user.roles; 
+                        var user=new ChatUser();
+                        var inp = JSON.parse(xmlhttp.responseText);                
+                        console.log(inp.picture.url,"IMP");
+                        user._uid = inp.uid;
+                        user._name = inp.name;
+                        user._fbid = inp.field_fbid['und'][0].value;
+                        user._picture = inp.picture.url;
+                        user._email = inp.mail;
+                        user._roles = inp.roles; 
                         user._session =variable_get('session');
-                        user._token =variable_get('token');
-                                           
-                      
-                    
-                        variable_set('user', user);
+                        user._token =variable_get('token'); 
+                                                                  
+                       console.log(user,"USER");
                         return resolve(user);
                     }
                     if (xmlhttp.status != 200) reject(xmlhttp.status);

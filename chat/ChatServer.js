@@ -64,6 +64,8 @@ class ChatServer {
                   this._user=new ChatUser(); 
                   this._user._sid=socket.id;
                   this._user._ip=socket.handshake.address;
+                  this._user._ip;
+                  this._user._roles=user._roles;
                   console.info(user._name,'ChatServer.connection name');
                 if(user._uid==undefined||user._uid==0){socket.emit('connect name','Sie sind anonym verbunden. Bitte geben sie einen Benutzernamen ein.',function(answer){
                   this._user._uid;
@@ -89,7 +91,7 @@ class ChatServer {
 
               });
               } else{
-                console.info(user._name,'ChatServer.connection name(authenticated)');
+                console.info(user,'ChatServer.connection name(authenticated)');
                 this._user.setName(user._name);
                 this._user._uid=user._uid;
                 this._user._token=user._token;
@@ -97,8 +99,8 @@ class ChatServer {
                 this._user._roles=user._roles;
                 this._user._email=user._email;
                 this._user._fbid=user._fbid;
-                if(user.fbid)this._user._picture='https://graph.facebook.com/'+user.fbid+'/picture?type=small';
-                if(user.picture)this._user._picture=user.picture.url;
+                if(user._fbid)this._user._picture='https://graph.facebook.com/'+user._fbid+'/picture?type=small';
+                if(user._picture)this._user._picture=user._picture;
                 socket.emit('connected',this._user);   
                 _clients[this._user._uid]=this._user;
                console.log(this._user,'connected' );
@@ -120,12 +122,25 @@ class ChatServer {
              
           })//connection name
           
-          socket.on('disconnect',function(cli){
-            console.log(cli,'disconnected');
+          socket.on('disconnect',function(reas){
+            if(!socket._user)return;
+            console.info(socket._user,"SOCKET");
+            console.info(socket._user._name,reas);
+            _msg.setText(' hat den Chat verlassen.');
+            _msg.setFrom({uid:socket._user._uid,name:socket._user._name,picture:socket._user._picture})
+            _server.sendMessage(_msg);
+            var cmd=new ChatCommand();
+            cmd._cmd='message';
+            cmd._data=_msg; 
+            _server._addToMsgBuffer(cmd);
+            if(processCommand)processCommand(cmd); 
+            
+            delete _clients[socket._user._uid];
+            _server._broadcastUserlist();
            // delete _clients[this._user._uid];
             })
           
-            socket.on('command',function(cmd){
+            socket.on('command',function(cmd){              
               _server.execute(socket,cmd); //class ChatCommand
             });   
 
@@ -136,7 +151,7 @@ class ChatServer {
     execute(socket,cmd){
         console.info(cmd._cmd,'ChatServer.execute');
         if(cmd._cmd=='kick'){
-        var from=this.clientByUID(cmd._data._from);
+        var from=this.clientByUID(socket._uid);
         var to=this.clientByUID(cmd._data._to);
         if(!from){
             console.error('Kein sender','kick');  
