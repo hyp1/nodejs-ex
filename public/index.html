@@ -165,7 +165,9 @@ var chat=null;
 //Hack für Openshift
 
 
-var host = 'https://awri.ch';
+var host = 'http://localhost/stage.awri.ch';
+//var host = 'https://awri.ch';
+
 var endpoint = 'connect';
 
 
@@ -300,7 +302,9 @@ function onchatuserlist(data){
 }
 
 function onchatcommand(cmd){
-    console.log(cmd,'onchatcommand');
+console.log(cmd,'onchatcommand');
+if(cmd._cmd=='whois data')appendLine(theme_user(cmd._data));
+
 
 if(cmd._cmd=="private command" && cmd._data._txt.startsWith('show content'))showContentFrom(cmd._data._from,cmd._data._txt.substr(12,cmd._data._txt.length));
 }
@@ -349,12 +353,16 @@ function unsetPriv(){
 };
 
 
-function sendText(txt){
+function sendText(){
 if($('#msg').val()=="")return;
+var txt=$('#msg').val();
+if(txt.length==2&&isEmoji(txt))txt='<span style="font-size:2em;">'+txt+'</span>';
+
+
 var msg=new ChatMessage();
 msg.setColor(color);
 msg.setFrom($('#uid').val());
-msg.setText($('#msg').val());
+msg.setText(txt);
 if(private){
     msg.setColor('red');
     chat.sendPrivateMessage($('#private').val(),msg);
@@ -384,6 +392,7 @@ function setColor(c){
 
 
 function appendLine(text="",color="#333"){
+
     ul = document.getElementById('messages');
     li = document.createElement('li');
     li.style.color=color;
@@ -596,16 +605,6 @@ else return true;
 }
 
 
-function user_roles_has(roles,hasrole){
-    let k=Object.keys(roles);
-    let r=false;
-    k.forEach(role => {
-        console.log(roles[role]+' = '+ hasrole);
-        if(hasrole==roles[role])r=true;
-    });
-return r;
-}
-
 
 function user_has_role(user,hasrole){
     let k=Object.keys(user._roles);
@@ -633,11 +632,56 @@ function playAudio(audiofile) {
     audio.play();
 } 
 
+function isEmoji(str) {
+    var ranges = [
+        '\ud83c[\udf00-\udfff]', // U+1F300 to U+1F3FF
+        '\ud83d[\udc00-\ude4f]', // U+1F400 to U+1F64F
+        '\ud83d[\ude80-\udeff]' // U+1F680 to U+1F6FF
+    ];
+    if (str.match(ranges.join('|'))) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+         function theme_user(user){
+             console.log(user._created,"theme");
+            var n='<h1>'+theme_user_picture(user._picture)+' '+user._name+'</h1>';
+            n+='<p>AWRI ID:'+user._uid+'</p>';
+            n+='<p>IP Adresse:'+user._ip+'</p>';
+            n+='<p>FBID:'+user._fbid+'</p>';
+            n+='<p>Email:'+user._email+'</p>';
+            n+='<p>Online seit:'+getFormattedDate(user._time)+'</p>';
+            n+='<p>Beigetreten:'+getFormattedDate(user._created*1000)+'</p>';
+            n+='<p>Letzes Login:'+getFormattedDate(user._access*1000)+'</p>';          
+            n+='<p>Benutzer Rollen:'+theme_user_roles(user._roles)+'</p>';
+            return n;
+        }
+
+     function theme_bookmarks(marks){
+         console.log(marks,"MARKS");
+         marks.forEach(bookmark => {
+             appendLine("<strong>["+bookmark.node.nid+"]</strong> "+bookmark.node.created+" "+theme_fb_image(bookmark.node.fbid)+" "+bookmark.node.fbname+"<br>"+bookmark.node.title);
+         });
+     }
+
+      function theme_user_roles(roles){
+        let k=Object.keys(roles);
+        var ret="<ul>";  
+        k.forEach(role => {
+              if(roles[role]=="administrator")ret+="<li>⚔️"+roles[role]+"</li>";
+              else
+              if(roles[role]=="moderator")ret+="<li>🛡️"+roles[role]+"</li>";
+              else ret+="<li>"+roles[role]+"</li>";
+          });
+          ret+="</ul>";
+        return ret;
+        }
          function theme_node(node){
             var n='<h1>'+node.nid+'</h1>';
            if(node.field_fbid) n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
             n+='<p>'+node.body['und'][0].safe_value+'</p>';
-          //  n+='<div id="comments"></div>';
             return n;
         }
         function theme_user_picture(pic){
@@ -645,7 +689,7 @@ function playAudio(audiofile) {
         }
 
         function theme_fb_image(fbid){
-            return '<img src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
+            return '<img style="vertical-align:middle;border-radius:50%;" src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
         }
 
         function theme_comments(comments){

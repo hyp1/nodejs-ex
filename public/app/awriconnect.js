@@ -323,7 +323,56 @@ class AWRI{
                 });
             }
         
+            awriconnect_bookmarks(uid,page=0) {
+                return new Promise(function (resolve, reject) {
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.withCredentials = true;
+                    xmlhttp.crossDomain = true;
+                    xmlhttp.open("GET", awri.host + "/user/bookmarks/"+uid+"?page="+page, true);
+                    xmlhttp.setRequestHeader("Content-Type", "application/json");
+                    xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                    //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                    xmlhttp.onreadystatechange = function () {
+                        if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                            var result= JSON.parse(xmlhttp.responseText); 
+                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_bookmarks',result);                                                                   
+                             resolve(result);
+                        }
+                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_bookmarks'));
+                    };
+                    awri._send(xmlhttp);
+                });
+            }
     
+            awriconnect_bookmark_action(name,nid,action) {
+                return new Promise(function (resolve, reject) {
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.withCredentials = true;
+                    xmlhttp.crossDomain = true;
+                    var postData={
+                        flag_name:name,
+                        entity_id:nid,
+                        uid:uid,
+                        action:action,
+                        skip_permission_check:true
+                    }
+
+                    xmlhttp.open("POST", awri.host +"/"+awri.endpoint +"/flag/flag.json", true);
+                    xmlhttp.setRequestHeader("Content-Type", "application/json");
+                    xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                    //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                    xmlhttp.onreadystatechange = function () {
+                        if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                            var result= JSON.parse(xmlhttp.responseText); 
+                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_bookmarks',result);                                                                   
+                             resolve(result);
+                        }
+                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_bookmarks'));
+                    };
+                    xmlhttp.send(JSON.stringify(postData));
+                });
+            }
+
             awriconnect_login(username,password) {
                 return new Promise(function (resolve, reject) {
                     var xmlhttp = new XMLHttpRequest();

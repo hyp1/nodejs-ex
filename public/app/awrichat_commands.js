@@ -14,6 +14,7 @@ function parseCommand(cmd){
    if(cmd=='info')cmdInfo();
    if(cmd=='clear')cmdClear();  
    if(cmd=='whoami')cmdWhoami();
+   if(cmd.startsWith('whois'))cmdWhois(cmd.substr(6,cmd.length));
    if(cmd=='beep')cmdBeep();
    if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));
    if(cmd=='kicks'){
@@ -35,7 +36,10 @@ function parseCommand(cmd){
    if(cmd.startsWith('show image'))cmdshowImage(cmd.substr(11,cmd.length));
    else if(cmd.startsWith('show content'))cmdshowContent(cmd.substr(13,cmd.length));
    else  if(cmd.startsWith('show'))cmdShow(cmd.substr(5,cmd.length));
-
+   if(cmd.startsWith('adminmsg'))cmdAdminMsg(cmd.substr(9,cmd.length));
+   if(cmd.startsWith('bookmarks'))cmdBookmarks(cmd.substr(10,cmd.length));
+   if(cmd.startsWith('add bookmark'))cmdAddBookmark(cmd.substr(13,cmd.length));
+   if(cmd.startsWith('del bookmark'))cmdDelBookmark(cmd.substr(13,cmd.length));
 }
 
 function addCmdToBuffer(str){
@@ -83,11 +87,16 @@ function cmdHelp(){
     '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/show content [Beitrags-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/show image [Datei-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] das Bild mit der [Datei-ID] an)',
+    '<strong>/adminmsg</strong> (sendet die Nachricht an alle Admins oder Moderatoren im Chat)',
+   
     '<span style="color:blue;">Befehlsliste (AWRI Mitglieder)</span>',
     '<strong>/login [username] [passwort]</strong> (meldet Sie über die AWRI Seite an)', 
     '<strong>/logout</strong> (meldet Sie von der AWRI Seite ab)', 
-    '<strong>/bookmarks</strong> (zeigt ihre gepeicherten Lesezeichen an.)', 
+    '<strong>/bookmarks {[Seite]}</strong> (zeigt ihre gepeicherten Lesezeichen an. Es werden immer 10 auf einer Seite angezeigt.)', 
+    '<strong>/add bookmark [Beitrags-ID]</strong> (fügt den Beitrag mit der [Beitrags-ID] zu Ihren Lesezeichen hinzu.)', 
+    '<strong>/del bookmark [Beitrags-ID]</strong> (entfernt den Beitrag mit der [Beitrags-ID] von Ihren Lesezeichen.)', 
     '<strong>/upload</strong> (Datei hochladen)', 
+
     '<strong>/uploads {[Seite]}</strong> (Zeigt Ihre hochgeladenen Dateien an. Es werden immer 10 auf einer Seite angezeigt.)', 
     '<span style="color:red;">Befehlsliste (AWRI Admins/Moderatoren)</span>',
     '<strong>/kick [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus dem Chat)',
@@ -96,8 +105,6 @@ function cmdHelp(){
     '<strong>/ban [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus dem Chat und sperrt seine IP Adresse)',
     '<strong>/unban [IP Adresse]</strong> (Entfernt die [IP-Adresse] aus der Sperrliste)',
     '<strong>/bans</strong> (Zeigt die Liste der gesperrten IP Adressen an.)',
-    '<strong>/bookmarks</strong> (zeigt ihre gepeicherten Lesezeichen an.)', 
-    '<strong>/upload</strong> (Datei hochladen)', 
 
 ];
 help.forEach(line => {
@@ -194,27 +201,42 @@ $('#msg').val('');
 
 function cmdKick(uid){
     chat.sendCommand('kick',uid);
+    $('#msg').val('');
 }
 function cmdKicks(){
     chat.sendCommand('kicks');
+    $('#msg').val('');
 }
 function cmdUnKick(uid){
     chat.sendCommand('unkick',uid);
+    $('#msg').val('');
 }
 
 
 function cmdBan(uid){
     chat.sendCommand('ban',uid);
+    $('#msg').val('');
 }
 
 function cmdBans(){
     chat.sendCommand('bans');
+    $('#msg').val('');
 }
 
 function cmdUnBan(ip){
     chat.sendCommand('unban',ip);
+    $('#msg').val('');
 }
 
+function cmdAdminMsg(text){
+    chat.sendCommand('adminmsg',text);
+    $('#msg').val('');
+}
+
+function cmdWhois(uid){
+    chat.sendCommand('whois',uid);
+    $('#msg').val('');
+}
 
 function cmdLogin(str){
     var cred=str.split(' ');
@@ -305,4 +327,45 @@ var param=params.split(' ');
             }); 
     });
     */
+}
+
+function cmdBookmarks(page=0){
+    showLoader();   
+    awri.awriconnect_bookmarks($("#user").attr("uid"),page).then(function(result){      
+   //console.log(result);
+   appendLine(theme_bookmarks(result.nodes));  
+    hideLoader();
+}).catch(function(err){
+    appendLine('Fehler: "'+err+'" !' ,'red');
+    hideLoader();
+});
+
+$('#msg').val('');
+}
+
+function cmdAddBookmark(nid){
+    showLoader();   
+    awri.awriconnect_bookmark_action('bookmarks',nid,"flag").then(function(result){      
+   console.log(result);
+   if(result[0]==true)appendLine("Der Beitrag mit der ID["+nid+"] wurde zu den Lesezeichen hinzugefügt!","green")
+
+   hideLoader();
+}).catch(function(err){
+    appendLine('Fehler: "'+err+'" !' ,'red');
+    hideLoader();
+});
+$('#msg').val('');
+}
+
+function cmdDelBookmark(nid){
+    showLoader();   
+    awri.awriconnect_bookmark_action('bookmarks',nid,"unflag").then(function(result){      
+   console.log(result);
+   if(result[0]==true)appendLine("Der Beitrag mit der ID["+nid+"] wurde aus den Lesezeichen entfernt!","red")
+    hideLoader();
+}).catch(function(err){
+    appendLine('Fehler: "'+err+'" !' ,'red');
+    hideLoader();
+});
+$('#msg').val('');
 }
