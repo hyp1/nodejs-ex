@@ -1,11 +1,9 @@
 class ChatUser {
   constructor(uid=0,name='Unbekannt') {
-    var rand=''+ Date.now();
-    rand=rand.substr(7,rand.length);
-    this._uid = (uid ==0) ? rand:uid;
+    this._uid = uid;
     this._time = Date.now();
-    this._name = (name == 'Unbekannt')?'User'+rand:name;
-    this._picture ='app/anonymous2.png';  
+    this._name = name;
+    this._picture ='app/anonymous.png';  
     this._roles={'1':'anonymous user'}
     this._email = null;
     this._fbid = null;

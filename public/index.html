@@ -7,18 +7,36 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
-<link rel="stylesheet" href="app/awri_chat.css" />
+<link rel="stylesheet" href="app/awrichat.css" />
 
 <script src=" //cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.slim.js"></script>
 <!-- <script src="/socket.io/socket.io.js"></script> -->
 <script src="app/jquery-1.11.1.min.js"></script>
 <script	src="app/jquery.mobile-1.4.5.min.js"></script> 
-<script src="app/chat_client.js"></script>
-<style>    
+<script src="app/awrichat.js"></script>
+<script src="app/awrichat_commands.js"></script>
+<script src="app/awriconnect.js"></script>
+<style>  
+.inlineIcon  {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+}  
+
+ #dialog,#upldialog {
+      min-width: 200px;
+      max-width: 100%px;
+      margin: auto;
+      border: thin solid black;
+      padding: 10px;
+      background: lightgreen;
+    }
+    .hidden {
+      display: none;
+    }
 </style>
 
 </head>
-
 <body onload="">
   <div data-role="page" id="index">
 
@@ -37,6 +55,29 @@
         
         <div data-role="content" class="emojis, loader" style="float:left;">
             <ul id="messages"></ul> 
+
+            <!-- dialog -->
+            <div id="dialog" class="hidden">
+                <div class="message">foobar</div>
+                <input type="text">
+                <div>
+                  <button class="ok">Ok</button>
+                  <button class="cancel">Cancel</button>
+                  </div>
+                </div><!--// Dialog -->
+
+                  <!-- upload dialog -->
+            <div id="upldialog" class="hidden">
+                <div class="message">foobar</div>
+                <input type="file" id="upload-file" onchange="awri._previewFile(this,'img#upload-preview')">
+                <img src="" id="upload-preview" height="200" alt="Image preview...">
+                <div>
+                  <button class="uplok">Ok</button>
+                  <button class="uplcancel">Cancel</button>
+                </div>
+                </div><!--// Dialog -->
+
+
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
@@ -46,24 +87,32 @@
                 <div class="ui-block-a">
                         <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
                         <button class="color" style="background-color:#333;" onclick=setColor(this);>&nbsp;</button>          
-                        <button class="color" style=" background-color:#a70301;" onclick="setColor(this);">&nbsp;</button>
-                        <button class="color" style="background-color:#0000aa;" onclick=setColor(this);>&nbsp;</button>          
-                        <button class="color" style="background-color:#555555;" onclick="setColor(this);">&nbsp;</button>
+                        <button class="color" style=" background-color:#630904;" onclick="setColor(this);">&nbsp;</button>
+                        <button class="color" style="background-color:#170463;" onclick=setColor(this);>&nbsp;</button>          
+                        <button class="color" style="background-color:#635704;" onclick="setColor(this);">&nbsp;</button>
+                        <button class="color" style="background-color:#046318;" onclick="setColor(this);">&nbsp;</button>
         
                         <button class="emojis" onclick="putSmiley(this);">😊</button>
-                        <button class="emojis" onclick="putSmiley(this);">❤️</button>
+                        <button class="emojis" onclick="putSmiley(this);">😘</button>
+                        <button class="emojis" onclick="putSmiley(this);">😉</button>
                         <button class="emojis" onclick="putSmiley(this);">😯</button>
+                        <button class="emojis" onclick="putSmiley(this);">😭</button>
+                        <button class="emojis" onclick="putSmiley(this);">😡</button>
+
+                        <button class="emojis" onclick="putSmiley(this);">❤️</button>
+                     
                         <button class="emojis" onclick="putSmiley(this);">👌</button>
                         <button class="emojis" onclick="putSmiley(this);">🤦</button>
                         <button class="emojis" onclick="putSmiley(this);">🙏</button>                         
-                        <button class="color" id="actualcolor" style="background-color:#333" onclick=setColor(this);>🖊️</button>                             
+                        <button class="color" id="actualcolor" style="color:white;background-color:#333" onclick=setColor(this);>🖊️</button>                             
                         </fieldset>         
                     </div>
             <div class="ui-block-b">
                     <div data-role="controlgroup" data-type="horizontal">
                         <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">☑️ </label>
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
-                        <input title="Chatnachrichten anhalten" type='button' href="#" onclick=""  value="🛑"></button>                        
+                        <label for="pause" title="Chatnachrichten anhalten">🛑</label>
+                        <input name="pause" type='checkbox' id="pause" href="#" class="custom" data-mini="true"/>                        
                         <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"></button>  
                     </div>
             </div>
@@ -71,7 +120,7 @@
        
          </div>  <!--// Footer -->
     </div><!--// Page -->
-    <div data-role="fieldcontain"> 
+    <div class="hidden" data-role="fieldcontain"> 
             <input type="text" id="uid" value="" disabled>   
             <input type="text" id="name" value="" disabled>
             <input type="text" id="private-name" disabled>
@@ -80,9 +129,33 @@
     </div>
     
 <script>
+$(function() {
+    $('#msg').focus();
+    $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
+    $("#msg").keydown(function (e) {
+    //Arrow Keys Up/Down
+        if ((e.which && e.which == 38) || (e.keyCode && e.keyCode == 38)) {              
+            cmdBufferIndex=(cmdBufferIndex+1)%cmdBuffer.length;
+            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]); 
+        }
+        if ((e.which && e.which == 40) || (e.keyCode && e.keyCode == 40)) {
+            cmdBufferIndex=(cmdBufferIndex-1);
+            if(cmdBufferIndex<0)cmdBufferIndex=cmdBuffer.length-1;
+            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);                    
+        }
+    });
 
-var host = 'https://awri.ch';
-var endpoint = 'drupalgap';
+    $("#msg").keypress(function (e) {
+    //Enter
+        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+            if($('#msg').val().startsWith('/'))parseCommand($('#msg').val().substr(1,$('#msg').val().length));
+            else sendText();
+        return false;
+        } else {
+        return true;
+        }
+    }); //keypress
+}); //jQuery
 
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
@@ -90,217 +163,111 @@ var color ='#333';
 var audiofile='app/notification.mp3'; //notification Alarm
 var chat=null;
 //Hack für Openshift
+
+
+var host = 'http://localhost/stage.awri.ch';
+var endpoint = 'drupalgap';
+
+
+AWRI.setLogger(console.log);
+awri=new AWRI(host,'connect');
+
+cuser= new ChatUser();
+
+
+function showDialog(message) {
+    var dialog       = document.getElementById('dialog');
+    var input        = dialog.querySelector('input');
+    var okButton     = dialog.querySelector('button.ok');
+  
+    dialog.querySelector('.message').innerHTML = String(message);
+    dialog.className = '';
+  
+    return new Promise(function(resolve, reject) {
+      dialog.addEventListener('click', function handleButtonClicks(e) {
+        if (e.target.tagName !== 'BUTTON') { return; }
+        dialog.removeEventListener('click', handleButtonClicks);
+        dialog.className = 'hidden';
+        if (e.target === okButton) {
+          resolve(input.value);
+        } else {
+          reject(new Error('User cancelled'));
+        }
+      })
+  })
+  }
+
+function showUploadDialog(message) {
+    var dialog       = document.getElementById('upldialog');
+    var file        = dialog.querySelector('file#upload-file');
+    var okButton     = dialog.querySelector('button.uplok');
+    var img        = dialog.querySelector('img#upload-preview');
+  
+    dialog.querySelector('.message').innerHTML = String(message);
+    dialog.className = '';
+  
+    return new Promise(function(resolve, reject) {
+      dialog.addEventListener('click', function handleButtonClicks(e) {
+        if (e.target.tagName !== 'BUTTON') { return; }
+        dialog.removeEventListener('click', handleButtonClicks);
+        dialog.className = 'hidden';
+        if (e.target === okButton) {
+          resolve(img);
+        } else {
+          reject(new Error('User cancelled'));
+        }
+      })
+  })
+  }
+
+(function (){
+    appendLine('<h2>Willkommen im AWRI Chat<h2>','green');
+    appendLine('Schreiben <strong>/info</strong> um weitere Informationen zu erhalten.');
+if(location.hostname==='localhost')chat=new ChatClient();
+else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
+})();
+
+awri.token().then(function(){
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
 
+    awri.connect().then(function(user){
+    cuser= new ChatUser();
+    cuser._uid=user.uid;
+    cuser._created=Date.now();
+    cuser._access=Date.now();
+    if(user.uid==0){
+  return chat.connect(cuser);
+    }else awri.awriconnect_load_user(user.uid).then(function(full){          
+            cuser=new ChatUser(full.uid,full.name);
+            cuser._roles=full.roles;
+            cuser._email=full.mail;
+            cuser._fbid=full.field_fbid['und'][0].value;
+            if(cuser._fbid!=='undefined')cuser._picture='https://graph.facebook.com/'+cuser._fbid+'/picture?type=small';
+            if(full.picture.url!=='undefined')cuser._picture=full.picture.url;
 
-$(function() {
+            cuser._created=full.created;
+            cuser._access=full.access;
+            cuser._token=awri._token;
+            cuser._session=awri._session;
 
-    $('#msg').focus();
-    $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
-    
-//Enter
-$("#msg").keypress(function (e) {
-    if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
-        //document.getElementById('sendr').click();
-        //if(private)sendPrivateMessage();
-        //else 
-        if($('#msg').val().startsWith('/'))parseCommand($('#msg').val().substr(1,$('#msg').val().length));
-        else sendText();
-        return false;
-    } else {
-        return true;
-    }
-});
-
-}); //jQuery
-
-
-(function(){
-    cmdInfo();
-})();
-
-function cmdInfo(){
-    help=[
-    '<h2>Willkommen im AWRI Chat</h2>'+l('AWRI','#',{onclick:"alert('Hallo')",id:'mylink'}),
-    'Dieser Chat ist mit der AWRI Datenbank verbunden.',
-    'Falls sie noch nicht auf <a href="https://awri.ch/" target="_BLANK">AWRI</a> (Alles was Recht ist) angemeldet sind,',
-    'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
-    'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
-    'Bei erneutem laden des Browsers, werdem immer die letzten 15 Chat Nachrichten angezeigt.',
-    'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
-    'Moderatoren haben <span class="modsym">🛡</span>, Admins <span class="adminsym">⚔️</span> ein solchen Präfix .',
-    'Viel Spass bei Diskutieren und bitte immer freundlich bleiben.',
-];
-help.forEach(line => {
-    appendLine(line)
-});
-$('#msg').val('');
-}
-
-function cmdHelp(){
-    help=[
-    '<h2>Hilfe</h2>',
-    'Chat Befehle beginnen mit einem Slash /[Befehl],',
-    'Befehlsliste (Alle Benutzer)',
-    '<strong>/info</strong> (zeigt Informationen über den Chat)',
-    '<strong>/help</strong> (zeigt diese Hilfe)',
-    '<strong>/clear</strong> (leert das Chat Fenster)',
-    '<strong>/whoami</strong> (zeigt ihre Benutzer Informationen)',
-    '<strong>/beep</strong> (spielt den Benachrichtiguns Ton ab)',
-    '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
-    '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
-    'Befehlsliste (AWRI Mitglieder)',
-    '<strong>/login [username] [passwort]</strong> (meldet Sie über die AWRI Seite an)', 
-    '<strong>/logout</strong> (meldet Sie von der AWRI Seite ab)', 
-    '<strong>/bookmarks</strong> (zeigt ihre gepeicherten Lesezeichen an.)', 
-    '<strong>/upload</strong> (Datei hochladen )', 
-    '<strong>/uploads</strong> (Zeigt Ihre hochgeladenen Dateien an.)', 
-];
-help.forEach(line => {
-    appendLine(line);
-});
-$('#msg').val('');
-}
-
-function cmdWhoami(){
-    let user=variable_get('user');
-    var k=Object.keys(user._roles);
-    roles=''
-  //  alert('Anon'+isAnon());
-  //  alert('Mod'+isModerator());
-  //  alert('Admin'+isAdmin());
-  let email=isAnon() ? '(nicht registriert)' : user._email;
-  let link=isAnon() ? '(nicht registriert)' :'https://awri.ch/user/'+user._uid;
-    
-    k.forEach(role => {
-        roles+=user._roles[role]+',';
-    });
-    out=[
-        '<h2>'+user._name+'</h2>',
-        'Id: '+user._uid,
-        'Email: '+''+ email,
-        'Rollen: '+roles,
-        'Konto-Link: '+ l(link,link+'/edit',{target:"_BLANK"}),
-        'Bild:'+ user._picture,
-    ]
-    out.forEach(line => {
-       appendLine(line);
-       $('#msg').val('');
-    });
-   // console.log(user_has_role('administrator'),'ISADMIN?');
-   // console.log(user_has_role('authenticated user'),'ISUSER?');
-   // console.log(user_has_role('moderator'),'MODERATOR?');
-
-}
-
-function cmdClear(){
-    $('#messages').html('');
-    $('#msg').val('');
-}
-
-function cmdBeep(){
-    playAudio(audiofile);
-    $('#msg').val('');
-}
-
-
-function showLoader(){
-    $.mobile.loading( 'show', {
-	text: 'Lade, bitte warten...',
-	textVisible: true,
-	theme: 'b',
-	html: ""
-});
-};
-
-function hideLoader(){
-    $.mobile.loading( 'hide');
-};
-
-function cmdSearch(text){
-showLoader();
-    searchNode(text).then(function(res){
-    console.log(res);
-        res.forEach(node => {
-        appendLine('<a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
+            return chat.connect(cuser);
         });
-        hideLoader();
-    }).catch(function(err){
-        appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
-        hideLoader();
     });
-$('#msg').val('');
-}
-
-function cmdShow(nid){
-    showLoader();   
-    showNode(nid).then(function(node){   
-    appendLine(theme_node(node));  
-    showComments(nid).then(function(res){
-                        appendLine(theme_comments(res));  
-                        }).catch(function(err){
-                            appendLine('Fehler: "'+err+'" !' ,'red');
-                        }); 
-    hideLoader();
-}).catch(function(err){
-    appendLine('Fehler: "'+err+'" !' ,'red');
-    hideLoader();
 });
 
-$.mobile.loading( "hide" );
-$('#msg').val('');
-}
-
-function cmdKick(uid){
-var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
-chat.sendCommand(cmd);
-}
-
-function cmdLogin(str){
-    var cred=str.split(' ');
-    console.log(cred);
-    var user=cred[0];
-    var pass=cred[1];
-    login(user,pass).then(function(result){
-console.log(result);
-    }).catch(function(err){
-        console.log(err);
-    });
-//var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
-//chat.sendCommand(cmd);
-}
-
-function cmdLogout(){
-    logout().then(function(result){
-console.log(result);
-    }).catch(function(err){
-        console.log(err);
-    });
-//var cmd=new ChatCommand('kick',{_from:variable_get('user')._uid,_to:uid}); 
-//chat.sendCommand(cmd);
-}
-
-function parseCommand(cmd){
-    console.log(cmd,'parseCommand');
-   if(cmd=='help'||cmd=='hilfe')cmdHelp();
-   if(cmd=='info')cmdInfo();
-   if(cmd=='clear')cmdClear();  
-   if(cmd=='whoami')cmdWhoami();
-   if(cmd=='beep')cmdBeep();
-   if(cmd.startsWith('search'))cmdSearch(cmd.substr(7,cmd.length));
-   if(cmd.startsWith('show'))cmdShow(cmd.substr(5,cmd.length));
-   if(cmd.startsWith('kick'))cmdKick(cmd.substr(5,cmd.length));           
-   if(cmd.startsWith('login'))cmdLogin(cmd.substr(6,cmd.length));           
-   if(cmd.startsWith('logout'))cmdLogout(cmd.substr(7,cmd.length));           
-
+function awriconnect_user_connected(user){
+    //if(user.uid==0)chat.connect(user);
+console.log(user,"awriconnect_user_connected");
 }
 
 function onchatconnected(user){
+    console.log(user,'chatconnected');
     variable_set('user',user);
     $('#uid').val(user._uid);
     $('#name').val(user._name);
-    $('#user').html('<img src="'+user._picture+'" width="20" height="20"/>'+user._name);
+    $('#user').html(theme_user_picture(user._picture)+' '+user._name);
+    $('#user').attr('uid',user._uid);
     appendLine(user._name+': connected','green');
 }
 
@@ -316,22 +283,45 @@ function onchatuserlist(data){
         data.forEach(user => {
         li = document.createElement('li');
         li.setAttribute('onclick', 'setPriv(this);');
-        li.setAttribute('id', user.uid);
-        if($('#private').val()==user.uid)li.classList.add("selected");
+        li.setAttribute('id', user._uid);
+        li.setAttribute('title', "["+user._uid+"] "+user._name);
+        if($('#private').val()==user._uid)li.classList.add("selected");
 
-        if(user_roles_has(user.roles,'moderator'))user.name='<span class="adminsym">🛡️</span>'+user.name;       
-        if(user_roles_has(user.roles,'administrator'))user.name='<span class="adminsym">⚔️</span>'+user.name;
+    //    if(user_roles_has(user.roles,'moderator'))user.name='<span class="adminsym">🛡️</span>'+user.name;       
+    //    if(user_roles_has(user.roles,'administrator'))user.name='<span class="adminsym">⚔️</span>'+user.name;
         
-       li.setAttribute('name', user.name);
+       li.setAttribute('name', user._name);
         //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
-        li.innerHTML='<img src="'+user.picture+'" width="20" height="20"> ' + user.name;
+        li.innerHTML=theme_user_picture(user._picture)+' ' + user._name;
         ul.appendChild(li);
         });
 }
 
-function onchatcommand(data){
-    console.log(data,'onchatcommand');
+function onchatcommand(cmd){
+    console.log(cmd,'onchatcommand');
+
+if(cmd._cmd=="private command" && cmd._data._txt.startsWith('show content'))showContentFrom(cmd._data._from,cmd._data._txt.substr(12,cmd._data._txt.length));
 }
+
+function showContentFrom(from,nid){
+console.log(from);
+ appendLine(from.name +" sendet folgenden Beitrag:","red");
+
+showContent(nid);
+
+};
+
+function showContent(nid){
+var render="";
+    awri.awriconnect_frage_get(nid).then(function(node){
+    render+=theme_node(node);
+         awri.awriconnect_comments(nid).then(function(comments){                        
+         render+=theme_comments(comments);
+         appendLine(render); 
+        });            
+    });
+};
+
 
 var private=false;
 function setPriv(li){
@@ -358,6 +348,7 @@ function unsetPriv(){
 
 
 function sendText(txt){
+if($('#msg').val()=="")return;
 var msg=new ChatMessage();
 msg.setColor(color);
 msg.setFrom($('#uid').val());
@@ -383,56 +374,9 @@ document.getElementById('sendPrivateMessage').focus();
 }
 
 
-
-/*
-var site="https://awri.ch";
-var endpoint="drupalgap";
-AWRI.setup(site,endpoint);
-
-(async function(){
-let res = await AWRI.token().catch(function(err){ alert(err); });
-
-let res2 = await AWRI.connect().catch(function(err){ alert(err); });
-
-//alert(res2.user.name);
-console.log(res2.user.name);
-chatuser =new ChatUser(res2.user.uid,res2.user.name); 
-//user._fbid = user.field_fbid['und'][0].value;
-chatuser._roles = res2.user.roles;
-chatuser._session = res2.session_name+'_'+res2.sessid;
-chatuser._token = res2.token;
-
-let res3 = await AWRI.loadUser(chatuser._uid).catch(function(err){  alert(err); });
-console.log(res3,"LOADUSER");
-chatuser.uid=res3.uid;
-chatuser._picture = res3.picture.url;
-chatuser._email = res3.mail;
-
-console.log(chatuser,"CHATUSER");
-$('#name').val(chatuser._name);
-$('#uid').val(chatuser._uid,chatuser);
-let searc= await AWRI.search('Miete').catch(function(err){alert(err);});
-console.log(searc,"SEARCH");
-
-let node= await AWRI.loadNode(16435).catch(function(err){alert(err);});
-console.log(node,"NODE");
-
-let comments= await AWRI.loadComments(16435).catch(function(err){alert(err);});
-console.log(comments,"ComemntsNODE");
-
-chat.connect(chatuser)
-})();
-
-(function(){
-    help.forEach(line => {
-    console.log(line);
-    $('#messages').append('<li>'+line+'</li>');
-});
-})();
-*/
 function setColor(c){
     var actualcol=$('#actualcolor');
-    actualcol.attr('style','background-color:'+c.style['background-color']);
+    actualcol.attr('style','background-color:'+c.style['background-color']+';color:white;');
     color=c.style['background-color'];
 }
 
@@ -445,6 +389,16 @@ function appendLine(text="",color="#333"){
     ul.appendChild(li); 
     window.scrollTo(0, document.body.scrollHeight);   
 }
+
+function appendMessage(msg){
+    ul = document.getElementById('messages');
+    li = document.createElement('li');
+    li.style.color=msg._color;
+    li.innerHTML=msg._txt;
+    ul.appendChild(li); 
+    window.scrollTo(0, document.body.scrollHeight);   
+}
+
 
 function putSmiley(c){
     var smiley=($(c).text())
@@ -539,7 +493,6 @@ cnt++;
       alert(mesg);
     }
   };
-
 
    /******************************************************/
   /*   Utility Funktionen                               */
@@ -685,7 +638,10 @@ function playAudio(audiofile) {
           //  n+='<div id="comments"></div>';
             return n;
         }
-        
+        function theme_user_picture(pic){
+            return '<img src="'+pic+'" width="20" height="20" style="vertical-align:middle;border-radius:10px;"/>';
+        }
+
         function theme_fb_image(fbid){
             return '<img src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
         }
@@ -703,236 +659,6 @@ function playAudio(audiofile) {
             });
         c+="</div>";
         return c;
-        }
-
-          /******************************************************/
-  /*   AWRI Connect                                     */
- /******************************************************/ 
-
-    function token() {
-        return new Promise(function (resolve, reject) {
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.withCredentials = true;
-            xmlhttp.open("GET",  host + "/services/session/token", true);
-            xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                    var token = xmlhttp.responseText;
-                    variable_set('token', token);
-                    resolve(token);
-                }
-                if (xmlhttp.status != 200) reject(xmlhttp.status);
-            };
-            xmlhttp.send();
-        });
-    };            
-
-        function connect() {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("POST", host + "/" + endpoint + "/system/connect.json", true);
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var response = xmlhttp.responseText;
-                        obj = JSON.parse(response);                        
-                        user._uid=obj.user.uid;
-                        user._session=obj.session_name + '_' + obj.sessid;
-                        user._token=obj.token;
-                        user._roles = obj.user.roles;
-                        if(obj.user.name)user._name=obj.user.name;
-                        variable_set('user', user);
-                        variable_set('session', obj.session_name + '_' + obj.sessid);
-                        resolve(variable_get('user'));
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };
-                xmlhttp.send();
-            });
-        }
-        
-        function logout() {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                //  console.log(postData,"LOGIN");
-                  
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("POST", host + "/" + endpoint + "/user/logout.json");
-                xmlhttp.setRequestHeader("Content-Type", "application/json");                
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                  
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var response = xmlhttp.responseText;
-                        variable_set('user',new ChatUser());
-                        resolve(response); 
-                        console.log(response)   
-                        chat.disconnect();                    
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };  
-                xmlhttp.send();
-            });      
-        }
-
-        function login(usr,pass) {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                var postData = {        
-                    username: usr,
-                    password: pass
-                  }   
-                  chat.disconnect();
-                //  console.log(postData,"LOGIN");
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("POST", host + "/" + endpoint + "/user/login.json");
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                
-                 xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                  
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var response = xmlhttp.responseText;
-                        obj = JSON.parse(response);                        
-                        user._uid=obj.user.uid;
-                        user._session=obj.session_name + '_' + obj.sessid;
-                        user._token=obj.token;
-                        console.log(obj,"LOGIN");
-                        user._roles = obj.user.roles;
-                        if(obj.user.name)user._name=obj.user.name;
-                        
-                        variable_set('token', obj.token);
-                        variable_set('session', obj.session_name + '_' + obj.sessid);
-                        loaduser(user._uid).then(function(res){
-                            alert("GOT Loades")
-                            console.log(res);
-                           
-                           chat.connect(user);
-                            resolve(user);
-                        });
-                        
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };  
-                xmlhttp.send(JSON.stringify(postData));
-            });
-        }
-  
-        function loaduser(uid) {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", host + "/" + endpoint + "/user/" + uid + ".json", true);
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var user=new ChatUser();
-                        var inp = JSON.parse(xmlhttp.responseText);                
-                        console.log(inp.picture.url,"IMP");
-                        user._uid = inp.uid;
-                        user._name = inp.name;
-                        user._fbid = inp.field_fbid['und'][0].value;
-                        user._picture = inp.picture.url;
-                        user._email = inp.mail;
-                        user._roles = inp.roles; 
-                        user._session =variable_get('session');
-                        user._token =variable_get('token'); 
-                                                                  
-                       console.log(user,"USER");
-                        return resolve(user);
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };
-                xmlhttp.send();
-            });
-        }
-
-        (function main(){
-        token().then(function (token) {           
-            connect(token).then(function (user) {
-//                console.log(user, 'connect');
-                if (user._uid !== 0)
-                    loaduser(user._uid).then(function (user) {
-                        variable_set('user', user);
-                        //   variable_set('session',user.session_name+'_'+user.sessid);
-  //                      console.log(user, 'loaduser');
-                        chat.connect( variable_get('user'));
-                    }).catch(function (err) { console.error(err, 'loaduser') })
-                else chat.connect(user);
-
-            }).catch(function (err) { console.error(err, 'connect') });
-        }).catch(function (err) { console.error(err, 'token') })
-    })();
-   
-
-     function searchNode(txt) {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", host + "/" + endpoint + "/search_node/retrieve.json?keys="+txt, true);
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var result= JSON.parse(xmlhttp.responseText);                                                           
-                        return resolve(result);
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };
-                xmlhttp.send();
-            });
-        }
-
-  
-  
-  function showNode(nid) {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", host + "/" + endpoint + "/node/"+nid+".json", true);
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var result= JSON.parse(xmlhttp.responseText);                                              
-                        return resolve(result);
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };
-                xmlhttp.send();
-            });
-        }
-
-        
-  function showComments(nid) {
-            return new Promise(function (resolve, reject) {
-                var xmlhttp = new XMLHttpRequest();
-                xmlhttp.withCredentials = true;
-                xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", host + "/" + endpoint + "/comment.json?parameters[nid]="+nid+"&parameters[status]=1&pagesize=150", true);
-                xmlhttp.setRequestHeader("Content-Type", "application/json");
-                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
-                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
-                xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
-                        var result= JSON.parse(xmlhttp.responseText);                                                                    
-                        return resolve(result);
-                    }
-                    if (xmlhttp.status != 200) reject(xmlhttp.status);
-                };
-                xmlhttp.send();
-            });
         }
 
 </script>

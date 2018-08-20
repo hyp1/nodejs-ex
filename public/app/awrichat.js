@@ -1,3 +1,11 @@
+
+ /**
+  * 
+  * @param {*} message 
+  * @param {*} socket 
+  */
+ 
+
 class ChatClient{
 
     constructor(protocol,host,port,ns='/'){
@@ -14,7 +22,7 @@ class ChatClient{
     }
 
     connect(){
-        var user = variable_get('user');
+        var user =new ChatUser();
         this.connect(user);
     }    
 
@@ -36,37 +44,43 @@ class ChatClient{
         console.info('CHAT SERVER NO URL AUTODISCOVERY')
         this._socket=io.connect();
     }  
-    this._socket.emit('connection name',user);      
+
+        this._socket.emit('connection name',user);      
     
+        //anonymus user connected server asks for username
         this._socket.on('connect name', function (question, callback) {
-              //  var user = variable_get('user');
-                var answer = "", cnt = 0;
-                do {
-                    if (cnt > 2) { alert("Tschüss! :-)"); return false; };
-                    answer = prompt(question);
-                    cnt++;
-                } while (answer == "")
-                user.name = answer;
-              //  variable_set('user', user);
-                return callback(user);            
+            //Async Dialog Promise
+            showDialog(question).then(function(answer){
+                user.name=answer;
+                return callback(user);
+            }).catch(function(err){
+                alert(err);
+            })   
+        });  
+        
+    this._socket.on('connected', function (user) {
+                if(typeof onchatconnected === 'function')onchatconnected(user);  
         });
-        this._socket.on('connected', function (user) {
-                    if(typeof onchatconnected === 'function')onchatconnected(user);  
-            })
+            
                             
             this._socket.on('command data', function (cmd) {
+                console.log(cmd);
+                if (cmd._cmd == 'error')onchatmessage(cmd._data);
                     if(typeof onchatcommand === 'function')onchatcommand(cmd);
                     if (cmd._cmd == 'userlist') if(typeof onchatuserlist === 'function')onchatuserlist(cmd._data);
                     if (cmd._cmd == 'message') if(typeof onchatmessage === 'function')onchatmessage(cmd._data);
                     if (cmd._cmd == 'private message') if(typeof onchatmessage === 'function'){
-                        cmd._data._from.name+=' an dich'
+                        if($("#user").attr('uid')==cmd._data._from.uid)cmd._data._from.name="Du";
+                        if($("#user").attr('uid')==cmd._data._to.uid)cmd._data._from.name+=' an dich';
+                        else cmd._data._from.name+=' an '+cmd._data._to.name;
                         //alert(cmd._data._from.name);                    
                         onchatmessage(cmd._data);
                     }
                 });
 
             this._socket.on('error', function (error) {
-                    alert(error);
+                if(typeof onchaterror === 'function')onchaterror(error);  
+                    console.error(error);
             })     
     }
     
@@ -83,9 +97,36 @@ class ChatClient{
         this._socket.emit('command',cmd)
     }
     
+    sendPrivateCommand(to,msg){
+        msg.setTo(to);
+        msg.setFrom(variable_get('user')._uid);
+        var cmd=new ChatCommand('private command',msg);
+        this._socket.emit('command',cmd)
+    }
+
+    sendKick(to){
+        //msg=new ChatMessage()
+        //msg.setTo(to);
+        //msg.setFrom($("#user").attr("uid"));
+        var cmd=new ChatCommand('kick',to);
+        this._socket.emit('command',cmd)
+    }
+
+    sendBan(to){
+        var cmd=new ChatCommand('ban',to);
+        this._socket.emit('command',cmd)
+    }
+
+
     sendCommand(cmd){
         this._socket.emit('command',cmd)
     }
+
+    sendCommand(cmd,data){
+        var cmd=new ChatCommand(cmd,data);
+        this._socket.emit('command',cmd)
+    }
+    
     
     userList(){
         var cmd=new ChatCommand('userlist');
@@ -195,7 +236,7 @@ class ChatMessage {
     getParam() {
         return this._params;
     };
-};
+}
     
 
 class ChatCommand {
@@ -226,12 +267,10 @@ class ChatCommand {
     
 class ChatUser {
     constructor(uid=0,name='Unbekannt') {
-      var rand=''+ Date.now();
-      rand=rand.substr(7,rand.length);
-      this._uid = (uid ==0) ? rand:uid;
+      this._uid = uid;
       this._time = Date.now();
-      this._name = (name == 'Unbekannt')?'User'+rand:name;
-      this._picture ='app/anonymous2.png';  
+      this._name = name;
+      this._picture ='app/anonymous.png';  
       this._roles={'1':'anonymous user'}
       this._email = null;
       this._fbid = null;

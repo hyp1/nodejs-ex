@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+    <title>AWRI - Rechtsfrage Service</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app/chat_client.js"></script>
+    <style>
+        input#cmdline , ul#terminal
+            {
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="">
+    <h3><a href="debug-awriconnect.html">AWRIConnect</a></h3>
+    <h3><a href="debug-standalone.html">AWRIChat(standalone)</a></h3>
+    <h3>AWRI Connect</h3>
+    <input type="text" id="ac-protocol" value="http">
+    <input type="text" id="ac-host" value="localhost">
+    <input type="text" id="ac-port" value="8080">
+    <input type="button" id="ac1-exec" onclick="setup();" value="setup">
+
+    <textarea id="userdata">{"_uid": "0",
+        "_name": "Unbekannt",
+        "_picture": "app/anonymous2.png",
+        "_roles": {"0":"anonymous user"}}</textarea>
+    <input type="button" onclick="connect();" value="connect" /><hr>
+  
+   
+
+    <textarea id="sendMessage"></textarea><input type="button" onclick="sendText();" value="sendMessage" /><hr>
+    <textarea id="sendPrivateMessage"></textarea><input type="text" id="To" value="3"><input type="button" onclick="sendPrivateText();" value="sendPrivateMessage" />
+    <hr>
+    <input type="text" id="cmdtext" value="private message">
+    <textarea id="cmddata">{"_from": "3","_to": "802",
+	"_color": "green",
+	"_txt": "Test Private Message"} </textarea>
+    <input type="button" onclick="executeCommand();" value="executeCommand">
+    <hr>
+
+    <ul id='users'>Users</ul>
+    <ul id='terminal'></ul>
+    <input id="cmdline" type="text" value=""/>
+    <script>
+
+var chat;
+
+function setup(){
+    chat=new ChatClient(document.getElementById('ac-protocol').value,
+    document.getElementById('ac-host').value,
+    document.getElementById('ac-port').value)
+
+}
+
+
+function connect(){
+    chat.connect(JSON.parse(document.getElementById('userdata').value))    
+
+}
+
+
+function sendText(txt){
+msg=new ChatMessage();
+
+msg.setFrom(JSON.parse(document.getElementById('userdata').value)._uid);
+msg.setText(document.getElementById('sendMessage').value);
+chat.sendMessage(msg);
+document.getElementById('sendMessage').value="";
+document.getElementById('sendMessage').focus();
+}
+
+function sendPrivateText(to,txt){
+    msg=new ChatMessage();
+msg.setFrom(JSON.parse(document.getElementById('userdata').value)._uid);
+msg.setText(document.getElementById('sendPrivateMessage').value);
+console.log(msg);
+chat.sendPrivateMessage(document.getElementById('To').value,msg);
+document.getElementById('sendPrivateMessage').value="";
+document.getElementById('sendPrivateMessage').focus();
+}
+
+
+function executeCommand() {
+    field = document.getElementById('cmddata');   
+    cmd = {
+        _cmd: document.getElementById('cmdtext').value,
+        _data: JSON.parse(field.value),
+        }
+    chat.sendCommand(cmd); 
+}
+
+
+function onchatconnected(user){
+    console.log(user);
+    console.log(user,'onchatconnected');
+    appendLine(user._name+': connected','green');
+}
+
+function onchatmessage(msg){
+    console.log(msg,'onchatmessage');
+    appendLine(msg._time+': <img src="'+msg._from.picture+'" width="20" height="20">'+msg._from.name+': '+msg._txt,msg._color);
+}
+
+function onchatuserlist(data){
+    console.log(data,'onchatlist');
+    ul = document.getElementById('users');
+        ul.innerHTML = "";
+        data.forEach(user => {
+        li = document.createElement('li');
+        //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
+        li.innerHTML='<img src="'+user._picture+'" width="20" height="20">'+user._uid + ' ' + user._name;
+        ul.appendChild(li);
+        });
+}
+
+function onchatcommand(data){
+    console.log(data,'onchatcommand');
+}
+
+
+
+
+
+
+        function appendLine(text="",color="#333"){
+            ul = document.getElementById('terminal');
+            li = document.createElement('li');
+            li.style.color=color;
+            li.appendChild(document.createTextNode(text));
+            ul.appendChild(li);    
+        }
+
+       function variable_set(key, value) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
+        function variable_get(key, def = null) {
+            if (typeof (window.Storage) !== "undefined") {
+                item = JSON.parse(window.localStorage.getItem(key));
+                if (item == undefined) return def;
+                return item;
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+    
+    </script>
+
+</body>
+
+</html>

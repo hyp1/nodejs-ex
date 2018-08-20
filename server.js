@@ -101,3 +101,4 @@ function logMessage(msg){
 
 module.exports = app;
 module.exports.LOGGING=LOGGING;
+module.exports.http = http;

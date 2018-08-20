@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+    <title>AWRI - Rechtsfrage Service</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app/chat_client.js"></script>
+    <script src="/app/awri_client.js"></script>
+
+    <style>
+        input#cmdline , ul#terminal
+            {
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="loadchat()">
+    <h3><a href="debug-awriconnect.html">AWRIConnect</a></h3>
+    <h3><a href="debug-awrichat.html">AWRIChat</a></h3>
+
+    <h3><a href="debug-standalone.html">AWRIChat(standalone)</a></h3>
+
+    <textarea id="sendMessage"></textarea><input type="button" onclick="sendText();" value="sendMessage" /><hr>
+    <textarea id="sendPrivateMessage"></textarea><input type="text" id="To" value="3"><input type="button" onclick="sendPrivateText();" value="sendPrivateMessage" />
+    <hr>
+    <input type="text" id="cmdtext" value="private message">
+    <textarea id="cmddata">{"_from": "3","_to": "802",
+	"_color": "green",
+	"_txt": "Test Private Message"
+}</textarea>
+    <input type="button" onclick="executeCommand();" value="executeCommand">
+    <hr>
+
+    <ul id='users'>Users</ul>
+    <ul id='terminal'></ul>
+    <input id="cmdline" type="text" value=""/>
+    <script>
+
+var chat;
+var site="https://awri.ch";
+var endpoint="drupalgap";
+AWRI.setup(site,endpoint);
+(async function(){
+let res = await AWRI.token().catch(function(err){ alert(err); });
+
+let res2 = await AWRI.connect().catch(function(err){ alert(err); });
+
+//alert(res2.user.name);
+console.log(res2.user.name);
+chatuser =new ChatUser(res2.user.uid,res2.user.name); 
+//user._fbid = user.field_fbid['und'][0].value;
+chatuser._roles = res2.user.roles;
+chatuser._session = res2.session_name+'_'+res2.sessid;
+chatuser._token = res2.token;
+
+let res3 = await AWRI.loadUser(chatuser._uid).catch(function(err){  alert(err); });
+console.log(res3,"LOADUSER");
+chatuser.uid=res3.uid;
+chatuser._picture = res3.picture.url;
+chatuser._email = res3.mail;
+console.log(users);
+let res4="";
+let searc= await AWRI.search('Miete',res4).catch(function(err){alert(err);});
+console.log(searc,"SEARCH");
+
+let node= await AWRI.loadNode(16435).catch(function(err){alert(err);});
+console.log(node,"NODE");
+
+let comments= await AWRI.loadComments(16435).catch(function(err){alert(err);});
+console.log(comments,"ComemntsNODE");
+
+chat.connect(chatuser)
+})();
+
+function loadchat(){
+
+chat=new ChatClient(location.protocol,location.hostname,8080)
+
+//msg=new ChatMessage();
+//msg.setFrom(variable_get('user')._uid);
+//msg.setText('Willkommen... asdasd');
+//alert(variable_get('user')._uid);
+//console.log(msg);
+//chat.sendMessage(msg); ->   onchatessage
+//chat.sendPrivateMessage('99159',msg); ->   onchatessage
+//chat.userList();      ->   onchatuserlist
+
+}//loadchat
+
+
+function sendText(txt){
+msg=new ChatMessage();
+msg.setFrom(chatuser._uid);
+msg.setText(document.getElementById('sendMessage').value);
+chat.sendMessage(msg);
+document.getElementById('sendMessage').value="";
+document.getElementById('sendMessage').focus();
+}
+
+function sendPrivateText(to,txt){
+msg=new ChatMessage();
+//msg.setTo(document.getElementById('To'.value);
+msg.setText(document.getElementById('sendPrivateMessage').value);
+chat.sendPrivateMessage(document.getElementById('To').value,msg);
+document.getElementById('sendPrivateMessage').value="";
+document.getElementById('sendPrivateMessage').focus();
+}
+
+
+function executeCommand() {
+    //if(!socket.connected)alert("keine Verbindung!");
+
+            field = document.getElementById('cmddata');
+            cmd = {
+                _cmd: document.getElementById('cmdtext').value,
+                _data: JSON.parse(field.value),
+            }
+            chat.sendCommand(cmd); 
+}
+
+/*
+ Vom ChatClient überschriebene Functionen:
+ *onchatmessage
+ *onchatuserlist
+ *onchatcommand 
+
+ChatClient functionen
+    sendMessage(msg)
+    sendPrivateMessage(to,msg)
+    sendCommand(cmd)    
+    userList()
+
+*/
+
+function onchatconnected(user){
+    console.log(user);
+    console.log(user,'onchatconnected');
+    appendLine(user._name+': connected','green');
+}
+
+function onchatmessage(msg){
+    console.log(msg,'onchatmessage');
+    appendLine(msg._time+': <img src="'+msg._from.picture+'" width="20" height="20">'+msg._from.name+': '+msg._txt,msg._color);
+}
+
+function onchatuserlist(data){
+    console.log(data,'onchatlist');
+    ul = document.getElementById('users');
+        ul.innerHTML = "";
+        data.forEach(user => {
+        li = document.createElement('li');
+        //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
+        li.innerHTML='<img src="'+user.picture+'" width="20" height="20">'+user.uid + ' ' + user.name;
+        ul.appendChild(li);
+        });
+}
+
+function onchatcommand(data){
+    console.log(data,'onchatcommand');
+}
+
+
+
+
+
+/*****************************************************
+ *   AWRI Connect
+ * */ 
+/*
+
+        var host = 'https://awri.ch';
+        var endpoint = 'drupalgap';
+
+    function token() {
+        return new Promise(function (resolve, reject) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.withCredentials = true;
+            xmlhttp.open("GET", "https://awri.ch/services/session/token", true);
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                    var token = xmlhttp.responseText;
+                    variable_set('token', token);
+                    return resolve(token);
+                }
+                if (xmlhttp.status != 200) rej(xmlhttp.status);
+            };
+            xmlhttp.send();
+        });
+    };            
+
+        function connect(token) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", host + "/" + endpoint + "/system/connect.json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        obj = JSON.parse(response);
+                        // variabe_set()
+
+                        variable_set('user', obj.user);
+                        variable_set('session', obj.session_name + '_' + obj.sessid);
+                        resolve(variable_get('user'));
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
+
+        function loaduser(uid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", host + "/" + endpoint + "/user/" + uid + ".json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", variable_get('token'));
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var user = JSON.parse(xmlhttp.responseText);
+                        user.fbid = user.field_fbid['und'][0].value;
+                        user.picture = user.picture.url;
+                        user.email = user.mail;
+                        user.roles = user.roles;
+                        user.session = variable_get('session');
+                        user.token = variable_get('token');
+                        variable_set('user', user);
+                        return resolve(user);
+                    }
+                    if (xmlhttp.status != 200) reject(xmlhttp.status);
+                };
+                xmlhttp.send();
+            });
+        }
+
+        (function main(){
+        token().then(function (token) {
+            console.log(token);
+            connect(token).then(function (user) {
+                console.log(user, 'connect');
+                if (user.uid !== 0)
+                    loaduser(user.uid).then(function (user) {
+                        variable_set('user', user);
+                        //   variable_set('session',user.session_name+'_'+user.sessid);
+                        console.log(user, 'loaduser');
+                        chat.connect();
+                    }).catch(function (err) { console.error(err, 'loaduser') })
+                else chat.connect();
+
+            }).catch(function (err) { console.error(err, 'connect') });
+        }).catch(function (err) { console.error(err, 'token') })
+    })()
+
+*/
+        function appendLine(text="",color="#333"){
+            ul = document.getElementById('terminal');
+            li = document.createElement('li');
+            li.style.color=color;
+            li.appendChild(document.createTextNode(text));
+            ul.appendChild(li);    
+        }
+
+       function variable_set(key, value) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
+        function variable_get(key, def = null) {
+            if (typeof (window.Storage) !== "undefined") {
+                item = JSON.parse(window.localStorage.getItem(key));
+                if (item == undefined) return def;
+                return item;
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

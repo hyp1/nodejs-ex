@@ -1,0 +1,250 @@
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+    <title>AWRI - Rechtsfrage Service</title>
+    <script src="//cdn.jsdelivr.net/bluebird/3.5.0/bluebird.js"></script>
+    <script src="/app/awriconnect.js"></script>
+
+    <style>
+        input#cmdline , ul#terminal
+            {
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="">
+    <h3>AWRI Connect</h3>
+    <input type="text" id="ac0-host" value="http://localhost/stage.awri.ch">
+    <input type="text" id="ac0-endpoint" value="connect">
+    <input type="button" id="ac0-exec" onclick="execac0();" value="new AWRI(host,endpoint);">
+    <hr>
+        <input type="button" id="ac1-exec" onclick="execac1();" value="awri.token()">
+    <hr>
+    <input type="button" id="ac2-exec" onclick="execac2();" value="awri.connect()">
+    <hr>
+        <input type="text" id="ac3-username" value="root">
+        <input type="text" id="ac3-password" value="kimo2002">
+        <input type="button" id="ac3-exec" onclick="execac3();" value="awri.login()">
+        <hr>
+        <input type="text" id="ac3a-username" value="">
+        <input type="text" id="ac3a-password" value="">
+        <input type="text" id="ac3a-mail" value="">
+        <input type="text" id="ac3a-mail-conf" value="">
+          <input type="button" id="ac3a-exec" onclick="execac3a();" value="awri.register()">
+
+    <hr>
+        <input type="button" id="ac4-exec" onclick="execac4();" value="awri.logount()">
+        <hr>
+        <input type="text" id="ac5-txt" value="">
+        <input type="button" id="ac5exec" onclick="execac5();" value="awriconnect_search_node()">
+        <hr>
+        <input type="text" id="ac6-txt" value="">
+        <input type="button" id="ac6exec" onclick="execac6();" value="awriconnect_search_user()">
+ 
+        <hr>
+        <input type="text" id="ac7-txt" value="">
+        <input type="button" id="ac7exec" onclick="execac7();" value="awriconnect_dummy()">
+        <hr>
+        <h3>awri_fragen Modul</h3>
+        <input type="text" id="ac8-txt" value="18305">
+        <input type="button" id="ac8exec" onclick="execac8();" value="awriconnect_frage_get()">
+        <hr>
+        page:<input type="text" id="ac9-page" value="100"> fields:<input type="text" id="ac9-fields" value="nid,title"> parameters:<input type="text" id="ac9-parameters" value="parameters[status]=1&parameters[type]=rechtsfrage">
+        page_size:<input type="text" id="ac9-page_size" value="1"> options :<input type="text" id="ac9-options" value="options[orderby][created]=desc">
+        <input type="button" id="ac9exec" onclick="execac9();" value="awriconnect_fragen_index()">
+        <hr>
+        <input type="text"  id="ac10-nid" value="18309"> <textarea id="ac10-data">{"body": "Hallo von Update :-)","anonym": "0","fbid": "100000611529195","fbname": "Robert Schweng"}</textarea>
+        <input type="button" id="ac10exec" onclick="execac10();" value="awriconnect_frage_update()">
+        <hr>
+         <textarea id="ac11-data">{"body": "Hallo Neu","anonym": "1","fbid": "100000611529195","fbname": "Robert Schweng"}</textarea>
+        <input type="button" id="ac11exec" onclick="execac11();" value="awriconnect_frage_create()">
+        <hr>
+        <h3>Taxonomy Modul</h3>
+        Taxonomy
+        <input type="text"  id="ac12-vid" value="3"><input type="text"  id="ac12-fields" value="vid,name,description">
+        <input type="button" id="ac12exec" onclick="execac12();" value="awriconnect_taxonomy_vocabulary()">
+        <hr>Taxonomy Term
+        page:<input type="text" id="ac13-page" value="0"> fields:<input type="text" id="ac13-fields" value="vid,name"> parameters:<input type="text" id="ac13-parameters" value="&parameters[vid]=3">
+        page_size:<input type="text" id="ac13-page_size" value="27"> options :<input type="text" id="ac13-options" value="options[orderby][name]=asc">
+        <input type="button" id="ac13exec" onclick="execac13();" value="awriconnect_taxomomy_term()">
+        <hr>
+        <h3>File</h3>
+        <input type="file" id="ac14-file" onchange="awri._previewFile(this,'img#ac14-preview')"> 
+        <img src="" id="ac14-preview" height="200" alt="Image preview...">
+        <input type="button" onclick="execac14();" value="awriconnect_file_upload()">
+        <hr>
+        <input type="text"  id="ac15-view" value="drupalgap/views_datasource/drupalgap_content"><input type="text"  id="ac15-params" value="page=0">
+        <input type="button" id="ac15exec" onclick="execac15();" value="awriconnect_view_get_viewy()">
+        <hr>
+        <input type="button" id="ac16exec" onclick="execac16();" value="awriconnect_whos_online()">
+        <hr>
+        <input type="button"  onclick="document.getElementById('log').innerHTML='';" value="CLEARLOG">
+        <input type="button"  onclick="check();" value="Connected?">
+        <ul id="log">log:</ul>
+
+<script>
+
+var user; 
+function check(){
+    alert(awri.connected);
+    console.log(awri);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+});
+
+AWRI.setLogger(print);
+awri=new AWRI(document.getElementById('ac0-host').value,document.getElementById('ac0-endpoint').value);
+ 
+(function(){
+ 
+   
+  print('anon()');
+ 
+  console.log("token")
+
+  var t=awri.token();
+  console.log("token done"+t)
+
+ console.log("connect")
+
+  awri.connect();
+  console.log("connect done")
+/*
+  console.log("awriconnect_logout")
+
+awri.awriconnect_logout();
+console.log("awriconnect_logout done")
+*/
+
+
+
+
+})();
+
+function print(line){
+    var log=document.getElementById('log');
+    var li=document.createElement('li');
+    var txt=document.createTextNode(line);
+    li.appendChild(txt);
+    log.appendChild(li);
+}
+    
+function execac0(){
+awri=new AWRI(document.getElementById('ac0-host').value,document.getElementById('ac0-endpoint').value);
+}
+
+function execac1(){
+//alert(awri.connected;
+awri.token();
+}
+
+function execac2(){
+awri.connect();
+}
+
+function execac3(){
+awri.awriconnect_login(document.getElementById('ac3-username').value ,document.getElementById('ac3-password').value);
+}
+
+function execac4(){
+awri.awriconnect_logout();
+}
+
+function execac5(){
+awri.awriconnect_search_node(document.getElementById('ac5-txt').value);
+}
+
+function execac6(){
+awri.awriconnect_search_user(document.getElementById('ac6-txt').value);
+}
+
+function execac7(){
+awri.awriconnect_dummy(document.getElementById('ac7-txt').value);
+}
+
+function execac8(){
+awri.awriconnect_frage_get(document.getElementById('ac8-txt').value);
+}
+
+function execac9(){
+awri.awriconnect_fragen_index(document.getElementById('ac9-page').value,document.getElementById('ac9-fields').value,document.getElementById('ac9-parameters').value,document.getElementById('ac9-page_size').value,document.getElementById('ac9-options').value);
+}
+
+function execac10(){
+awri.awriconnect_frage_update(document.getElementById('ac10-nid').value,document.getElementById('ac10-data').value);
+}
+
+function execac11(){
+awri.awriconnect_frage_create(document.getElementById('ac11-data').value);
+}
+
+function execac12(){
+awri.awriconnect_taxonomy_vocabulary(document.getElementById('ac12-vid').value,document.getElementById('ac12-fields').value);
+}
+
+function execac13(){
+awri.awriconnect_taxonomy_term(document.getElementById('ac13-page').value,document.getElementById('ac13-fields').value,document.getElementById('ac13-parameters').value,document.getElementById('ac13-page_size').value,document.getElementById('ac13-options').value);
+}
+
+function execac14(){
+awri.awriconnect_upload_file('ac14-preview');
+}
+
+function execac3a(){
+awri.awriconnect_register(document.getElementById('ac3a-username').value,document.getElementById('ac3a-password').value,document.getElementById('ac3a-mail').value,document.getElementById('ac3a-mail-conf').value);
+}
+
+function execac15(){
+awri.awriconnect_views_get_view(document.getElementById('ac15-view').value,document.getElementById('ac15-params').value);
+}
+
+function execac16(){
+awri.awriconnect_whos_online();
+}
+
+
+
+function exec1(){
+chat=new ChatClient(document.getElementById('1-protocol').value,document.getElementById('1-host').value,document.getElementById('1-port').value);
+alert(user.uid);
+chat.connect(user);
+}
+
+function awriconnect_user_connected(user){
+print('awriconnect_user_connected'+user.uid);
+//alert('awriconnect_user_connected:'+user.uid);
+//chat.connect(user);
+};
+function awriconnect_error(name,err){
+print(name+' :'+err);
+};
+
+function awriconnect_token(token){
+//alert('awriconnect_token:'+token);
+print('awriconnect_token: '+token);
+};
+
+
+function awriconnect_data(name,data){
+//alert('awriconnect_token:'+data);
+print(name+': '+JSON.stringify(data));
+};
+
+
+function awriconnect_upload(name,data){
+//alert('awriconnect_token:'+data);
+print(name+': '+JSON.stringify(data));
+};
+
+
+
+    </script>
+
+</body>
+
+</html>
+
+ 

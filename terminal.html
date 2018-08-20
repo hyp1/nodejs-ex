@@ -83,7 +83,7 @@ var txt = document.getElementById('cmd').value;
 var notifications=false;
 var socket;
 
-socket = io.connect('http://localhost:8080');
+socket = io.connect('http://localhost:3000');
 socket.emit('connection name',{uid:0,name:'test'});
 
 socket.on('message', function(msg){

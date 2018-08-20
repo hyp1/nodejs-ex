@@ -1,0 +1,533 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" />
+    <title>AWRI - Rechtsfrage Service</title>
+    <script src="//cdn.jsdelivr.net/bluebird/3.5.0/bluebird.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/app/chat_client.js"></script>
+    <style>
+        input#cmdline , ul#terminal
+            {
+            width: 100%;
+        }
+    </style>
+</head>
+<body onload="">
+    <h3>AWRI Connect</h3>
+    <input type="text" id="ac0-host" value="http://localhost/stage.awri.ch">
+    <input type="text" id="ac0-endpoint" value="drupalgap">
+    <input type="button" id="ac0-exec" onclick="execac0();" value="awri=new AWRI(host,endpoint)">
+    <hr>
+        <input type="button" id="ac1-exec" onclick="execac1();" value="awri.token()">
+    <hr>
+    <input type="button" id="ac2-exec" onclick="execac2();" value="awri.connect()">
+    <hr>
+    <input type="text" id="ac3-username" value="root">
+    <input type="text" id="ac3-password" value="kimo2002">
+    <input type="button" id="ac3-exec" onclick="execac3();" value="awri.login()">
+    <hr>
+    <input type="button" id="ac4-exec" onclick="execac4();" value="awri.logount()">
+    <ul id="log">log:</ul>
+    <h3>Chat Connect</h3>
+    <input type="text" id="1-protocol" value="http">
+    <input type="text" id="1-port" value="3000">
+    <input type="text" id="1-host" value="localhost">
+    <input type="button" id="1-exec" onclick="exec1();" value="chat.connect()">
+<hr>
+    <h3>Kein await in Chrome!!!</h3>
+    <textarea id="sendMessage"></textarea><input type="button" onclick="sendText();" value="sendMessage" /><hr>
+    <textarea id="sendPrivateMessage"></textarea><input type="text" id="To" value="3"><input type="button" onclick="sendPrivateText();" value="sendPrivateMessage" />
+    <hr>
+    <input type="text" id="cmdtext" value="private message">
+    <textarea id="cmddata">{"_from": "3","_to": "802",
+	"_color": "green",	"_txt": "Test Private Message"}</textarea>
+    <input type="button" onclick="executeCommand();" value="executeCommand">
+    <hr>
+
+    <ul id='users'>Users</ul>
+    <ul id='terminal'></ul>
+    <input id="cmdline" type="text" value=""/>
+
+<script>
+
+var chat=null;
+var user={uid:0,name:'anon'}; 
+
+
+function setup(){
+    chat= new ChatClient(document.getElementById('ac-protocol').value,document.getElementById('ac-host').value,document.getElementById('ac-port').value)
+};
+
+
+function connect(){
+    chat.connect(JSON.parse(document.getElementById('userdata').value))
+};
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  //host = document.getElementById('ac1-host').value;
+  //endpoint = document.getElementById('ac1-endpoint').value;
+  AWRI.setLogger(print);
+  print('DOMContentLoaded');
+});
+
+function print(line){
+    var log=document.getElementById('log');
+    var li=document.createElement('li');
+    var txt=document.createTextNode(line);
+    li.appendChild(txt);
+    log.appendChild(li);
+}
+    
+
+function execac0(){
+awri=new AWRI(document.getElementById('ac0-host').value,document.getElementById('ac0-endpoint').value);
+}
+
+function execac1(){
+awri.token();
+}
+
+function execac2(){
+awri.connect();
+}
+
+function execac3(){
+awri.awriconnect_login(document.getElementById('ac3-username').value ,document.getElementById('ac3-password').value);
+}
+
+function execac4(){
+awri.awriconnect_logout();
+}
+
+function exec1(){
+chat=new ChatClient(document.getElementById('1-protocol').value,document.getElementById('1-host').value,document.getElementById('1-port').value);
+alert(user.uid);
+chat.connect(user);
+}
+
+function awriconnect_user_connected(user){
+print('awriconnect_user_connected'+user.uid);
+//alert('awriconnect_user_connected:'+user.uid);
+//chat.connect(user);
+};
+function awriconnect_error(err){
+alert('awriconnect_error:'+err);
+};
+
+function awriconnect_token(token){
+alert('awriconnect_token:'+token);
+};
+
+
+function awriconnect_data(data){
+alert('awriconnect_token:'+data);
+console.log(data,'awriconnect_data');
+};
+
+class AWRI{
+
+constructor(host,endpoint){
+this.host=host;
+this.endpoint=endpoint;
+this._token=null;
+this._session=null;
+//this.log=console.log;
+AWRI.log("AWRI.constructed")
+return this;
+}
+
+static log(line){
+if(awri.log)awri.log(line);
+}
+
+static setLogger(log){
+    AWRI.log=log;
+}
+
+ connect() {
+        return new Promise(function (resolve, reject) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.withCredentials = true;
+            xmlhttp.open("GET",  awri.host + "/services/session/token", true);
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                    awri._token = xmlhttp.responseText;
+                   AWRI.log('connect:'+awri._token);
+                return resolve(awri._connect(awri._token));
+                }
+                if (xmlhttp.status != 200)return reject( new Error(xmlhttp.status+' Fehler in connect.'));
+            };
+            xmlhttp.send();
+        }).then(function(res){
+            console.log(res);
+            if(typeof awriconnect_user_connected == 'function')awriconnect_user_connected(res);
+        }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        });
+    }
+
+
+token() {
+        return new Promise(function (resolve, reject) {
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.withCredentials = true;
+            xmlhttp.open("GET",  awri.host + "/services/session/token", true);
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                    awri._token = xmlhttp.responseText;
+                    AWRI.log('token:'+awri._token);
+                 resolve(awri._token);
+                 if(typeof awriconnect_token == 'function')awriconnect_token(awri._token);
+                }
+                if (xmlhttp.status != 200)reject( new Error(xmlhttp.status+' Fehler in token.'));
+            };
+            xmlhttp.send();
+        }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        })
+    }
+
+
+    _connect(token) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", awri.host + "/" + awri.endpoint + "/system/connect.json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+            
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                       var  obj = JSON.parse(response);
+                    //    awri._session = obj.session_name+'_'+obj.sessid;  
+                      //  obj.user.session=obj.session_name+'_'+obj.sessid;
+                      //  obj.user.token=token;
+                        AWRI.log('_connect:'+awri._token);
+                       console.log(obj);
+                       if(obj.user.uid==0)return resolve(obj.user);
+                       else return resolve(awri.awriconnect_load_user(obj.user.uid));
+                    }
+                    if (xmlhttp.status != 200) return reject(new Error(xmlhttp.status+' Fehler connect.'));
+                };
+                xmlhttp.send();
+            });
+        }
+
+        awriconnect_load_user(uid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/user/" + uid + ".json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {                      
+                   user = JSON.parse(xmlhttp.responseText);
+                  // user.session=obj.session;
+                  // user.token=obj.token;
+                   if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_loaduser',user);                                                                   
+               
+                    return resolve(user);
+                    }
+                    if (xmlhttp.status != 200) return reject(new Error(xmlhttp.status+' Fehler in loaduser.'));
+                };
+                xmlhttp.send();
+            });
+        };
+
+     awriconnect_search_node(txt) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/search_node/retrieve.json?keys="+txt, true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                                           
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_search_node',result);                                                                   
+                        return resolve(result);
+                    }
+                    if (xmlhttp.status == 404) reject(new Error('Nichts gefunden auf:'+txt));
+
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler','awriconnect_search_node'));
+                };
+                xmlhttp.send();
+            }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        });
+        }
+
+       awriconnect_search_user(txt) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/search_user/retrieve.json?keys="+txt, true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                                           
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_search_user',result);                                                                   
+                        return resolve(result);
+                    }     
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler','awriconnect_search_user'));
+                };
+                xmlhttp.send();
+            }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        });
+        }
+  
+    awriconnect_load_node(nid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/node/"+nid+".json", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText);                                              
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_load_node',result);                                                                   
+                        return resolve(result);
+                    }                  
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler','awriconnect_load_node'));
+                };
+                xmlhttp.send();
+            }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        });;
+        }
+
+        
+        awriconnect_comments(nid) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/comment.json?parameters[nid]="+nid+"&parameters[status]=1&pagesize=150", true);
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var result= JSON.parse(xmlhttp.responseText); 
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_comments',result);                                                                   
+                        return resolve(result);
+                    }
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler', 'awriconnect_comments'));
+                };
+                xmlhttp.send();
+            }).catch(function(err){
+            if(typeof awriconnect_error == 'function')awriconnect_error(err);
+        });
+        }
+    
+
+        awriconnect_login(username,password) {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                var postData = {        
+                    username: username,
+                    password: password
+                  }   
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", awri.host + "/" + awri.endpoint + "/user/login.json");
+                xmlhttp.setRequestHeader("Content-Type", "application/json");
+                
+                 //xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                  
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        var obj = JSON.parse(response);                        
+                        user=obj.user;
+                        awri._session=obj.session_name + '_' + obj.sessid;
+                        awri._token=obj.token;
+                        console.log(user,"LOGIN");
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_login',user);                                                                   
+                  
+                         return resolve(awri.awriconnect_load_user(user.uid));                                          
+                    }
+                    if (xmlhttp.status == 401) reject(new Error('Sie sind schon eingeloggt','awriconnect_login'));
+                
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler','awriconnect_login'));
+                };  
+                xmlhttp.send(JSON.stringify(postData));
+            }).catch(function(err){
+                if(typeof awriconnect_error == 'function')awriconnect_error(err);
+            });
+        }
+
+
+    awriconnect_logout() {
+            return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();                  
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("POST", awri.host + "/" + awri.endpoint + "/user/logout.json");
+                xmlhttp.setRequestHeader("Content-Type", "application/json");                
+                xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        var response = xmlhttp.responseText;
+                        console.log(response)   
+                        if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_logout',response);                                                                   
+                  
+                        return resolve(response); 
+                    }
+                    if (xmlhttp.status == 406) reject(new Error('Sie sind nicht eingeloggt!','awriconnect_logout'));
+        
+                    if (xmlhttp.status != 200) reject(new Error(xmlhttp.status+' Fehler','awriconnect_logout'));
+                };  
+                xmlhttp.send();
+            }).catch(function(err){
+                if(typeof awriconnect_error == 'function')awriconnect_error(err);
+            });      
+        }
+        getToken(){
+            return awri._token;
+        };
+
+}
+
+
+function loadchat(){
+
+//chat=new ChatClient(location.protocol,location.hostname,8080)
+
+//chat=new ChatClient(location.protocol,location.hostname,3000)
+
+//msg=new ChatMessage();
+//msg.setFrom(variable_get('user')._uid);
+//msg.setText('Willkommen... asdasd');
+//alert(variable_get('user')._uid);
+//console.log(msg);
+//chat.sendMessage(msg); ->   onchatessage
+//chat.sendPrivateMessage('99159',msg); ->   onchatessage
+//chat.userList();      ->   onchatuserlist
+
+}//loadchat
+
+
+function sendText(txt){
+msg=new ChatMessage();
+msg.setFrom(user.uid);
+msg.setText(document.getElementById('sendMessage').value);
+chat.sendMessage(msg);
+document.getElementById('sendMessage').value="";
+document.getElementById('sendMessage').focus();
+}
+
+function sendPrivateText(to,txt){
+msg=new ChatMessage();
+//msg.setTo(document.getElementById('To'.value);
+msg.setText(document.getElementById('sendPrivateMessage').value);
+chat.sendPrivateMessage(document.getElementById('To').value,msg);
+document.getElementById('sendPrivateMessage').value="";
+document.getElementById('sendPrivateMessage').focus();
+}
+
+
+function executeCommand() {
+    //if(!socket.connected)alert("keine Verbindung!");
+
+            field = document.getElementById('cmddata');
+            cmd = {
+                _cmd: document.getElementById('cmdtext').value,
+                _data: JSON.parse(field.value),
+            }
+            chat.sendCommand(cmd); 
+}
+
+/*
+ Vom ChatClient überschriebene Functionen:
+ *onchatmessage
+ *onchatuserlist
+ *onchatcommand 
+
+ChatClient functionen
+    sendMessage(msg)
+    sendPrivateMessage(to,msg)
+    sendCommand(cmd)    
+    userList()
+
+*/
+
+function onchatconnected(user){
+    console.log(user);
+    console.log(user,'onchatconnected');
+    appendLine(user.name+': connected','green');
+}
+
+function onchatmessage(msg){
+    console.log(msg,'onchatmessage');
+    appendLine(msg._time+': <img src="'+msg._from.picture+'" width="20" height="20">'+msg._from.name+': '+msg._txt,msg._color);
+}
+
+function onchatuserlist(data){
+    console.log(data,'onchatlist');
+    ul = document.getElementById('users');
+        ul.innerHTML = "";
+        data.forEach(user => {
+        li = document.createElement('li');
+        //li.appendChild(document.createTextNode(user.uid + ' ' + user.name))
+        li.innerHTML='<img src="'+user._picture+'" width="20" height="20">'+user.uid + ' ' + user.name;
+        ul.appendChild(li);
+        });
+}
+
+function onchatcommand(data){
+    if(data._cmd=='message')onchatmessage(data._data);
+    console.log(data,'onchatcommand');
+}
+
+
+        function appendLine(text="",color="#333"){
+            ul = document.getElementById('terminal');
+            li = document.createElement('li');
+            li.style.color=color;
+            li.appendChild(document.createTextNode(text));
+            ul.appendChild(li);    
+        }
+
+       function variable_set(key, value) {
+            if (typeof (window.Storage) !== "undefined") {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+
+        function variable_get(key, def = null) {
+            if (typeof (window.Storage) !== "undefined") {
+                item = JSON.parse(window.localStorage.getItem(key));
+                if (item == undefined) return def;
+                return item;
+            } else {
+                console.error('window.localStorage', 'ERROR');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

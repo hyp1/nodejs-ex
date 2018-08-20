@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Async Dislogs Example</title>
+
+  <script src="/app/awriconnect.promise.js"></script>
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+      var time = document.getElementById('time-stamp');
+      clockTick();
+      setInterval(clockTick, 1000);
+      function clockTick() {
+        time.innerHTML = '' + new Date();
+      }
+    });
+  </script>
+  <style type="text/css">
+    #dialog {
+      width: 200px;
+      margin: auto;
+      border: thin solid black;
+      padding: 10px;
+      background: lightgreen;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+        <button id="test" onclick="doconn();" >Connect</button>
+        <button id="test" onclick="showDialog();" >Set Name</button>
+  <p>The current time is <span id="time-stamp"></span>.</p>
+  <p>Your name is <span id="prompt"></span>.</p>
+  <button id="action">Set Name</button>
+  <div id="dialog" class="hidden">
+    <div class="message">foobar</div>
+    <input type="text">
+    <div>
+      <button class="ok">Ok</button>
+      <button class="cancel">Cancel</button>
+    </div>
+  </div>
+  <script>
+
+AWRI.setLogger(console.log);
+awri=new AWRI('http://localhost/stage.awri.ch','connect');
+
+function awriconnect_user_connected(user){
+alert("awriconnect_user_connected"+user.name);
+}
+function doconn(){
+   
+   awri.token().then(function(token){
+       console.log(token,"GOT TOKEN");
+       return awri.connect(token).then(function(user){
+          console.log(user,"GOT USER");
+           if(user.uid==0)return promptPromise("Wie heissen Sie?").then(function(name){
+               alert("Willkommen "+name);
+           });
+           else { 
+                    return awri.awriconnect_load_user(user.uid).then(function(user){
+                    console.log(user,"FULLL");
+                    }) 
+                }
+       })
+   }).catch(function(err){
+       alert(err);
+   });
+};
+
+function doconn2(){
+   
+     token().then(function(token){
+         console.log(token,"GOT TOKEN");
+         return connect(token).then(function(user){
+            console.log(user,"GOT USER");
+             if(user.uid==0)return promptPromise("Wie heissen Sie?").then(function(name){
+                 alert("Willkommen "+name);
+             });
+         })
+     });
+
+};
+
+function token() {
+    return new Promise(function (resolve, reject) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.withCredentials = true;
+                xmlhttp.crossDomain = true;
+                xmlhttp.open("GET",  awri.host + "/services/session/token", false);
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                        awri._token = xmlhttp.responseText;
+                       //AWRI.log('connect:'+awri._token);
+                       console.log(awri._token);
+                    (function(){
+                        setTimeout(() => {
+                        console.log("Time");
+                    }, 8000);
+                })
+              
+                    resolve(awri._token);
+                }
+                 
+                    if (xmlhttp.status != 200) reject(  new AWRIError(xmlhttp.status+' Fehler in connect.'));
+                };
+                xmlhttp.send(null);
+   });
+}
+
+function connect(token) {
+    return new Promise(function (resolve, reject) {
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.withCredentials = true;
+                    xmlhttp.crossDomain = true;
+                    xmlhttp.open("POST", awri.host + "/" + awri.endpoint + "/system/connect.json", false);
+                    xmlhttp.setRequestHeader("Content-Type", "application/json");
+                    xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                
+                    xmlhttp.onreadystatechange = function () {
+                        if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                            var response = xmlhttp.responseText;
+                           var  obj = JSON.parse(response);                   
+                            resolve(obj.user);
+                        }
+                        if (xmlhttp.status != 200) return reject( new AWRIError(xmlhttp.status+' Fehler connect.'));
+                    };
+                    xmlhttp.send();
+                })
+}
+
+
+  function promptPromise(message) {
+  var dialog       = document.getElementById('dialog');
+  var input        = dialog.querySelector('input');
+  var okButton     = dialog.querySelector('button.ok');
+
+  dialog.querySelector('.message').innerHTML = String(message);
+  dialog.className = '';
+
+  return new Promise(function(resolve, reject) {
+    dialog.addEventListener('click', function handleButtonClicks(e) {
+      if (e.target.tagName !== 'BUTTON') { return; }
+      dialog.removeEventListener('click', handleButtonClicks);
+      dialog.className = 'hidden';
+      if (e.target === okButton) {
+        resolve(input.value);
+      } else {
+        reject(new Error('User cancelled'));
+      }
+    })
+})
+}
+/*
+document.addEventListener('DOMContentLoaded', function() {
+  var button = document.getElementById('action');
+  var output = document.getElementById('prompt');
+  button.addEventListener('click', function() {
+    promptPromise('What is your name?').then(function(name) {
+      output.innerHTML = '' + name;
+    })
+    .catch(function() {
+      output.innerHTML = '¯\\_(ツ)_/¯';
+    });
+  });
+});
+*/
+function showDialog(test='Hallo Welt'){
+    new promptPromise(test).then(function(name) {
+     alert(name);
+    }).catch(function(err){
+        alert(err)
+    })
+};
+
+
+
+  </script>
+</body>
+</html>
