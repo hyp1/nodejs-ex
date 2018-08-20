@@ -62,6 +62,7 @@ class ChatServer{
                     socket.emit('connected', clients[user._uid]);
                     _broadcastUserlist();
                     _flushMsgBuffer(socket);
+                    console.log(user);
                 })//connect name 
             } 
             else //authenticated user 
@@ -185,7 +186,7 @@ class ChatServer{
     socket.on('disconnect', function (data){
         console.log(data,'disconnect');
         console.log(socket._uid,'disconnect uid');
-        delete clients[socket._uid];
+        if(socket._uid!=='undefined')delete clients[socket._uid];
         _broadcastUserlist();
     }); //disconnect
 
