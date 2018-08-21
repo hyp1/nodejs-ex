@@ -272,7 +272,7 @@ else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.start
             cuser._email=full.mail;
             cuser._fbid=full.field_fbid['und'][0].value;
             if(cuser._fbid!=='undefined')cuser._picture='https://graph.facebook.com/'+cuser._fbid+'/picture?type=small';
-            if(full.picture.url!=='undefined')cuser._picture=full.picture.url;
+            if(full.picture&&full.picture.url!=='undefined')cuser._picture=full.picture.url;
 
             cuser._created=full.created;
             cuser._access=full.access;
