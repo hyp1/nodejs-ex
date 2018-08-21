@@ -192,10 +192,18 @@ cuser= new ChatUser();
 
 
 (function (){
-    appendLine('<h2><img style="vertival-align:middle;" src="img/logo_blank_50x50.png"> Willkommen im AWRI Chat<h2>');
-    appendLine('Schreiben Sie <strong>/info</strong> in den Chat, um weitere Informationen zu erhalten.');
+  //  appendLine('<h2><img style="vertival-align:middle;" src="img/logo_blank_50x50.png"> Willkommen im AWRI Chat<h2>');
+  //  appendLine('Schreiben Sie <strong>/info</strong> in den Chat, um weitere Informationen zu erhalten.');
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
+
+awri.awriconnect_load_node(18329).then(function(node){
+    
+appendLine(node.body['und'][0].value);
+})
+
+
+
 })();
 
 

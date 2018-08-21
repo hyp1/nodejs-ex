@@ -297,9 +297,9 @@ class AWRI{
                     xmlhttp.onreadystatechange = function () {
                         if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
                             var result= JSON.parse(xmlhttp.responseText);  
-                            console.log(result);                                            
+                                                                   
                             if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_load_node',result);                                                                   
-                             resolve(result.nodes);
+                            resolve(result);
                         }                  
                         if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler','awriconnect_load_node'));
                     };
