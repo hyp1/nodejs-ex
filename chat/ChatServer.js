@@ -350,7 +350,9 @@ function sendErrorTo(to,text){
 function sendMessage(from,text,color="#333"){
     var msg=new ChatMessage({uid:from._uid,name:from._name, picture:from._picture},text);
     msg.setColor(color); 
-    io.emit('command data', new ChatCommand("message",msg));
+    var cmd=new ChatCommand("message",msg);
+    if(processCommand)processCommand(cmd);
+    io.emit('command data',cmd);
 }
 
 function sendMessageTo(from,to,text,color="#333"){
