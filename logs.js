@@ -88,8 +88,8 @@ router.get('/cleardb', function (req, res) {
   if (db) {
     db.then(function(db) {
   //  console.log('messages,counts droppend')
-    db.collection('messages').remove();
-    db.collection('counts').remove();    
+    db.collection('messages').drop();
+    db.collection('counts').drop();    
     });
     res.send('messages,counts droppend');
   }else{

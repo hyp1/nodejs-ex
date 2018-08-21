@@ -88,6 +88,7 @@ class ChatServer{
                     console.info("connect name %s %s (anonymous).",user._uid,user._name);
                     sendMessage(user,"hat den Chat betreten","green")
                 })//connect name 
+                
             } 
             else //authenticated user 
             {
@@ -118,7 +119,6 @@ isKicked(user._uid).then(function(res){
 
         socket.on('command', function (cmd) {
             console.info("command %s(%d) %s  ",user._name,user._uid,cmd._cmd);  
-
             if (cmd._cmd == 'whois') {              
                 var fr=clientByUID(socket._uid);
             if(!_user_is_in_role(fr,["administrator","moderator"]))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
