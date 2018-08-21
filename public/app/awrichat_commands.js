@@ -32,7 +32,7 @@ function parseCommand(cmd){
    if(cmd.startsWith('login'))cmdLogin(cmd.substr(6,cmd.length));           
    if(cmd.startsWith('logout'))cmdLogout(cmd.substr(7,cmd.length));           
    if(cmd.startsWith('uploads'))cmdUploads(cmd.substr(8,cmd.length));
-   if(cmd=='upload')cmdUpload();  
+   if(cmd=='upload')cmdUpload();
    if(cmd.startsWith('show image'))cmdshowImage(cmd.substr(11,cmd.length));
    else if(cmd.startsWith('show content'))cmdshowContent(cmd.substr(13,cmd.length));
    else  if(cmd.startsWith('show'))cmdShow(cmd.substr(5,cmd.length));
@@ -265,8 +265,8 @@ function cmdUploads(page="0"){
     
     awri.awriconnect_get_files($("#user").attr('uid'),page).then(function(result){
         var files=JSON.parse(result);
-        files.forEach(file => {
-            appendLine("<p><strong>["+file.fid+"]</strong> "+ file.filename+'</p><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100">');
+        files.forEach(file => {      
+            appendLine("<p><strong>["+file.fid+"]</strong></p><p>Dateiname:"+ file.filename+'</p><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100"><p>Dateigrösse:'+(file.filesize/1000)+' Kb</p>');
         });
         $('#msg').val('');
     })
@@ -314,10 +314,20 @@ function cmdUpload(){
 function cmdshowImage(params){
     var param=params.split(' ');
     var msg=new ChatMessage();
-    awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
+    if(!param[1]){
+        awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
+            msg.setFrom($("#user").attr("uid"));
+            console.log(image);
+            var file=image.uri.replace("public://",host+"/sites/default/files/");
+            msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
+            appendMessage(msg);
+        });
+        return;
+    }
+         awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
         msg.setFrom($("#user").attr("uid"));
         var file=image.uri.replace("public://",host+"/sites/default/files/");
-        msg.setText('<img src="'+file+'">');
+        msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
         chat.sendPrivateMessage(param[1],msg);
     });
 }

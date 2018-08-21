@@ -283,8 +283,7 @@ else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.start
 });
 
 function awriconnect_user_connected(user){
-    //if(user.uid==0)chat.connect(user);
-console.log(user,"awriconnect_user_connected");
+//console.log(user,"awriconnect_user_connected");
 }
 
 function onchatconnected(user){
@@ -396,6 +395,7 @@ function unsetPriv(){
 function sendText(){
 if($('#msg').val()=="")return;
 var txt=$('#msg').val();
+txt=convertLinks(txt);
 if(txt.length==2&&isEmoji(txt))txt='<span style="font-size:2em;">'+txt+'</span>';
 
 
@@ -448,7 +448,6 @@ function appendMessage(msg){
     ul.appendChild(li); 
     window.scrollTo(0, document.body.scrollHeight);   
 }
-
 
 function putSmiley(c){
     var smiley=($(c).text())
@@ -605,21 +604,17 @@ function getFormattedDate(time) {
     return str;
 }
 
-function readCookie(){
-    uid=read_cookie('DRUPAL_UID');
-    name=read_cookie('sessname');
-    id=read_cookie('sessid');
-    token=read_cookie('token');
-    document.getElementById('uid').value=uid;
-    document.getElementById('sessname').value=name;
-    document.getElementById('sessid').value=id;
-    document.getElementById('token').value=token;
-}     
 
 function read_cookie(key)
 {
     var result;
     return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
+}
+
+function convertLinks(txt){
+   txt=txt.replace(/((http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png))/g,'<img  src="$1">')
+   txt=txt.replace(/((http|https|ftp):\/\/[\w?=&.\/-;#~%-]+(?![\w\s?&.\/;#~%"=-]*>))/g, '<a href="$1" target="_BLANK">$1</a>');
+   return txt;
 }
 
 function isAdmin(){
