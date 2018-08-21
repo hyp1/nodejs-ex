@@ -43,12 +43,12 @@ class ChatServer{
             web.emit('event',"Willkommen");
             var admin=clientByUID(3);
             if(!admin)return;
-            sendMessageTo({_uid:3,_name:"Admin",_picture:"img/anonymous.png"},admin,"Ein Benutzer ist auf der Webseite")            
+            sendMessageTo({_uid:3,_name:"Admin",_picture:"img/logo_blank_50x50.png"},admin,"Ein Benutzer ist auf der Webseite")            
               socket.on('message', function (msg) {
                 console.log(msg);
                 web.emit('event',msg);
 
-                sendMessageTo({_uid:0,_name:"WebUser",_picture:"img/anonymous.png"},admin,msg)            
+                sendMessageTo({_uid:0,_name:"WebUser",_picture:"img/logo_blank_50x50.png"},admin,msg)            
       
                 io.to(admin._sid).emit(new ChatCommand("error",msg));
             })
@@ -146,9 +146,10 @@ isKicked(user._uid).then(function(res){
                 console.info("adminmsg %s(%d).",fr._name,fr._uid); 
             }
             if (cmd._cmd == 'kick') {
+                var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
                 var to=clientByUID(cmd._data);
                 if(!to)return sendError("Kein Empfänger mit der ID ["+cmd._data+"]");
-                var fr=clientByUID(socket._uid);
                 sendMessage(fr,to._name+" wurde gekickt!");
                 logKick(fr._uid,to._uid);
                 socket.disconnect();
@@ -157,13 +158,16 @@ isKicked(user._uid).then(function(res){
                 console.info("kick %s(%d) -> %s(%d) %s.",fr._name,fr._uid,to._name,to._uid,cmd._data);
             }
             if (cmd._cmd == 'unkick') {
-                var fr=clientByUID(socket._uid);            
+                var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")            
                 delKick(cmd._data);
                 sendMessage(fr,"Benutzer mit der ID ["+cmd._data+"] wurde aus der Kickliste entfernt!");
                 console.info("unick %s(%d) -> %d.",fr._name,fr._uid,cmd._data);
             }
             if (cmd._cmd == 'kicks') {
                 var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
+
                 var msg=new ChatMessage(socket._uid); 
                 msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });         
                 listKicks().then(function(result){
@@ -175,15 +179,20 @@ isKicked(user._uid).then(function(res){
             }
 
             if (cmd._cmd == 'ban') {
+                var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
+
                 var to=clientByUID(cmd._data);
                 if(!to)return sendError("Kein Empfänger mit der ID ["+cmd._data+"]");
-                var fr=clientByUID(socket._uid);
+
                 sendMessage(fr,to._name+"'s IP Adresse "+to._ip+" wurde gebannt!");
                 logBan(fr._uid,to._uid,to._ip);
                 console.info("ban %s(%d) -> %s(%d) %s.",fr._name,fr._uid,to._name,to._uid,cmd._data);
             }
             if (cmd._cmd == 'unban') {
-                var fr=clientByUID(socket._uid);            
+                var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
+            
                 delBan(cmd._data);
                 sendMessage(fr,"Benutzer mit der ID ["+cmd._data+"] wurde aus der Bannliste entfernt!");
        
@@ -191,6 +200,8 @@ isKicked(user._uid).then(function(res){
             }
             if (cmd._cmd == 'bans') {
                 var fr=clientByUID(socket._uid);
+                if(!_checkAccess(fr))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
+
                 var msg=new ChatMessage(socket._uid); 
                 msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });         
                  listBans().then(function(result){
@@ -309,25 +320,25 @@ function _flushMsgBuffer(socket){
 }
 
 function sendCommand(cmd,data){
-    var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},data);
+    var msg=new ChatMessage({uid:0,name:"Server", picture:"img/logo_blank_50x50.png"},data);
     msg.setColor("red"); 
     io.emit('command data', new ChatCommand(cmd,data));
 }
 function sendCommandTo(to,cmd,data){
-    //var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},data);
+    //var msg=new ChatMessage({uid:0,name:"Server", picture:"img/logo_blank_50x50.png"},data);
     //msg.setColor("red"); 
     io.to(to._sid).emit('command data', new ChatCommand(cmd,data));
 }
 
 function sendError(text){
-      var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},text);
+      var msg=new ChatMessage({uid:0,name:"Server", picture:"img/logo_blank_50x50.png"},text);
       msg.setColor("red"); 
       io.emit('command data', new ChatCommand("error",msg));
       console.info("error %s.",text);
 }
 
 function sendErrorTo(to,text){
-    var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},text);
+    var msg=new ChatMessage({uid:0,name:"Server", picture:"img/logo_blank_50x50.png"},text);
     msg.setColor("red"); 
     io.to(to._sid).emit('command data', new ChatCommand("error",msg));
     console.info("errorto %s(%d) -> %s.",to._name,to._uid,text);
@@ -368,16 +379,6 @@ return ret;
 }
     
 
-
-function removeItem(array, item){
-    for(var i in array){
-        if(array[i]==item){
-            array.splice(i,1);
-            break;
-        }
-    }
-}
-
 function _user_has_role(user,hasrole){
       var k=Object.keys(user._roles);
       let r=false;
@@ -401,5 +402,9 @@ function _user_is_in_role(user,arr){
   function _addKick(uid){
       logs.insert();
   }
+
+function _checkAccess(user){
+return  _user_is_in_role(user,["administrator","moderator"]);
+}
 
 module.exports= {ChatServer,clientByUID};
