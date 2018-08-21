@@ -83,7 +83,6 @@ function cmdHelp(){
     '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
     '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/show content [Beitrags-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] den Beitrag mit der [Beitrags-ID] an)',
-    '<strong>/show image [Datei-ID] {[Benutzer-ID]}</strong> (zeigt das Bild mit der [Datei-ID] ihnen oder optional dem Benutzer mit der [Benutzer-ID] an)',
     '<strong>/adminmsg</strong> (sendet die Nachricht an alle Admins oder Moderatoren im Chat)',
    
     '<span style="color:blue;">Befehlsliste (AWRI Mitglieder)</span>',
@@ -93,7 +92,8 @@ function cmdHelp(){
     '<strong>/add bookmark [Beitrags-ID]</strong> (fügt den Beitrag mit der [Beitrags-ID] zu Ihren Lesezeichen hinzu.)', 
     '<strong>/del bookmark [Beitrags-ID]</strong> (entfernt den Beitrag mit der [Beitrags-ID] von Ihren Lesezeichen.)', 
     '<strong>/upload</strong> (Datei hochladen)', 
-
+    '<strong>/show image [Datei-ID] {[Benutzer-ID]}</strong> (zeigt das Bild mit der [Datei-ID] ihnen oder optional dem Benutzer mit der [Benutzer-ID] an)',
+  
     '<strong>/uploads {[Seite]}</strong> (Zeigt Ihre hochgeladenen Dateien an. Es werden immer 10 auf einer Seite angezeigt.)', 
     '<span style="color:red;">Befehlsliste (AWRI Admins/Moderatoren)</span>',
     '<strong>/kick [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus dem Chat)',
