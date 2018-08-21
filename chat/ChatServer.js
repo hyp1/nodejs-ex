@@ -80,7 +80,6 @@ class ChatServer{
                     user._name=answer._name;
                     user._sid = socket.conn.id;
                     user._ip = socket.handshake.address;
-                    if(isinBans(user._ip))return sendError(user._ip+" wurde gebannt!");
                     clients[user._uid]=user;
                     socket._uid=user._uid;
                     socket.emit('connected', clients[user._uid]);
@@ -103,9 +102,6 @@ isKicked(user._uid).then(function(res){
         return;
     }
 });
-
-                if(isinKicks(user._uid))return sendError(user._uid+" wurde gekickt!");
-                if(isinBans(user._ip))return sendError(user._ip+" wurde gebannt!");
 
                 clients[user._uid]=user;
                 socket._uid=user._uid;
@@ -365,22 +361,6 @@ function sendMessageTo(from,to,text,color="#333"){
 function _addToMsgBuffer(cmd){
    if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
     MsgBuffer.push(cmd);
-}
-
-function isinKicks(uid){
-var ret=false;
-    kicks.forEach(kicked => {
-        if(uid==kicked)ret=true;
-    });
-return ret;
-}
-
-function isinBans(ip){
-var ret=false;
-    bans.forEach(banned => {
-        if(ip==banned)ret=true;
-    });
-return ret;
 }
     
 
