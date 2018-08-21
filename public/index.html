@@ -157,10 +157,22 @@ $(function() {
         return true;
         }
     }); //keypress
+
+
+$("input[type='checkbox']#checkbox-mini-0").bind( "change", function(event, ui) {
+notifications= $('input[type="checkbox"]#checkbox-mini-0').prop("checked");
+});
+
+$("input[type='checkbox']#pause").bind( "change", function(event, ui) {
+pause= $('input[type="checkbox"]#pause').prop("checked");
+});
+
+
 }); //jQuery
 
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
+var pause=false;      //pause msg toggle
 var color ='#333';
 var audiofile='app/notification.mp3'; //notification Alarm
 var chat=null;
@@ -280,7 +292,7 @@ function onchatconnected(user){
 function onchatmessage(msg){
     console.log(msg,'onchatmessage');
     if(notifications&&msg._to.uid==variable_get('user')._uid)notify(getFormattedDate(msg._time)+': '+msg._from.name+': '+msg._txt,msg._from.picture,audiofile);
-    appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"/> '+msg._from.name+': '+msg._txt,msg._color);
+    if(!pause)appendLine('<small>'+getFormattedDate(msg._time)+'</small>: <img src="'+msg._from.picture+'" width="20" height="20"/> '+msg._from.name+': '+msg._txt,msg._color);
 }
 
 function onchatuserlist(data){
@@ -412,7 +424,6 @@ function setColor(c){
 
 
 function appendLine(text="",color="#333"){
-
     ul = document.getElementById('messages');
     li = document.createElement('li');
     li.style.color=color;
@@ -471,9 +482,6 @@ window.addEventListener('load', function () {
 });
 
 
-$("input[type='checkbox']").bind( "change", function(event, ui) {
-notifications= $('input[type="checkbox"]').prop("checked");
-});
 
 cnt=0;
 function notify(mesg,img,snd){

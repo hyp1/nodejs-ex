@@ -2,7 +2,9 @@
     background: url('../img/30.gif'); 
 	background-size: 2.875em 2.875em;
 }
-
+a{
+    text-decoration: none;
+}
 ul {
     list-style-type: none;
 }

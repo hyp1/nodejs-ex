@@ -248,6 +248,9 @@ function cmdLogin(str){
 }
 
 function cmdLogout(){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     awri.awriconnect_logout().then(function(result){
         location.reload();
     }).catch(function(err){
@@ -255,7 +258,11 @@ function cmdLogout(){
     });
 }
 
-function cmdUploads(page="0"){    
+
+function cmdUploads(page="0"){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     awri.awriconnect_get_files($("#user").attr('uid'),page).then(function(result){
         var files=JSON.parse(result);
         files.forEach(file => {
@@ -264,6 +271,8 @@ function cmdUploads(page="0"){
         $('#msg').val('');
     })
 }  
+
+
     /*
 awri.awriconnect_views_get_view('user/files').then(function(result){
 console.log(result.nodes);
@@ -284,6 +293,9 @@ nodes.forEach(file => {
 
 
 function cmdUpload(){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     showUploadDialog("Datei hochladen").then(function(file){
     showLoader();
         awri.awriconnect_upload_file('upload-preview').then(function(upl){
@@ -331,6 +343,9 @@ var param=params.split(' ');
 }
 
 function cmdBookmarks(page=0){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     showLoader();   
     awri.awriconnect_bookmarks($("#user").attr("uid"),page).then(function(result){      
    //console.log(result);
@@ -345,6 +360,9 @@ $('#msg').val('');
 }
 
 function cmdAddBookmark(nid){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     showLoader();   
     awri.awriconnect_bookmark_action('bookmarks',nid,"flag").then(function(result){      
    console.log(result);
@@ -359,6 +377,9 @@ $('#msg').val('');
 }
 
 function cmdDelBookmark(nid){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+    
     showLoader();   
     awri.awriconnect_bookmark_action('bookmarks',nid,"unflag").then(function(result){      
    console.log(result);
