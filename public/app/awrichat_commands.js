@@ -317,7 +317,6 @@ function cmdshowImage(params){
     if(!param[1]){
         awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
             msg.setFrom($("#user").attr("uid"));
-            console.log(image);
             var file=image.uri.replace("public://",host+"/sites/default/files/");
             msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
             appendMessage(msg);
