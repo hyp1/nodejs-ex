@@ -111,7 +111,7 @@ isKicked(user._uid).then(function(res){
                 _broadcastUserlist();
                 _flushMsgBuffer(socket);
                 console.info("connect name %d %s.",user._uid,user._name);
-                sendMessage(user,"hat den Chat betreten","green")
+                sendMessage(user,"hat den Chat betreten.","green")
 
             }
 /***************************Commanfs *****************************/

@@ -83,7 +83,7 @@ function cmdHelp(){
     '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
     '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/show content [Beitrags-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] den Beitrag mit der [Beitrags-ID] an)',
-    '<strong>/show image [Datei-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] das Bild mit der [Datei-ID] an)',
+    '<strong>/show image [Datei-ID] {[Benutzer-ID]}</strong> (zeigt das Bild mit der [Datei-ID] ihnen oder optional dem Benutzer mit der [Benutzer-ID] an)',
     '<strong>/adminmsg</strong> (sendet die Nachricht an alle Admins oder Moderatoren im Chat)',
    
     '<span style="color:blue;">Befehlsliste (AWRI Mitglieder)</span>',
