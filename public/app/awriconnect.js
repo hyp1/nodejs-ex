@@ -794,8 +794,7 @@ class AWRI{
         }
 
            //base64 emcoded image data
-           awriconnect_upload_filedata(data) {
-            console.log(awri.host + "/"+awri.endpoint+"/file.json");
+           awriconnect_upload_filedata(data) {         
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;

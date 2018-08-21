@@ -70,7 +70,7 @@
             <div id="upldialog" class="hidden">
                 <div class="message">foobar</div>
                 <input type="file" id="upload-file" onchange="awri._previewFile(this,'img#upload-preview')">
-                <img src="" id="upload-preview" height="200" alt="Image preview...">
+                <img src="img/preview.jpg" id="upload-preview" height="200" alt="Image preview...">
                 <div>
                   <button class="uplok">Ok</button>
                   <button class="uplcancel">Cancel</button>
@@ -140,8 +140,7 @@ $(function() {
             $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);
         } 
         }
-        if ((e.which && e.which == 40) || (e.keyCode && e.keyCode == 40)) {    
-            console.log(cmdBufferIndex+' -> '+cmdBuffer.length)        
+        if ((e.which && e.which == 40) || (e.keyCode && e.keyCode == 40)) {                   
             if(cmdBufferIndex>0)cmdBufferIndex=(cmdBufferIndex-1);
             else cmdBufferIndex=cmdBuffer.length-1;
             $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);                                
@@ -181,7 +180,7 @@ cuser= new ChatUser();
 
 
 (function (){
-    appendLine('<h2>Willkommen im AWRI Chat<h2>','green');
+    appendLine('<h2><img style="vertival-align:middle;" src="img/logo_blank_50x50.png"> Willkommen im AWRI Chat<h2>');
     appendLine('Schreiben Sie <strong>/info</strong> in den Chat, um weitere Informationen zu erhalten.');
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
@@ -308,8 +307,26 @@ function onchatcommand(cmd){
 console.log(cmd,'onchatcommand');
 if(cmd._cmd=='whois data')appendLine(theme_user(cmd._data));
 
-
+if(cmd._cmd=='kicks data')appendLine(theme_kicks(cmd._data._txt));
+if(cmd._cmd=='bans data')appendLine(theme_bans(cmd._data._txt));
 if(cmd._cmd=="private command" && cmd._data._txt.startsWith('show content'))showContentFrom(cmd._data._from,cmd._data._txt.substr(12,cmd._data._txt.length));
+}
+
+function theme_kicks(kicks){
+    var n='<ul id="kicks">';
+    kicks.forEach(kick => {
+        n+='<li>'+getFormattedDate(kick.time)+' '+kick.to+'</li>';
+    });
+    n+='</ul>';
+return n;
+}
+function theme_bans(bans){
+    var n='<ul id="bans">';
+            bans.forEach(ban => {
+        n+='<li>'+getFormattedDate(ban.time)+' '+ban.to+' '+ban.ip+'</li>';
+    });
+    n+='</ul>';
+return n;
 }
 
 function showContentFrom(from,nid){

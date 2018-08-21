@@ -271,7 +271,7 @@ class ChatUser {
       this._time = Date.now();
       this._name = name;
       this._picture ='img/anonymous.png';  
-      this._roles={'1':'anonymous user'}
+      this._roles={'0':'anonymous user'}
       this._email = null;
       this._fbid = null;
       this._session= null;

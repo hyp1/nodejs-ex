@@ -44,15 +44,12 @@ function parseCommand(cmd){
 
 function addCmdToBuffer(str){
     if(cmdBuffer.length>cmdBufferMax)cmdBuffer.shift();
-    cmdBuffer.push(str);
-    console.log("cmd added to cmdBuffer:"+str); 
-    console.log("cmdBuffer len:"+cmdBuffer.length); 
-       
+    cmdBuffer.push(str);      
 }
 
 function cmdInfo(){
     help=[
-    '<h3>AWRI Chat Info</h3>',
+    '<h3><img style="vertival-align:middle;" src="img/logo_blank_50x50.png"> AWRI Chat Info</h3>',
     'Dieser Chat ist mit der AWRI Datenbank verbunden.',
     'Benutzer die auf '+l('AWRI (Alles was Recht ist)','https://awri.ch',{id:"awrihome",target:"_BLANK"})+' angemeldet sind, könnnen aus dem Chat authentifizierte Anfragen an AWRI senden.',
     'Falls sie noch nicht auf '+l('AWRI','https://awri.ch',{id:"awrihome",target:"_BLANK"})+' angemeldet sind,',
@@ -64,7 +61,7 @@ function cmdInfo(){
     'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
     'Moderatoren haben dieses <span class="modsym">🛡</span> und Admins <span class="adminsym">⚔️</span> ein solches Präfix vor den Namen.',
     'Mit den Pfeiltasten (hoch/runter) können Sie ihre letzten Befehle wiederholen.',
-    'Anonyme Benutzer haben dieses '+theme_user_picture('app/anonymous.png')+' Profilbild',
+    'Anonyme Benutzer haben dieses '+theme_user_picture('img/anonymous.png')+' Profilbild',
     'Viel Spass beim Diskutieren und bitte immer freundlich bleiben. ¯\\_(ツ)_/¯',
 ];
 help.forEach(line => {
@@ -290,7 +287,11 @@ function cmdUpload(){
     showUploadDialog("Datei hochladen").then(function(file){
     showLoader();
         awri.awriconnect_upload_file('upload-preview').then(function(upl){
-            appendLine('<img src="'+upl.uri+'" width="200">')
+            console.log(upl,"UPLOAD");
+            awri.awriconnect_get_file_by_fid(JSON.parse(upl).fid).then(function(file){
+                var image = file.uri.replace('public://',awri.host+"/sites/default/files/");
+                appendLine('<strong>ID['+fid+']</strong><p><img src="'+image+'" width="200"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>')
+            })
         }).catch(function(err){
         hideLoader();
         });

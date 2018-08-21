@@ -1,5 +1,6 @@
-const server = require('http').createServer();
-const http = require('../server').http;
+//const server = require('http').createServer();
+//const http = require('../server').http;
+
 const {ChatCommand} = require('./ChatCommand');
 const {ChatMessage} = require('./ChatMessage');
 /*
@@ -26,6 +27,17 @@ class ChatServer{
          }
 
     start(){
+//console.log(m.SimpleMessage,"LOGKICK");
+//lk.requestP("https://awri.ch");
+
+//clearKicks();
+//logKick(3,802);
+//delKick(802);
+//listKicks().then(function(result){
+//    console.log(result,"test kicks");
+//});
+
+
 
    var web= io.of("/web").on('connect', (socket) => {
             web.emit('event',"Willkommen");
@@ -43,10 +55,21 @@ class ChatServer{
         })
 
     var chat=io.of("/").on('connect', (socket) => {
+        console.info("connect name %s %s",socket.handshake.address,socket.conn.id);
 
         socket.on('connection name', function (user) {
             
             user._sid = socket.conn.id;
+            user._ip = socket.handshake.address;
+            isBanned(user._ip).then(function(res){
+                if(res&&res.ip==user._ip){
+                    sendError(res.ip+" wurde gebannt!");
+                    socket.disconnect();                   
+                    return;
+                }
+            });
+
+            
             if(user._uid<1)
             {
                 socket.emit('connect name','Sie sind anonym verbunden. Bitte geben sie einen Benutzernamen ein.',function(answer){                             
@@ -57,20 +80,30 @@ class ChatServer{
                     user._name=answer._name;
                     user._sid = socket.conn.id;
                     user._ip = socket.handshake.address;
+                    if(isinBans(user._ip))return sendError(user._ip+" wurde gebannt!");
                     clients[user._uid]=user;
                     socket._uid=user._uid;
                     socket.emit('connected', clients[user._uid]);
                     _broadcastUserlist();
                     _flushMsgBuffer(socket);
-                    console.log(user);
+                    console.info("connect name %s %s (anonymous).",user._uid,user._name);
                 })//connect name 
             } 
             else //authenticated user 
             {
-                user._ip = socket.handshake.address;
+        
 
-                console.log(isinKicks(user._uid),"ISKICKED");
-                if(isinKicks(user._uid))return sendError(user._ip+" wurde gekickt!");
+isKicked(user._uid).then(function(res){
+    if(res&&res.to==user._uid){
+        sendError(res.to+" wurde gekickt!");
+        socket.disconnect();
+        _broadcastUserlist();
+        delete clients[res.to];
+        return;
+    }
+});
+
+                if(isinKicks(user._uid))return sendError(user._uid+" wurde gekickt!");
                 if(isinBans(user._ip))return sendError(user._ip+" wurde gebannt!");
 
                 clients[user._uid]=user;
@@ -80,19 +113,21 @@ class ChatServer{
                 socket.emit('connected', clients[user._uid]);
                 _broadcastUserlist();
                 _flushMsgBuffer(socket);
+                console.info("connect name %d %s.",user._uid,user._name);
             }
 /***************************Commanfs *****************************/
 
         socket.on('command', function (cmd) {
-            console.log(cmd._cmd);
-            if (cmd._cmd == 'whois') {
+            console.info("command %s(%d) %s  ",user._name,user._uid,cmd._cmd);  
+
+            if (cmd._cmd == 'whois') {              
                 var fr=clientByUID(socket._uid);
-           if(!_user_is_in_role(fr,["administrator","moderator"]))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
+            if(!_user_is_in_role(fr,["administrator","moderator"]))return sendErrorTo(fr,"Sie sind kein Admin oder Moderator!")
                 //if()
                 var who=clientByUID(cmd._data);
                 if(!who)return sendErrorTo(fr,"User nicht online!")
-                console.log(who,"WHO");
                 sendCommandTo(fr,'whois data',who);
+                console.info("whois %s(%d) -> %s.",fr._name,fr._uid,cmd._data);
             }
             if (cmd._cmd == 'adminmsg') {
                 var admins=[];
@@ -105,32 +140,38 @@ class ChatServer{
                 admins.forEach(admin => {
                     sendMessageTo(fr,admin,cmd._data,'red');
                     str+=admin._name+",";
-                    console.log(admin._name,"ADMINS");
                 });
                 if(admins.length==0)sendErrorTo(fr,"Es ist derzeit kein Admin oder Moderator online.")
                 sendMessageTo(fr,fr,"Die Nachricht wurde an:"+str+" gesendet.")
+                console.info("adminmsg %s(%d).",fr._name,fr._uid); 
             }
             if (cmd._cmd == 'kick') {
                 var to=clientByUID(cmd._data);
                 if(!to)return sendError("Kein Empfänger mit der ID ["+cmd._data+"]");
                 var fr=clientByUID(socket._uid);
                 sendMessage(fr,to._name+" wurde gekickt!");
-                kicks.push(cmd._data);
+                logKick(fr._uid,to._uid);
+                socket.disconnect();
                 delete clients[to._uid];
-                console.log(cmd,"KICK++++"+cmd._data);
+            //    socket.close();
+                console.info("kick %s(%d) -> %s(%d) %s.",fr._name,fr._uid,to._name,to._uid,cmd._data);
             }
             if (cmd._cmd == 'unkick') {
-                console.log(cmd._data,"unkick");
-                var fr=clientByUID(socket._uid);
-                var to=clientByUID(cmd._data);
-                removeItem(kicks,cmd._data);
-                sendMessage(fr,"Benutzer mit der ID ["+cmd._data+"] wurde aus der kickliste entfernt!");
+                var fr=clientByUID(socket._uid);            
+                delKick(cmd._data);
+                sendMessage(fr,"Benutzer mit der ID ["+cmd._data+"] wurde aus der Kickliste entfernt!");
+                console.info("unick %s(%d) -> %d.",fr._name,fr._uid,cmd._data);
             }
             if (cmd._cmd == 'kicks') {
                 var fr=clientByUID(socket._uid);
-                var msg=new ChatMessage(socket._uid,kicks); 
-                msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });
-                socket.emit('command data', new ChatCommand("message",msg));
+                var msg=new ChatMessage(socket._uid); 
+                msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });         
+                listKicks().then(function(result){
+                    msg.setText(result);
+                    if(result.length==0)sendError("Keine Kicks vorhanden!");
+                    else socket.emit('command data', new ChatCommand("kicks data",msg));    
+                });              
+                console.info("kicks %s(%d).",fr._name,fr._uid);                        
             }
 
             if (cmd._cmd == 'ban') {
@@ -138,17 +179,26 @@ class ChatServer{
                 if(!to)return sendError("Kein Empfänger mit der ID ["+cmd._data+"]");
                 var fr=clientByUID(socket._uid);
                 sendMessage(fr,to._name+"'s IP Adresse "+to._ip+" wurde gebannt!");
-                bans.push(to._ip);
+                logBan(fr._uid,to._uid,to._ip);
+                console.info("ban %s(%d) -> %s(%d) %s.",fr._name,fr._uid,to._name,to._uid,cmd._data);
             }
             if (cmd._cmd == 'unban') {
-                removeItem(bans,cmd._data);
-                console.log(bans,"UNBANNES++++"+cmd._data);
+                var fr=clientByUID(socket._uid);            
+                delBan(cmd._data);
+                sendMessage(fr,"Benutzer mit der ID ["+cmd._data+"] wurde aus der Bannliste entfernt!");
+       
+                console.info("unban %s(%d) -> %s.",fr._name,fr._uid,cmd._data);
             }
             if (cmd._cmd == 'bans') {
                 var fr=clientByUID(socket._uid);
-                var msg=new ChatMessage(socket._uid,bans); 
-                msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });
-                socket.emit('command data', new ChatCommand("message",msg));
+                var msg=new ChatMessage(socket._uid); 
+                msg.setFrom({ uid: fr._uid, name: fr._name, picture: fr._picture });         
+                 listBans().then(function(result){
+                    msg.setText(result);
+                    if(result.length==0)sendError("Keine Banss vorhanden!");
+                    else socket.emit('command data', new ChatCommand("bans data",msg));    
+                });              
+                console.info("bans %s(%d).",fr._name,fr._uid,cmd._data);
             }
 
             if (cmd._cmd == 'message') {
@@ -157,51 +207,44 @@ class ChatServer{
                 cmd._data._from = { uid: fr._uid, name: fr._name, picture: fr._picture }
                 io.emit('command data', cmd);       
                 _addToMsgBuffer(cmd);
+                console.info("message %s(%d).",fr._name,fr._uid);
+
             } else 
             if (cmd._cmd == 'private message') {
-                console.log(cmd._data);
                 var fr=clientByUID(cmd._data._from);
-                if(!fr)return sendError("Kein Sender mit der ID ["+cmd._data._from+"]");      
+                if(!fr)return console.error("Kein Sender mit der ID[%d]",cmd._data._from);      
 
                 cmd._data._from = { uid: fr._uid, name: fr._name, picture: fr._picture }            
                 var to=clientByUID(cmd._data._to);
-                if(!to){
-                    console.log("kein empfänger");
-                    _sendError(fr._sid,'Kein empfänger');
-                    return;
-                }            
+                if(!to)return console.error("Kein Empfänger mit der ID[%d]",cmd._data._to);            
           
                 cmd._data._to = { uid: to._uid, name: to._name, picture: to._picture }
 
                 socket.to(to._sid).emit('command data', cmd);
                 _addToMsgBuffer(cmd); 
+                console.info("private message %s(%d) -> %s(%d).",fr._name,fr._uid,to._name,to._uid);
             } else
             if (cmd._cmd == 'private command') {
              //   console.log(cmd._data);
                 var fr=clientByUID(cmd._data._from);
-                if(!fr){
-                    console.log("kein Sender")
-                    return;
-                }            
+                if(!fr)return console.error("Kein Sender mit der ID[%d]",cmd._data._from);      
+
+                
                 cmd._data._from = { uid: fr._uid, name: fr._name, picture: fr._picture }            
                 var to=clientByUID(cmd._data._to);
-                if(!to){
-                    console.log("kein empfänger");
-                    _sendError(fr._sid,'kein empfänger');
-                    return;
-                }       
-                   
+                if(!to)return console.error("Kein Empfänger mit der ID[%d]",cmd._data._to);            
+                                 
                 cmd._data._to = { uid: to._uid, name: to._name, picture: to._picture }
 
                 socket.to(to._sid).emit('command data', cmd);
-              
+                console.info("private command %s(%d) -> %s(%d)",fr._name,fr._uid,to._name,to._uid);
             } else
             if (cmd._cmd == 'userlist') {
                 // var _cmd=new ChatCommand(cmd._cmd,cmd._data);
                 var clts = _getClients();
-                console.log(clts,'clients');
                 cmd._data = clts;
               // socket.emit('command data',cmd);        
+              console.info("userlist %s(%d) length:%d.",user._name,user._uid,clts.length);
             } 
             else io.emit('command data', cmd);
             if(processCommand)processCommand(cmd); 
@@ -211,18 +254,13 @@ class ChatServer{
     
     socket.on('disconnect', function (data){
         console.log(data,'disconnect');
+        //console.info("disconnect socket  %s %s.",socket._uid,socket.sid);
         console.log(socket._uid,'disconnect uid');
         if(socket._uid!=='undefined')delete clients[socket._uid];
         _broadcastUserlist();
     }); //disconnect
 
 }); //connect
-
-
-function _sendError(to,msg){
-    var _cmd=new ChatCommand('error',msg);
-    io.emit('command data',_cmd);
-  }
 
 function _broadcastUserlist(){
     var clts=_getClients();
@@ -252,7 +290,7 @@ function clientByUID(uid){
 }
 
 function _flushMsgBuffer(socket){
-    console.info(MsgBuffer.length,'ChatServer._flushMsgBuffer');
+//    console.info('_flushMsgBuffer',MsgBuffer.length);
     MsgBuffer.forEach(_cmd => {
         if(_cmd._cmd=='message')    socket.emit('command data',_cmd)
         else 
@@ -285,12 +323,14 @@ function sendError(text){
       var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},text);
       msg.setColor("red"); 
       io.emit('command data', new ChatCommand("error",msg));
+      console.info("error %s.",text);
 }
 
 function sendErrorTo(to,text){
     var msg=new ChatMessage({uid:0,name:"Server", picture:"img/anonymous.png"},text);
     msg.setColor("red"); 
     io.to(to._sid).emit('command data', new ChatCommand("error",msg));
+    console.info("errorto %s(%d) -> %s.",to._name,to._uid,text);
 }
 
 function sendMessage(from,text,color="#333"){
@@ -307,7 +347,6 @@ function sendMessageTo(from,to,text,color="#333"){
     io.to(to._sid).emit('command data', new ChatCommand("private message",msg));
 }
 function _addToMsgBuffer(cmd){
-    console.log(cmd,"ADDED"+MsgBuffer.length);
    if(MsgBuffer.length>_msgBufferSize)MsgBuffer.shift();
     MsgBuffer.push(cmd);
 }
@@ -340,7 +379,6 @@ function removeItem(array, item){
 }
 
 function _user_has_role(user,hasrole){
-    console.log(user);
       var k=Object.keys(user._roles);
       let r=false;
       k.forEach(role => {
@@ -350,7 +388,6 @@ function _user_has_role(user,hasrole){
   }
 
 function _user_is_in_role(user,arr){
-    console.log(user);
     let r=false;
  arr.forEach(has => {     
       var k=Object.keys(user._roles);
@@ -359,6 +396,10 @@ function _user_is_in_role(user,arr){
       });
     });//arr
   return r;
+  }
+
+  function _addKick(uid){
+      logs.insert();
   }
 
 module.exports= {ChatServer,clientByUID};

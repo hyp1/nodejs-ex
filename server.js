@@ -74,22 +74,15 @@ chat=new ChatServer(io);
 
 
 processCommand=function(cmd){
-    console.log(cmd,'server.js: processCommand');
+    console.log(cmd._cmd,'server.js: processCommand');
     if(cmd._cmd=='message')logMessage(cmd._data);
     if(cmd._cmd=='private message')logMessage(cmd._data);
     if(cmd._cmd=='connected')logMessage(cmd._data);
-    console.log(cmd._cmd);
     if(cmd._cmd.startsWith('/')){
      parseCommand(cmd._data);
     }
-    if(cmd.data=='userlist'){
-    //    console.log("**************LIST****************");
-      /*        var users =  chat.userList();
-        console.log(users,'processCommand');
-    */
-    }    
 }
-chat.start(processCommand);
+
 
 function parseCommand(cmd){
   console.log("parsing command data"+cmd);
@@ -99,6 +92,110 @@ function logMessage(msg){
     var res=singleton.insert('messages',msg);
   }
 
+  logKick=function(from,to){
+    singleton.insert('kicks',{time:Date.now(),from:from,to:to});
+  }
+  
+  delKick=function(uid){
+    var db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {  
+      db.collection('kicks').remove({ to:uid }, true)         
+    });
+  }
+  }
+
+  clearKicks=function(){
+    var db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {
+      db.collection('kicks').drop();      
+    });
+  }
+  }
+
+
+listKicks = function(){
+    return new Promise(function(resolve,reject){
+  var db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {
+      db.collection('kicks').find({}).toArray(function(err, resultArray){
+       return resolve(resultArray);
+        });
+    });
+  }
+});
+}
+
+isKicked=function(to){
+  return new Promise(function(resolve,reject){
+  var db=singleton.DbConnection;
+  if (db) {
+  db.then(function(db) {
+    db.collection('kicks').findOne({to:to}, function(err, result) {
+      if (err) reject(err);
+      resolve(result);
+    });
+  })
+}
+ });  
+}
+
+logBan = function(from,to,ip){
+    var res=singleton.insert('bans',{time:Date.now(),from:from,to:to,ip:ip});
+  }
+
+delBan = function(to){
+    var db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {  
+      db.collection('bans').remove({ to:to }, true)         
+    });
+}
+}
+
+listBans = function(){
+    return new Promise(function(resolve,reject){
+  var db=singleton.DbConnection;
+    if (db) {
+    db.then(function(db) {
+      db.collection('bans').find({}).toArray(function(err, resultArray){
+       return resolve(resultArray);
+        });
+    });
+  }
+});
+}
+
+
+isBanned=function(ip){
+  return new Promise(function(resolve,reject){
+  var db=singleton.DbConnection;
+  if (db) {
+  db.then(function(db) {
+    db.collection('bans').findOne({ip:ip}, function(err, result) {
+      if (err) reject(err);
+      resolve(result);
+    });
+  })
+}
+ });  
+}
+
+clearBans=function(){
+  var db=singleton.DbConnection;
+  if (db) {
+  db.then(function(db) {
+    db.collection('bans').drop();      
+  });
+}
+}
+  
+
+// muss unten stehen wegen der Module exports 
+chat.start(processCommand);
+
+
 module.exports = app;
-module.exports.LOGGING=LOGGING;
-module.exports.http = http;
+

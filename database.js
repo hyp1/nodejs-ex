@@ -19,16 +19,16 @@ var singleton = function singleton() {
     this.insert=function(table,data){
         this.DbConnection.then(function(db) {
         var col = db.collection(table);
+        console.log(table);
         // Create a document with request IP and current time of request
         col.insert(data).then(function(data){
     //        console.log(data," database:DBInsert ok");
 
         }).catch(function(err){
-    //        console.error("database:DBInsert error flushBuffer key exists");
-
+            console.error("database.js: %s",err);
         });
             col.count(function(err, count){
-            console.error('database:DBINSERT '+JSON.stringify(data)+' COUNT:'+count)
+            console.info('database.js insert  count:%d',count)
             return count;
             });
         },table,data).catch(function(err){
