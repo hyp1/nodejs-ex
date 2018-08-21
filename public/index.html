@@ -294,7 +294,7 @@ function onchatconnected(user){
     $('#name').val(user._name);
     $('#user').html(theme_user_picture(user._picture)+' '+user._name);
     $('#user').attr('uid',user._uid);
-    appendLine(user._name+': verbunden mit AWRI Chat','green');
+   // appendLine(user._name+': verbunden mit AWRI Chat','green');
 }
 
 function onchatmessage(msg){
