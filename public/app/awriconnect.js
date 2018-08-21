@@ -30,8 +30,10 @@ awriconnect_upload_file(previewid)
 awriconnect_views_get_view()
 awriconnect_dummy() 
 awriconnect_get_file_by_fid(fid)
-*  
-* 
+awriconnect_bookmarks(uid,page=0) 
+awriconnect_bookmark_action(name,nid,action)
+  
+
 SERVICE ENDPOINTS
 system: 
 *connect
@@ -69,6 +71,10 @@ search_node:
 
 comments:
 *index
+
+flag:
+*isflagged
+*flag
 
 */
 
@@ -300,8 +306,7 @@ class AWRI{
                     awri._send(xmlhttp);
                 });
             }
-    
-            
+                
             awriconnect_comments(nid) {
                 return new Promise(function (resolve, reject) {
                     var xmlhttp = new XMLHttpRequest();
@@ -343,7 +348,28 @@ class AWRI{
                     awri._send(xmlhttp);
                 });
             }
-    
+
+            awriconnect_is_bookmark(nid) {
+                return new Promise(function (resolve, reject) {
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.withCredentials = true;
+                    xmlhttp.crossDomain = true;
+                    xmlhttp.open("GET", awri.host +"/"+awri.endpoint +"/flag/is_flagged.json", true);
+                    xmlhttp.setRequestHeader("Content-Type", "application/json");
+                    xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
+                    //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
+                    xmlhttp.onreadystatechange = function () {
+                        if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
+                            var result= JSON.parse(xmlhttp.responseText); 
+                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_is_bookmark',result);                                                                   
+                             resolve(result);
+                        }
+                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_is_bookmark'));
+                    };
+                    awri._send(xmlhttp);
+                });
+            }
+
             awriconnect_bookmark_action(name,nid,action) {
                 return new Promise(function (resolve, reject) {
                     var xmlhttp = new XMLHttpRequest();
@@ -364,10 +390,10 @@ class AWRI{
                     xmlhttp.onreadystatechange = function () {
                         if (xmlhttp.status == 200 && xmlhttp.readyState == 4) {
                             var result= JSON.parse(xmlhttp.responseText); 
-                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_bookmarks',result);                                                                   
+                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_bookmark_action',result);                                                                   
                              resolve(result);
                         }
-                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_bookmarks'));
+                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_bookmark_action'));
                     };
                     xmlhttp.send(JSON.stringify(postData));
                 });

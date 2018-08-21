@@ -135,13 +135,16 @@ $(function() {
     $("#msg").keydown(function (e) {
     //Arrow Keys Up/Down
         if ((e.which && e.which == 38) || (e.keyCode && e.keyCode == 38)) {              
+            if(cmdBuffer.length>0){
             cmdBufferIndex=(cmdBufferIndex+1)%cmdBuffer.length;
-            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]); 
+            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);
+        } 
         }
-        if ((e.which && e.which == 40) || (e.keyCode && e.keyCode == 40)) {
-            cmdBufferIndex=(cmdBufferIndex-1);
-            if(cmdBufferIndex<0)cmdBufferIndex=cmdBuffer.length-1;
-            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);                    
+        if ((e.which && e.which == 40) || (e.keyCode && e.keyCode == 40)) {    
+            console.log(cmdBufferIndex+' -> '+cmdBuffer.length)        
+            if(cmdBufferIndex>0)cmdBufferIndex=(cmdBufferIndex-1);
+            else cmdBufferIndex=cmdBuffer.length-1;
+            $("#msg").val("/"+cmdBuffer[cmdBufferIndex]);                                
         }
     });
 

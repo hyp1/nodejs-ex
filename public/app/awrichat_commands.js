@@ -58,7 +58,7 @@ function cmdInfo(){
     'Falls sie noch nicht auf '+l('AWRI','https://awri.ch',{id:"awrihome",target:"_BLANK"})+' angemeldet sind,',
     'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
-    'Bei erneutem laden des Browsers, werdem immer die letzten 15 Chat Nachrichten angezeigt.',
+    'Bei erneutem laden des Browsers, werden die letzten 15 Chat Nachrichten geladen und angezeigt.',
     'Sie können  private Nachrichten senden, indem Sie die Person in der Mitgliederliste <a href="#myheader" class="ui-icon-user ui-btn-icon-notext inlineIcon"></a> rechts oben auswählen.',
     'Wenn sie dieses Häkchen aktivieren ☑️ werden sie bei privaten Nachrichten durch Browsernotifikationen benachrichtigt. ',
     'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
