@@ -312,6 +312,9 @@ function cmdUpload(){
 }
 
 function cmdshowImage(params){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+
     var param=params.split(' ');
     var msg=new ChatMessage();
     if(!param[1]){
