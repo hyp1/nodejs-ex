@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -6,16 +7,23 @@
 <meta itemprop="image" content="https://awri.ch/sites/all/themes/awri_jqm/images/home_2.jpg" />
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
-<link rel="stylesheet" href="app/jquery.mobile-1.4.5.min.css" />
-<link rel="stylesheet" href="app/awrichat.css" />
+<link rel="stylesheet" href="es5/jquery.mobile-1.4.5.min.css" />
+<link rel="stylesheet" href="es5/awrichat.css" />
 
 <script src=" //cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.slim.js"></script>
 <!-- <script src="/socket.io/socket.io.js"></script> -->
-<script src="app/jquery-1.11.1.min.js"></script>
-<script	src="app/jquery.mobile-1.4.5.min.js"></script> 
-<script src="app/awrichat.js"></script>
-<script src="app/awrichat_commands.js"></script>
-<script src="app/awriconnect.js"></script>
+
+<script src="es5/bluebird.js"></script>
+<script src="es5/jquery-1.11.1.min.js"></script>
+<script	src="es5/jquery.mobile-1.4.5.min.js"></script> 
+<script src="es5/awriconnecterror-es5.js"></script>
+<script src="es5/awriconnect-es5.js"></script>
+
+<script src="es5/awrichat_commands-es5.js"></script>
+<script src="es5/awrichatclient-es5.js"></script>
+<script src="es5/awrichatutils-es5.js"></script>
+
+
 <style>  
 .inlineIcon  {
     display: inline-block;
@@ -49,7 +57,7 @@
             
         <div data-role="header" data-position="fixed">
                 <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a>
-                <h1 id="user">User</h1>
+                <h1 id="user">Unbekannt</h1>
             <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
@@ -81,32 +89,69 @@
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
-      <form autocomplete="off">
-            <input style="display:none" type="password" name="fakepasswordremembered"/>
+      
                 <input class="emojis" type="text" id="msg" autocomplete="off" value="">
-            </form>
         <fieldset class="ui-grid-a">
                 <div class="ui-block-a">
                         <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <button class="color" style="background-color:#333;" onclick=setColor(this);>&nbsp;</button>          
-                        <button class="color" style=" background-color:#630904;" onclick="setColor(this);">&nbsp;</button>
-                        <button class="color" style="background-color:#170463;" onclick=setColor(this);>&nbsp;</button>          
-                        <button class="color" style="background-color:#635704;" onclick="setColor(this);">&nbsp;</button>
-                        <button class="color" style="background-color:#046318;" onclick="setColor(this);">&nbsp;</button>
-        
-                        <button class="emojis" onclick="putSmiley(this);">😊</button>
-                        <button class="emojis" onclick="putSmiley(this);">😘</button>
-                        <button class="emojis" onclick="putSmiley(this);">😉</button>
-                        <button class="emojis" onclick="putSmiley(this);">😯</button>
-                        <button class="emojis" onclick="putSmiley(this);">😭</button>
-                        <button class="emojis" onclick="putSmiley(this);">😡</button>
+                                <a title="Schnellzugriff auf Chat Befehle" href="#popupCommands" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-a " data-theme="a">⚡</a>
+                                <div data-role="popup" id="popupCommands" data-theme="a">
+                                    <ul datarole="listview" id="commandlist" style="padding:0px; margin:0;cursor:pointer;">
+                                    <li onclick="cmdNews();">News</li>
+                                    <li onclick="$('#msg').val('/search [Text]');$('#popupCommands').popup('close');">Suche Beitrag...</li>                                
+                                    <li onclick="$('#msg').val('/show [Beitrag ID]');$('#popupCommands').popup('close');">Zeige Beitrag</li>
+                                    <li  name="content" onclick="showClientsPopup(this);">Sende Beitrag an...<ul name="show content [Beitrag ID] " id="clients-content"></ul></li>
+                                    <li onclick="$('#msg').val('/show image [Datei ID]');$('#popupCommands').popup('close');">Zeige Bild</li>
+                                    <li name="image" onclick="showClientsPopup(this);">Sende Bild an...<ul name="show image [Beitrag ID] " id="clients-image"></ul></li>
+                                    <li onclick="$('#msg').val('/adminmsg [Text]');$('#popupCommands').popup('close');">Admin melden</li>
+                                    
+                                    <li onclick="cmdWhoami();">Wer bin ich?</li>
+                                    <li onclick="cmdInfo();">Info</li>
+                                    <li onclick="cmdHelp();">Hilfe</li>
+                                    <li onclick="cmdBeep();">Alarmton</li>
+                                    <li onclick="cmdClear();">Chatfenster leeren</li>
+                                    <li style="color:blue;" data-role="list-devider">Mitglieder</li>    
+                                    <li onclick="cmdUploads();">Meine Dateien</li>
+                                    <li onclick="cmdUpload();">Datei hochladen</li>
+                                    <li onclick="$('#msg').val('/bookmarks 0');$('#popupCommands').popup('close');">Lesezeichen</li>
+                                    <li onclick="$('#msg').val('/add bookmark [Beitrag ID]');$('#popupCommands').popup('close');">Lesezeichen hinzuf.</li>
+                                    <li onclick="$('#msg').val('/del bookmark [Beitrag ID]');$('#popupCommands').popup('close');">Lesezeichen entf.</li>
+                                    <li onclick="$('#msg').val('/login [Benutzername] [Passwort]');$('#popupCommands').popup('close');">Anmelden(AWRI)</li>
+                                    <li onclick="$('#msg').val('/logout');$('#popupCommands').popup('close');">Abmelden(AWRI)</li>
+                                    <li style="color:red;" data-role="list-devider">Admins/Moderatoren</li>   
+                                    <li name="whois" onclick="showClientsPopup(this);">Wer ist...<ul name="whois " id="clients-whois"></ul></li>                            
+                                    <li onclick="cmdKicks();">Kickliste</li>    
+                                    <li name="kick" onclick="showClientsPopup(this);">Kicke...<ul name="kick " id="clients-kick"></ul></li>
+                                    <li onclick="cmdBans();">Bannliste</li>    
+                                    <li name="ban" onclick="showClientsPopup(this);">Kicke...<ul name="kick " id="clients-ban"></ul></li>                                
+                                </ul>
+                                </div>
 
-                        <button class="emojis" onclick="putSmiley(this);">❤️</button>
-                     
-                        <button class="emojis" onclick="putSmiley(this);">👌</button>
-                        <button class="emojis" onclick="putSmiley(this);">🤦</button>
-                        <button class="emojis" onclick="putSmiley(this);">🙏</button>                         
-                        <button class="color" id="actualcolor" style="color:white;background-color:#333" onclick=setColor(this);>🖊️</button>                             
+                                <a href="#popupColors" title="Schriftfrbe auswählen" id="actualcolor" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">🖊️</a>
+                                <div data-role="popup" id="popupColors" data-theme="a">
+                                    <ul datarole=listview style="padding:0px; margin:0;cursor:pointer;">
+                                    <li class="color" style="width:35px;padding:0;background-color:#333;" onclick=setColor(this);>&nbsp;</li>          
+                                    <li class="color" style=" background-color:#630904;" onclick="setColor(this);">&nbsp;</li>
+                                    <li class="color" style="background-color:#170463;" onclick=setColor(this);>&nbsp;</li>          
+                                    <li class="color" style="background-color:#635704;" onclick="setColor(this);">&nbsp;</li>
+                                    <li class="color" style="background-color:#046318;" onclick="setColor(this);">&nbsp;</li>        
+                                    </ul>
+                                </div>
+                                <a href="#popupEmojis" title="Emojis einfügen" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini ui-data-theme-a" data-theme="a">😊</a>
+                                <div data-role="popup" id="popupEmojis" data-theme="a">
+                                    <ul datarole=listview style="padding:0px; margin:0;cursor:pointer;">
+                                    <li class="emojis" style="width:35px;" onclick="putSmiley(this);">😊</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😘</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😉</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😯</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😭</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😡</li>                    
+                                    <li class="emojis" onclick="putSmiley(this);">❤️</li>                                         
+                                    <li class="emojis" onclick="putSmiley(this);">👌</li>
+                                    <li class="emojis" onclick="putSmiley(this);">🤦</li>
+                                    <li class="emojis" onclick="putSmiley(this);">🙏</li>
+                                    </ul>
+                                </div>
                         </fieldset>         
                     </div>
             <div class="ui-block-b">
@@ -115,9 +160,11 @@
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
                         <label for="pause" title="Chatnachrichten anhalten">🛑</label>
                         <input name="pause" type='checkbox' id="pause" href="#" class="custom" data-mini="true"/>                        
-                        <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"></button>  
-                    </div>
+                        <a title="Zeitline der Beiträge (extern)" href="https://awri.ch/html/timedown.html" target="_BLANK"  data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">📅</a>
+                        <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"> 
+                        </div>
             </div>
+                 
         </fieldset>
        
          </div>  <!--// Footer -->
@@ -133,7 +180,7 @@
 <script>
 $(function() {
     $('#msg').focus();
-    $("input[type='checkbox']:first").attr("checked",notifications).checkboxradio("refresh");
+    $("input#checkbox-mini-0:first").attr("checked",notifications);
     $("#msg").keydown(function (e) {
     //Arrow Keys Up/Down
         if ((e.which && e.which == 38) || (e.keyCode && e.keyCode == 38)) {              
@@ -172,12 +219,18 @@ pause= $('input[type="checkbox"]#pause').prop("checked");
 
 }); //jQuery
 
+//ACHTUNG DIE einzige THEME Funktion 
+function theme_user_picture(pic){
+            return '<img src="'+pic+'" width="20" height="20" style="vertical-align:middle;border-radius:10px;"/>';
+        }
+
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
 var pause=false;      //pause msg toggle
 var color ='#333';
 var audiofile='app/notification.mp3'; //notification Alarm
 var chat=null;
+var clients=[];
 //Hack für Openshift
 
 
@@ -187,7 +240,7 @@ var host = 'https://awri.ch';
 var endpoint = 'connect';
 
 
-AWRI.setLogger(console.log);
+//AWRI.setLogger(console.log);
 awri=new AWRI(host,'connect');
 
 cuser= new ChatUser();
@@ -199,14 +252,42 @@ cuser= new ChatUser();
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
 
-awri.awriconnect_load_node(18329).then(function(node){
-    
+//MOTD
+
+awri.awriconnect_load_node(18329).then(function(node){    
 appendLine(node.body['und'][0].value);
 })
 
-
-
 })();
+
+
+
+function showClientsPopup(el){
+var ulc=$("#clients-"+$(el).attr("name"));    
+var cmdname=ulc.attr("name");
+ulc.empty();
+
+clients.forEach(function(client){
+li=document.createElement("li");
+$(li).text(client._name);
+li.setAttribute("id",client._uid);
+$(li).prop("cmd",cmdname);
+ulc.append(li).trigger('create');
+
+//document.getElementById("clients").removeEventListener("click",showClientsPopup, true);
+});
+
+document.getElementById($(ulc).attr("id")).addEventListener("click",function(e) {
+       // e.target is our targetted element.
+                    // try doing console.log(e.target.nodeName), it will result LI
+        if(e.target && e.target.nodeName == "LI") {
+            $("#msg").val("/"+$(e.target).prop('cmd') + e.target.id);
+            $("#popupCommands").popup("close"); 
+            $(ulc).empty();     
+        }
+    },false);    
+    
+};
 
 
 function showDialog(message) {
@@ -251,7 +332,9 @@ function showUploadDialog(message) {
           reject(new Error('User cancelled'));
         }
       })
+      window.scrollTo(0, document.body.scrollHeight);  
   })
+ 
   }
 
 
@@ -305,9 +388,10 @@ function onchatmessage(msg){
 }
 
 function onchatuserlist(data){
+    clients=data;
     ul = document.getElementById('users');
         ul.innerHTML = "";
-        data.forEach(user => {
+        data.forEach(function(user) {
         li = document.createElement('li');
         li.setAttribute('onclick', 'setPriv(this);');
         li.setAttribute('id', user._uid);
@@ -333,22 +417,7 @@ if(cmd._cmd=='bans data')appendLine(theme_bans(cmd._data._txt));
 if(cmd._cmd=="private command" && cmd._data._txt.startsWith('show content'))showContentFrom(cmd._data._from,cmd._data._txt.substr(12,cmd._data._txt.length));
 }
 
-function theme_kicks(kicks){
-    var n='<ul id="kicks">';
-    kicks.forEach(kick => {
-        n+='<li>'+getFormattedDate(kick.time)+' '+kick.to+'</li>';
-    });
-    n+='</ul>';
-return n;
-}
-function theme_bans(bans){
-    var n='<ul id="bans">';
-            bans.forEach(ban => {
-        n+='<li>'+getFormattedDate(ban.time)+' '+ban.to+' '+ban.ip+'</li>';
-    });
-    n+='</ul>';
-return n;
-}
+
 
 function showContentFrom(from,nid){
 console.log(from);
@@ -430,10 +499,14 @@ function setColor(c){
     var actualcol=$('#actualcolor');
     actualcol.attr('style','background-color:'+c.style['background-color']+';color:white;');
     color=c.style['background-color'];
+    $('#popupColors').popup("close");
 }
 
 
-function appendLine(text="",color="#333"){
+function appendLine(text,color){
+    if(!color||color=="undefined")color="#333";
+    if(!text||text=="undefined")text="";
+
     ul = document.getElementById('messages');
     li = document.createElement('li');
     li.style.color=color;
@@ -455,6 +528,7 @@ function putSmiley(c){
     var smiley=($(c).text())
     var txt=$('#msg').val();
     $('#msg').val(txt+smiley);
+    $('#popupEmojis').popup("close");
 }
 
 
@@ -554,7 +628,8 @@ cnt++;
             }
         }
 
-        function variable_get(key, def = null) {
+        function variable_get(key, def) {
+            if(!def||def=='undefined')def=null;
             if (typeof (window.Storage) !== "undefined") {
                 item = JSON.parse(window.localStorage.getItem(key));
                 if (item == undefined) return def;
@@ -642,17 +717,18 @@ else return true;
 function user_has_role(user,hasrole){
     let k=Object.keys(user._roles);
     let r=false;
-    k.forEach(role => {
+    k.forEach(function(role){
         console.log(user._roles[role]+' = '+ hasrole);
         if(hasrole==user._roles[role])r=true;
     });
 return r;
 }
 
-function l(name,url,options={}){
+function l(name,url,options){
+    if(!options||options=="undefined")options={};
     let link='<a href="'+url+'" ';
     let keys=Object.keys(options);
-    keys.forEach(key => {
+    keys.forEach(function(key) {
         var option=key+'="'+options[key]+'"';   
          link=link+' '+option;
     });
@@ -678,67 +754,13 @@ function isEmoji(str) {
     }
 }
 
-         function theme_user(user){
-             console.log(user._created,"theme");
-            var n='<h1>'+theme_user_picture(user._picture)+' '+user._name+'</h1>';
-            n+='<p>AWRI ID:'+user._uid+'</p>';
-            n+='<p>IP Adresse:'+user._ip+'</p>';
-            n+='<p>FBID:'+user._fbid+'</p>';
-            n+='<p>Email:'+user._email+'</p>';
-            n+='<p>Online seit:'+getFormattedDate(user._time)+'</p>';
-            n+='<p>Beigetreten:'+getFormattedDate(user._created*1000)+'</p>';
-            n+='<p>Letzes Login:'+getFormattedDate(user._access*1000)+'</p>';          
-            n+='<p>Benutzer Rollen:'+theme_user_roles(user._roles)+'</p>';
-            return n;
-        }
+  if (!String.prototype.startsWith) {
+  String.prototype.startsWith = function(searchString, position) {
+     position = position || 0;
+    return this.indexOf(searchString, position) === position;
+  };
+}  
 
-     function theme_bookmarks(marks){
-         console.log(marks,"MARKS");
-         marks.forEach(bookmark => {
-             appendLine("<strong>["+bookmark.node.nid+"]</strong> "+bookmark.node.created+" "+theme_fb_image(bookmark.node.fbid)+" "+bookmark.node.fbname+"<br>"+bookmark.node.title);
-         });
-     }
-
-      function theme_user_roles(roles){
-        let k=Object.keys(roles);
-        var ret="<ul>";  
-        k.forEach(role => {
-              if(roles[role]=="administrator")ret+="<li>⚔️"+roles[role]+"</li>";
-              else
-              if(roles[role]=="moderator")ret+="<li>🛡️"+roles[role]+"</li>";
-              else ret+="<li>"+roles[role]+"</li>";
-          });
-          ret+="</ul>";
-        return ret;
-        }
-         function theme_node(node){
-            var n='<h1>'+node.nid+'</h1>';
-           if(node.field_fbid) n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
-            n+='<p>'+node.body['und'][0].safe_value+'</p>';
-            return n;
-        }
-        function theme_user_picture(pic){
-            return '<img src="'+pic+'" width="20" height="20" style="vertical-align:middle;border-radius:10px;"/>';
-        }
-
-        function theme_fb_image(fbid){
-            return '<img style="vertical-align:middle;border-radius:50%;" src="https://graph.facebook.com/'+fbid+'/picture?type=small"/>';
-        }
-
-        function theme_comments(comments){
-            if(comments.length<1)return;
-            console.log(comments,"Comemnts");
-//        var c='<button id="comment-btn-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+');">+</button><div style="display:none;" id="comments-'+comments[0].nid+'">'
-            var c='<a id="icon-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+')" href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-plus ui-btn-icon-notext ui-btn-b ui-btn-inline">Plus</a><div style="display:none;" id="comments-'+comments[0].nid+'">'
-            comments.forEach(comment => {
-                console.log(comment,"c");
-                c+='<span><strong>'+comment.subject+'</strong>'
-                c+=''+comment.comment_body['und'][0].safe_value+'</span>'
-
-            });
-        c+="</div>";
-        return c;
-        }
 
 </script>
 
