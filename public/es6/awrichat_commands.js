@@ -435,7 +435,7 @@ function cmdNews(){
             });                
         });        
         }).catch(function(err){
-            appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
+            appendLine('Keine News gefunden!' ,'red');
             hideLoader();
         });    
     $('#msg').val('');

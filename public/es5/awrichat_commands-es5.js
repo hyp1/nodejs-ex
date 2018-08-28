@@ -428,16 +428,23 @@ function cmdNews(){
     //ACHTUNG ASYNC==true!!!
 //    awriconnect_fragen_index(page=0,fields,parameters=null,page_size=null,options="options[orderby][cerated]=desc")           
 
-        awri.awriconnect_fragen_index(0,'nid',null,3).then(function(result){
+       awri.awriconnect_fragen_index(0,'nid',1,3,"options[orderby][created]=desc").then(function(result){
+       
             result.forEach(function(node) {
             awri.awriconnect_frage_get(node.nid).then(function(node){
                 appendLine(theme_node(node));
-                hideLoader();                
-            });                
-        });        
+                hideLoader();   
+                                                
+            });
+        });
+        $('#msg').val('');                   
+        window.scrollTo(0, document.body.scrollHeight);     
         }).catch(function(err){
-            appendLine('Keine Ergebnisse für "'+text+'" gefunden!' ,'red');
+            appendLine('Keine News gefunden!' ,'red');
             hideLoader();
         });    
-    $('#msg').val('');
+    
     }
+
+
+    

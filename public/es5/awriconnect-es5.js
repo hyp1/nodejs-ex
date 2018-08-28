@@ -187,7 +187,7 @@ var AWRI = function () {
                             reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_comments'));
                         }
                     }                
-                awri._send(xmlhttp);
+                xmlhttp.send(null);
             });
         } //Func
 
@@ -214,7 +214,7 @@ var AWRI = function () {
                         else  reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_is_bookmark'));
                     };
                 };
-                awri._send(xmlhttp);
+                xmlhttp.send(null);
             });
         } //Func
 
@@ -403,7 +403,7 @@ var AWRI = function () {
                         if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler in dummy.'));    
                     }
                 };
-                _send(xmlhttp);
+                xmlhttp.send(null);
             }).catch(function(err){
                 if(typeof awriconnect_error == 'function')awriconnect_error('dummy',err);   
             });      
@@ -415,7 +415,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/awri_fragen/"+nid+".json", true);
+                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/awri_fragen/"+nid+".json", false);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 xmlhttp.onreadystatechange = function () {
@@ -423,15 +423,15 @@ var AWRI = function () {
                     var data = JSON.parse(xmlhttp.responseText);
                         if(xmlhttp.status == 200){ 
                             if(data[0]==false) reject(new AWRIError('Der Beitrag wurde nicht gefunden.')); 
-                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_dummy',data);                                                                                  
-                            resolve(data);
+                            if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_frage_get',data);                                                                                  
+                            return resolve(data);
                         }
                         if (xmlhttp.status == 403) reject( new AWRIError(xmlhttp.status+' Kein Zugriff für anonyme Benutzer.'));              
                         if (xmlhttp.status == 0) reject( new AWRIError(xmlhttp.status+' Der Service wurde nicht gefunden.'));                
-                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler in dummy.'));                    
+                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler in awriconnect_frage_get.'));                    
                     }
                 };
-                awri._send(xmlhttp);
+                xmlhttp.send(null);
             });
         } //Func
     
@@ -444,17 +444,19 @@ var AWRI = function () {
             if(fields&&fields!="")query+="&fields="+fields;
             if(parameters&&parameters!="")query+="&"+parameters;
             if(page_size&&page_size!="")query+="&pagesize="+page_size;
-            return new Promise(function (resolve, reject) {
+            return new Promise(function (resolve, reject) { 
+                console.log( awri.host + "/"+awri.endpoint+"/awri_fragen"+query+"&"+options)
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/awri_fragen?"+query+"&"+options, AWRI.async());
+                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/awri_fragen"+query+"&"+options, false);
                 //xmlhttp.overrideMimeType('application/xml;');
                 xmlhttp.setRequestHeader("Content-Type", "application/json ;charset=UTF-8");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);            
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4) {                      
                     var data = JSON.parse(xmlhttp.responseText);
+                
                         if(xmlhttp.status == 200){
                             if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_fragen_index',data);                                                                   
                             resolve(data);
@@ -465,7 +467,7 @@ var AWRI = function () {
                     }
                 };
              
-               xmlhtt.send(null);
+               xmlhttp.send(null);
             }).catch(function(err){
                 if(typeof awriconnect_error == 'function')awriconnect_error('awriconnect_fragen_index',err);   
             });
@@ -478,7 +480,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("PUT", awri.host + "/"+awri.endpoint+"/awri_fragen/"+nid+"", false);
+                xmlhttp.open("PUT", awri.host + "/"+awri.endpoint+"/awri_fragen/"+nid+"", true);
     
                 xmlhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
@@ -508,7 +510,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/awri_fragen", false);
+                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/awri_fragen", true);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
@@ -537,7 +539,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/taxonomy_vocabulary?parameters[vid]="+vid+'&fields='+fields, false);
+                xmlhttp.open("GET", awri.host + "/"+awri.endpoint+"/taxonomy_vocabulary?parameters[vid]="+vid+'&fields='+fields, true);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 xmlhttp.onreadystatechange = function () {
@@ -629,7 +631,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("GET", awri.host + "/stats.txt", false);
+                xmlhttp.open("GET", awri.host + "/stats.txt", true);
                 xmlhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 xmlhttp.onreadystatechange = function () {
@@ -655,7 +657,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/awri_connect/whos_online.json", false);
+                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/awri_connect/whos_online.json", true);
     
                 xmlhttp.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
@@ -713,7 +715,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
-                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/file.json", false);           
+                xmlhttp.open("POST", awri.host + "/"+awri.endpoint+"/file.json", true);           
                 xmlhttp.setRequestHeader("Content-Type", "application/json ;charset=UTF-8");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);            
                 xmlhttp.onreadystatechange = function () {
@@ -784,7 +786,7 @@ var AWRI = function () {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.withCredentials = true;
             xmlhttp.crossDomain = true;                    
-            xmlhttp.open("GET", awri.host+'/'+awri.endpoint+'/file/'+fid+".json", false);
+            xmlhttp.open("GET", awri.host+'/'+awri.endpoint+'/file/'+fid+".json", true);
             xmlhttp.setRequestHeader("Content-Type", "application/json");
             xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
             xmlhttp.onreadystatechange = function () {

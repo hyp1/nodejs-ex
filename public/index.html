@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="es5/jquery.mobile-1.4.5.min.css" />
-<link rel="stylesheet" href="es5/awrichat.css" />
+<link rel="stylesheet" href="css/awrichat.css" />
 
 <script src=" //cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.slim.js"></script>
 <!-- <script src="/socket.io/socket.io.js"></script> -->
@@ -22,6 +22,7 @@
 <script src="es5/awrichat_commands-es5.js"></script>
 <script src="es5/awrichatclient-es5.js"></script>
 <script src="es5/awrichatutils-es5.js"></script>
+<script src="es5/awrichat_theme-es5.js"></script>
 
 
 <style>  
@@ -56,9 +57,9 @@
         </div><!-- // Panel -->
             
         <div data-role="header" data-position="fixed">
-                <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a>
-                <h1 id="user">Unbekannt</h1>
-            <a href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
+               <!-- <a href="#" data-icon="back" data-rel="back" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Back</a> -->
+                <h1 id="user">AWRI Chat</h1>
+            <a class="ui-btn-right" href="#myheader" data-icon="user" data-iconpos="notext" data-shadow="false" data-iconshadow="false">Menu</a>   
         </div> <!--// Header -->
         
         <div data-role="content" class="emojis, loader" style="float:left;">
@@ -84,8 +85,7 @@
                   <button class="uplcancel">Cancel</button>
                 </div>
                 </div><!--// Dialog -->
-
-
+                
         </div> <!--// Content -->      
 
         <div data-role="footer" data-position="fixed">
@@ -178,6 +178,25 @@
     </div>
     
 <script>
+function scrollBottom(){
+    window.scrollTo(0,document.querySelector("#index").scrollHeight);
+}
+
+$( document ).on( "pageinit", "#index", function( event ) {
+
+$( "#myheader" ).on( "panelopen", function( event, ui ) {
+  //console.log("i am open");
+  $('body').css("overflow", "hidden");
+} );
+
+$( "#myheader" ).on( "panelclose", function( event, ui ) {
+  //console.log("i am close");
+  scrollBottom();
+  $('body').css("overflow", "auto");
+} );
+
+});
+
 $(function() {
     $('#msg').focus();
     $("input#checkbox-mini-0:first").attr("checked",notifications);
@@ -228,7 +247,7 @@ var notifications=false; //browser notifications
 var private=false;      //private msg toggle
 var pause=false;      //pause msg toggle
 var color ='#333';
-var audiofile='app/notification.mp3'; //notification Alarm
+var audiofile='es5/notification.mp3'; //notification Alarm
 var chat=null;
 var clients=[];
 //Hack für Openshift
@@ -332,7 +351,7 @@ function showUploadDialog(message) {
           reject(new Error('User cancelled'));
         }
       })
-      window.scrollTo(0, document.body.scrollHeight);  
+      scrollBottom();
   })
  
   }
@@ -374,6 +393,7 @@ function awriconnect_user_connected(user){
 function onchatconnected(user){
     console.log(user,'chatconnected');
     variable_set('user',user);
+    document.title=user._name;
     $('#uid').val(user._uid);
     $('#name').val(user._name);
     $('#user').html(theme_user_picture(user._picture)+' '+user._name);
@@ -512,7 +532,7 @@ function appendLine(text,color){
     li.style.color=color;
     li.innerHTML=text;
     ul.appendChild(li); 
-    window.scrollTo(0, document.body.scrollHeight);   
+    scrollBottom();   
 }
 
 function appendMessage(msg){
@@ -521,7 +541,7 @@ function appendMessage(msg){
     li.style.color=msg._color;
     li.innerHTML=msg._txt;
     ul.appendChild(li); 
-    window.scrollTo(0, document.body.scrollHeight);   
+    scrollBottom();
 }
 
 function putSmiley(c){
@@ -621,14 +641,21 @@ cnt++;
  /******************************************************/ 
 
        function variable_set(key, value) {
+           console.log(value,key);
+           setCookie(key,JSON.stringify(value));
+           /*
             if (typeof (window.Storage) !== "undefined") {
                 window.localStorage.setItem(key, JSON.stringify(value));
             } else {
                 console.error('window.localStorage', 'ERROR');
             }
+            */
         }
 
-        function variable_get(key, def) {
+        function variable_get(key) {
+            var ret=getCookie(key);
+            return JSON.parse(ret);
+            /*
             if(!def||def=='undefined')def=null;
             if (typeof (window.Storage) !== "undefined") {
                 item = JSON.parse(window.localStorage.getItem(key));
@@ -637,14 +664,35 @@ cnt++;
             } else {
                 console.error('window.localStorage', 'ERROR');
             }
+            */
         }
 
         function variable_del(key) {
+        setCookie(key,null,-1);
+            /*
+            $
             if (typeof (window.Storage) !== "undefined") {
                 window.localStorage.removeItem(key);
             } else {
                 console.error('window.localStorage', 'ERROR');
             }
+            */
+        }
+
+
+ function setCookie(key, value, days) {
+            var expires = new Date();
+            if (days) {
+                expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+                document.cookie = key + '=' + value + ';expires=' + expires.toUTCString();
+            } else {
+                document.cookie = key + '=' + value + ';expires=Fri, 30 Dec 9999 23:59:59 GMT;';
+            }
+        }
+
+        function getCookie(key) {
+            var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+            return keyValue ? keyValue[2] : null;
         }
 
 function getFormattedDate(time) {
@@ -679,13 +727,6 @@ function getFormattedDate(time) {
     if(tday+tmonth+tyear==day+month+year)str=str.replace(rep,''); 
     
     return str;
-}
-
-
-function read_cookie(key)
-{
-    var result;
-    return (result = new RegExp('(?:^|; )' + encodeURIComponent(key) + '=([^;]*)').exec(document.cookie)) ? (result[1]) : null;
 }
 
 function convertLinks(txt){
