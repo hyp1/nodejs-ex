@@ -75,3 +75,8 @@ function theme_comments(comments){
 c+="</div>";
 return c;
 }
+
+//ACHTUNG DIE einzige THEME Funktion 
+function theme_user_picture(pic){
+    return '<img src="'+pic+'" width="20" height="20" style="vertical-align:middle;border-radius:10px;"/>';
+}

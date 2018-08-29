@@ -8,7 +8,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1" /> 
 <title>AWRI - Rechtsfrage Service</title>
 <link rel="stylesheet" href="es5/jquery.mobile-1.4.5.min.css" />
+<link rel="stylesheet" href="css/forum.css" />
 <link rel="stylesheet" href="css/awrichat.css" />
+
 
 <script src=" //cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.slim.js"></script>
 <!-- <script src="/socket.io/socket.io.js"></script> -->
@@ -32,17 +34,6 @@
     vertical-align: middle;
 }  
 
- #dialog,#upldialog {
-      min-width: 200px;
-      max-width: 100%px;
-      margin: auto;
-      border: thin solid black;
-      padding: 10px;
-      background: lightgreen;
-    }
-    .hidden {
-      display: none;
-    }
 </style>
 
 </head>
@@ -67,22 +58,22 @@
 
             <!-- dialog -->
             <div id="dialog" class="hidden">
-                <div class="message">foobar</div>
+                <div class="message">Anmeldung</div>
                 <input type="text">
                 <div>
-                  <button class="ok">Ok</button>
-                  <button class="cancel">Cancel</button>
+                  <button class="ok">Weiter</button>
+                  <button class="cancel">Zurück</button>
                   </div>
                 </div><!--// Dialog -->
 
                   <!-- upload dialog -->
             <div id="upldialog" class="hidden">
-                <div class="message">foobar</div>
+                <div class="message">Hochladen</div>
                 <input type="file" id="upload-file" onchange="awri._previewFile(this,'img#upload-preview')">
                 <img src="img/preview.jpg" id="upload-preview" height="200" alt="Image preview...">
                 <div>
-                  <button class="uplok">Ok</button>
-                  <button class="uplcancel">Cancel</button>
+                  <button class="uplok">Weiter</button>
+                  <button class="uplcancel">Zurück</button>
                 </div>
                 </div><!--// Dialog -->
                 
@@ -154,7 +145,7 @@
                                 </div>
                         </fieldset>         
                     </div>
-            <div class="ui-block-b">
+            <div class="ui-block-b" class="ui-btn-right">
                     <div data-role="controlgroup" data-type="horizontal">
                         <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">☑️ </label>
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
@@ -193,7 +184,14 @@ $( "#myheader" ).on( "panelclose", function( event, ui ) {
   //console.log("i am close");
   scrollBottom();
   $('body').css("overflow", "auto");
+  $('#msg').focus();
 } );
+
+//MOTD
+
+awri.awriconnect_load_node(18329).then(function(node){    
+appendLine(node.body['und'][0].value);
+})
 
 });
 
@@ -238,10 +236,7 @@ pause= $('input[type="checkbox"]#pause').prop("checked");
 
 }); //jQuery
 
-//ACHTUNG DIE einzige THEME Funktion 
-function theme_user_picture(pic){
-            return '<img src="'+pic+'" width="20" height="20" style="vertical-align:middle;border-radius:10px;"/>';
-        }
+
 
 var notifications=false; //browser notifications
 var private=false;      //private msg toggle
@@ -271,15 +266,18 @@ cuser= new ChatUser();
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
 
-//MOTD
 
-awri.awriconnect_load_node(18329).then(function(node){    
-appendLine(node.body['und'][0].value);
-})
 
 })();
 
-
+function showUserMenu(elem,id,cmd){
+    $(elem).html("");
+    clients.forEach(function(client) {
+      //  console.log(client);
+        var n='<li onclick="'+cmd+'('+id+','+client._uid+');">'+theme_user_picture(client._picture)+client._name+'</li>';
+    $(elem).append(n);
+    });
+}
 
 function showClientsPopup(el){
 var ulc=$("#clients-"+$(el).attr("name"));    
@@ -319,13 +317,17 @@ function showDialog(message) {
   
     return new Promise(function(resolve, reject) {
       dialog.addEventListener('click', function handleButtonClicks(e) {
+          if(input.value.length<4){
+            dialog.querySelector('.message').innerHTML = "min. 5 Zeichen.";
+            return;
+            }
         if (e.target.tagName !== 'BUTTON') { return; }
         dialog.removeEventListener('click', handleButtonClicks);
         dialog.className = 'hidden';
         if (e.target === okButton) {
           resolve(input.value);
         } else {
-          reject(new Error('User cancelled'));
+         document.location.reload();
         }
       })
   })
@@ -391,7 +393,7 @@ function awriconnect_user_connected(user){
 }
 
 function onchatconnected(user){
-    console.log(user,'chatconnected');
+//    console.log(user,'chatconnected');
     variable_set('user',user);
     document.title=user._name;
     $('#uid').val(user._uid);
@@ -470,7 +472,7 @@ function setPriv(li){
     $('#users  li').removeClass('selected');
     //$('li[id='+li.id+']').addClass('selected');
     $(li).addClass('selected');
-    $('#message').focus();  
+    $('#msg').focus();  
     private=true;
 };
 
@@ -478,7 +480,7 @@ function unsetPriv(){
     $('#private').val(-1);
     $('#private-name').val('');
     $('#users li').removeClass('selected');
-    $('#message').focus();  
+    $('#msg').focus();  
     private=false;
 };
 

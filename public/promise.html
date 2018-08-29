@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>Async Dislogs Example</title>
 
-  <script src="/app/awriconnect.promise.js"></script>
-  <script type="text/javascript">
+  <script src="/es5/awriconnect-es5.js"></script>
+  <script src="/es5/bluebird.js"></script>
+
+<script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
       var time = document.getElementById('time-stamp');
       clockTick();
@@ -29,7 +31,7 @@
   </style>
 </head>
 <body>
-        <button id="test" onclick="doconn();" >Connect</button>
+        <button id="test" onclick="getToken();" >Connect</button>
         <button id="test" onclick="showDialog();" >Set Name</button>
   <p>The current time is <span id="time-stamp"></span>.</p>
   <p>Your name is <span id="prompt"></span>.</p>
@@ -44,6 +46,151 @@
   </div>
   <script>
 
+var awri=new AWRI('http://localhost/stage.awri.ch','connect');
+
+
+function doconnect(){
+
+  p1=awri.token;
+  
+  p2=awri.connect;
+  
+  p3=awriconnect_load_user;
+}
+
+var A = function() {
+return new Promise(function(resolve, reject) {
+    var result = 'A is done'
+    awri.token().then(function(token){
+      resolve(token);
+      console.log(result+token)
+    },result)
+})
+}
+
+var B = function(token) {
+
+return new Promise(function(resolve, reject) {
+    var result = 'B is done'
+
+    setTimeout(function() {
+      
+        awri.connect(token).then(function(user){
+          //console.log(user,"GOT CNNECTTADA");
+          console.log(result+user.uid);
+          resolve(user);
+
+           }).catch(function(err){
+            console.log(err);
+            return reject(err); 
+      
+           },token);
+
+        //resolve(result);
+    }, 2000)
+})
+}
+
+var C = function(uid) {
+
+return new Promise(function(resolve, reject) {
+    var result = 'C is done'
+
+    awri.awriconnect_load_user(uid).then(function(user){
+          //console.log(user,"GOT USERTADA");
+          console.log(user,result);
+           resolve(user);   
+  
+           }).catch(function(err){
+            return reject(err);
+             //console.log(err);
+           });
+})
+}
+
+var D = function() {
+
+return new Promise(function(resolve, reject) {
+    var result = 'D is done'
+    console.log(result)
+    resolve(result);
+})
+}
+
+var token,user; 
+A().then(function(result) { 
+  token = result; 
+   return  B(result); 
+    }) .then(function(user) { 
+      console.log(user); 
+      return C(user.uid); 
+        }) .then(D);
+
+
+function getConnectData(token, resolve, reject) {
+ return awri.connect(token).then(function(user){
+          console.log(user,"GOT CNNECTTADA");
+          resolve(user);
+   
+           });
+}
+
+function getConnectDataAsync(token) {
+    return new Promise(function(resolve, reject) {
+        // Put all your code here, this section is throw-safe.
+        getConnectData(token, resolve, reject);
+    });
+}
+
+function getUserData(uid, resolve, reject) {
+ return awri.awriconnect_load_user(uid).then(function(user){
+          console.log(user,"GOT USERTADA");
+          resolve(user);   
+           });
+}
+
+function getUserDataAsync(uid) {
+    return new Promise(function(resolve, reject) {
+        // Put all your code here, this section is throw-safe.
+        getUserData(uid, resolve, reject);
+    });
+}
+
+
+
+function getToken() {
+  awri.token().then(function(token){
+    getConnectDataAsync(token).then(function(user){
+      console.log(user,"getConnectDataAsync");
+getUserDataAsync(user.uid).then(function(user2){
+  console.log(user2,'getConnectDataAsync')
+}).catch(function(e){
+console.log(e);
+
+});
+    });
+  });
+}
+
+/*
+
+   awri.token().then(function(token){
+       console.log(token,"GOT TOKEN");
+       return awri.connect(token).then(function(user){
+          console.log(user,"GOT USER");
+           if(user.uid==0)return promptPromise("Wie heissen Sie?").then(function(name){
+               alert("Willkommen "+name);
+           });
+           else { 
+                    return awri.awriconnect_load_user(user.uid).then(function(user){
+                    console.log(user,"FULLL");
+                    }) 
+                }
+       })
+   }).catch(function(err){
+       alert(err);
+   });
+};
 
 
 function awriconnect_user_connected(user){
@@ -152,6 +299,10 @@ function connect(token) {
     })
 })
 }
+*/
+
+
+
 /*
 document.addEventListener('DOMContentLoaded', function() {
   var button = document.getElementById('action');
@@ -165,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
-*/
+
 function showDialog(test='Hallo Welt'){
     new promptPromise(test).then(function(name) {
      alert(name);
@@ -174,7 +325,7 @@ function showDialog(test='Hallo Welt'){
     })
 };
 
-
+*/
 
   </script>
 </body>

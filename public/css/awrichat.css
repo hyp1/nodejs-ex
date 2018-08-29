@@ -13,6 +13,9 @@ ul#commandlist li:hover{
     background-color:orange;
 }
 
+strong{
+    color: #046318;
+}
 #users li{
     cursor:pointer;
     float:left;
@@ -53,5 +56,31 @@ ul{
     list-style-type: none;  
 }
  li.selected{
-background-color:orange;
+background-color:lightgreen;
+}
+
+
+#dialog,#upldialog {
+    min-width: 200px;
+    max-width: 100%px;
+    margin: auto;
+    border: thin solid black;
+    border-radius: 15px;
+    padding: 10px;
+    background: lightgreen; 
+  }
+  .hidden {
+    display: none;
+  }
+
+  .ui-page-theme-e > div{
+    border:0 !important;
+} 
+  .ui-page-theme-e > li{
+    color:#fff !important;
+     /* background-color:pink !important; */
+      text-shadow: none !important;
+  } 
+  .ui-page-theme-e > strong{
+    color:lightgreen;
 }

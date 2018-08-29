@@ -72,7 +72,7 @@ class ChatServer{
             
             if(user._uid<1)
             {
-                socket.emit('connect name','Sie sind anonym verbunden. Bitte geben sie einen Benutzernamen ein.',function(answer){                             
+                socket.emit('connect name','<p>Sie sind nicht auf AWRI angemeldet.Sie können dennoch mit eingeschränkten Funktionen teilnehmen.</p><p>Bitte geben sie einen Benutzernamen ein.</p>',function(answer){                             
                     //give random user uid
                     var rand=''+ Date.now();
                     rand=rand.substr(7,rand.length);

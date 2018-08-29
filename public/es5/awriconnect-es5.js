@@ -36,7 +36,7 @@ var AWRI = function () {
                         resolve(user);
                         if (typeof awriconnect_user_connected == 'function') awriconnect_user_connected(user);
                     }
-                    //if (xmlhttp.status == 404) return reject( new AWRIError(xmlhttp.status+' Nicht gefunden.'));
+                    if (xmlhttp.status == 404) return reject( new AWRIError(xmlhttp.status+' Nicht gefunden.'));
                     if (xmlhttp.status != 200) return reject(new AWRIError(xmlhttp.status + ' Fehler connect.'));
                 };
                 xmlhttp.send();
@@ -77,13 +77,19 @@ var AWRI = function () {
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4) {                      
-                    var user = JSON.parse(xmlhttp.responseText);
-               
+                    var res = xmlhttp.responseText;            
+                    var err=new AWRIError(xmlhttp.status+' User '+uid+' nicht gefunden.');
+                     
                     if(xmlhttp.status == 200 ){
+                        var user=JSON.parse(res);
                         if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_load_user',user);                                                                                  
                         resolve(user);
-                    }
-                    else  reject( new AWRIError(xmlhttp.status+' Fehler in loaduser.'));    
+                    }else
+                    if(xmlhttp.status == 404){
+                        reject(new AWRIError(xmlhttp.status+' User '+uid+' nicht gefunden.'));
+
+                    } else
+                    return  new AWRIError(xmlhttp.status+' unbekannter Fehler.');    
                     }
                     
                 };
@@ -684,7 +690,7 @@ var AWRI = function () {
         key: "awriconnect_get_files",
         value: function awriconnect_get_files(uid,page){
             return new Promise(function (resolve, reject) {
-                if(!page||page=='undefined')
+                if(!page||page=='undefined')page=0;
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;                    
@@ -809,3 +815,28 @@ var AWRI = function () {
 
     return AWRI;
 }();
+
+
+
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var AWRIError = function (_Error) {
+    _inherits(AWRIError, _Error);
+
+    function AWRIError(msg) {
+        _classCallCheck(this, AWRIError);
+
+        var _this = _possibleConstructorReturn(this, (AWRIError.__proto__ || Object.getPrototypeOf(AWRIError)).call(this, msg));
+
+        _this.msg = msg;
+        _this.name = "AWRIConnectError";
+        return _this;
+    }
+
+    return AWRIError;
+}(Error);

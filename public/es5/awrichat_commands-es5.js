@@ -177,7 +177,8 @@ showLoader();
 //ACHTUNG ASYNC==true!!!
     awri.awriconnect_search_node(text).then(function(result){
         result.forEach(function(node) {
-        appendLine('<a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
+         //   appendLine(theme_node(node));
+            appendLine('<a href="#" onclick="cmdShow('+node.node.nid+')" data-role="button">👁️</a><a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
         hideLoader();
     });
     }).catch(function(err){
@@ -191,7 +192,7 @@ function cmdShow(nid){
     showLoader();   
     awri.awriconnect_frage_get(nid).then(function(node){      
    
-    appendLine(theme_node(node));  
+    appendLine(theme_node(node)+'<a href="#" onclick="showUserMenu(this,'+nid+',\'cmdshowContentTo\');" >📧</a> <ul id="usermenu-'+node.nid+'" data-role="button"></ul>');  
  
    
     awri.awriconnect_comments(nid).then(function(res){
@@ -274,6 +275,8 @@ function cmdLogout(){
 }
 
 
+
+
 function cmdUploads(page){
     if(!page||page=='undefined')page=0;
     if(!user_has_role(variable_get("user"),'authenticated user')) 
@@ -282,7 +285,7 @@ function cmdUploads(page){
     awri.awriconnect_get_files($("#user").attr('uid'),page).then(function(result){
         var files=JSON.parse(result);
         files.forEach(function(file) {      
-            appendLine("<p><strong>["+file.fid+"]</strong></p><p>Dateiname:"+ file.filename+'</p><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100"><p>Dateigrösse:'+(file.filesize/1000)+' Kb</p>');
+            appendLine('<a href="#" onclick="showUserMenu(this,'+file.fid+',\'cmdshowImageTo\');" >📧</a> <ul id="usermenu-'+file.fid+'" data-role="button"></ul><a href="#" onclick="cmdshowImage('+file.fid+')" data-role="button">👁️</a><p><strong>['+file.fid+']</strong></p><p>Dateiname:'+ file.filename+'</p><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100"><p>Dateigrösse:'+(file.filesize/1000)+' Kb</p>');
         });
         $('#msg').val('');
     })
@@ -328,28 +331,67 @@ function cmdUpload(){
     });    
 }
 
-function cmdshowImage(params){
+function cmdshowImage(fid){
     if(!user_has_role(variable_get("user"),'authenticated user')) 
     return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
 
-    var param=params.split(' ');
+    //var param=params.split(' ');
     var msg=new ChatMessage();
-    if(!param[1]){
-        awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
+        awri.awriconnect_get_file_by_fid(fid).then(function(image){
             msg.setFrom($("#user").attr("uid"));
             var file=image.uri.replace("public://",host+"/sites/default/files/");
             msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
             appendMessage(msg);
+            scrollBottom();
         });
-        return;
-    }
-         awri.awriconnect_get_file_by_fid(param[0]).then(function(image){
+    /*
+         awri.awriconnect_get_file_by_fid(fid).then(function(image){
         msg.setFrom($("#user").attr("uid"));
         var file=image.uri.replace("public://",host+"/sites/default/files/");
         msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
-        chat.sendPrivateMessage(param[1],msg);
+        chat.sendPrivateMessage("3",msg);
+    });
+    */
+}
+
+function cmdshowImageTo(fid,uid){
+  //  alert(fid+ '->'+uid);
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
+
+    //var param=params.split(' ');
+    var msg=new ChatMessage();
+
+        awri.awriconnect_get_file_by_fid(fid).then(function(image){
+        msg.setFrom($("#user").attr("uid"));
+        var file=image.uri.replace("public://",host+"/sites/default/files/");
+        msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
+        chat.sendPrivateMessage(uid,msg);
+        scrollBottom();
     });
 }
+
+
+
+function cmdshowContentTo(nid,uid){
+    var msg=new ChatMessage();
+    msg.setFrom($("#user").attr("uid"));
+    msg.setText('show content'+nid);
+    chat.sendPrivateCommand(uid,msg);     
+    $('#msg').val('');
+/*
+var param=params.split(' ');
+    awri.awriconnect_frage_get(param[0]).then(function(node){
+        msg.setFrom($("#user").attr("uid"));
+        msg.setText(theme_node(node));
+            awri.awriconnect_comments(param[0]).then(function(comments){                        
+                msg.setText(msg._txt+theme_comments(comments));
+                chat.sendPrivateCommand(param[1],msg);     
+            }); 
+    });
+    */
+}
+
 
 function cmdshowContent(params){
     var param=params.split(' ');

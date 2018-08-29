@@ -1,3 +1,16 @@
+function theme_usermenu(elem,cmd){
+
+    
+  //  var n='<ul id="usrmenu">';
+  var n="";  
+  clients.forEach(function(client) {
+        console.log(client);
+        //n+='<li>'+getFormattedDate(client.time)+' '+client.to+'</li>';
+    $(elem).append(client._uid);
+    });
+
+}
+
 function theme_kicks(kicks){
     var n='<ul id="kicks">';
     kicks.forEach(function(kick) {
