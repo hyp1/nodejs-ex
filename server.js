@@ -61,17 +61,12 @@ app.engine('html', require('ejs').renderFile); //console log modules unten!
 
 app.use('/', express.static('public'), function (req, res) {
   //console.log(req.headers);
-  res.set({
-    'Access-Control-Allow-Origin': 'https://forum.awri.ch',
-    'ETag': '12345'
-  })
   //res.sendFile(express.static('public')+'index.html');
   res.sendFile('index.html', { root: __dirname + '/public' });
 });
 
 
 http.listen(8080, function (req, res) {
-
   console.log('listening on *:' + port);
 });
 io = require('socket.io').listen(http)
