@@ -2,6 +2,7 @@ const express = require('express');
 const app     = express();
 const http = require('http').Server(app);
 var morgan = require('morgan');
+var cors = require('cors');
 
 var WEBLOG = process.env.WEBLOG || 0;
 var DBLOG = process.env.DBLOG || 0;
@@ -47,6 +48,7 @@ console.log(port, 'NODEJS_PORT');
 var singleton = require('./database');
 singleton.setup(mongoURL);
 
+app.use(cors());
 
 app.use('/logs', logs);
 //Serverlogs für APP
