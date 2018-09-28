@@ -1,16 +1,3 @@
-function theme_usermenu(elem,cmd){
-
-    
-  //  var n='<ul id="usrmenu">';
-  var n="";  
-  clients.forEach(function(client) {
-        console.log(client);
-        //n+='<li>'+getFormattedDate(client.time)+' '+client.to+'</li>';
-    $(elem).append(client._uid);
-    });
-
-}
-
 function theme_kicks(kicks){
     var n='<ul id="kicks">';
     kicks.forEach(function(kick) {
@@ -43,7 +30,9 @@ function theme_user(user){
 
 function theme_bookmarks(marks){
 marks.forEach(function(bookmark) {
-    appendLine("<strong>["+bookmark.node.nid+"]</strong> "+bookmark.node.created+" "+theme_fb_image(bookmark.node.fbid)+" "+bookmark.node.fbname+"<br>"+bookmark.node.title);
+ var btn='<a title="Beitrag ansehen" class="ui-link ui-btn ui-icon-eye ui-btn-icon-notext ui-corner-all" href="#" onclick="cmdShow('+bookmark.node.nid+')" data-role="icon" title="Beitrag ansehen">👁️</a>';
+ 
+    appendLine(btn+"<h2>"+bookmark.node.nid+"</h2> "+bookmark.node.created+" "+theme_fb_image(bookmark.node.fbid)+" "+bookmark.node.fbname+"<br>"+bookmark.node.title);
 });
 }
 
@@ -59,10 +48,22 @@ k.forEach(function(role) {
  ret+="</ul>";
 return ret;
 }
+
 function theme_node(node){
-   var n='<h1>'+node.nid+'</h1>';
-  if(node.field_fbid) n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+node.field_fbname['und'][0].value+'</h2>';
-   n+='<p>'+node.body['und'][0].safe_value+'</p>';
+   var n='<h1>'+node.nid+'<a id="bookmark-nid-'+node.nid+'" class="ui-link ui-btn ui-icon-tag ui-btn-icon-notext ui-corner-all"></a></h1>';
+   awri.awriconnect_is_bookmark("bookmarks",node.nid).then(function(res){
+    if(res[0]==true){
+       // alert("NID:"+node.nid)
+        $('#bookmark-nid-'+node.nid).addClass("ui-btn-active");   
+    }
+        console.log(res,"is_bookmark");
+   });
+  var images="";
+  if(typeof node.field_image.und!=='undefined')node.field_image['und'].forEach(function(img) {
+      images+='<p><img src="'+get_image_path(img.uri)+'"></p>'
+  });
+   if(node.field_fbid) n+='<h2>'+theme_fb_image(node.field_fbid['und'][0].value)+'&nbsp;&nbsp;&nbsp;'+node.field_fbname['und'][0].value+'</h2>';
+   n+='<h3>'+node.body['und'][0].safe_value+'</h3>'+images;
    return n;
 }
 function theme_user_picture(pic){
@@ -75,7 +76,7 @@ function theme_fb_image(fbid){
 
 function theme_comments(comments){
    if(comments.length<1)return;
-   console.log(comments,"Comemnts");
+  // console.log(comments,"Comemnts");
 //        var c='<button id="comment-btn-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+');">+</button><div style="display:none;" id="comments-'+comments[0].nid+'">'
    var c='<a id="icon-'+comments[0].nid+'" onclick="toggleComments('+comments[0].nid+')" href="#" class="ui-btn ui-shadow ui-corner-all ui-icon-plus ui-btn-icon-notext ui-btn-b ui-btn-inline">Plus</a><div style="display:none;" id="comments-'+comments[0].nid+'">'
    comments.forEach(function(comment) {
@@ -86,3 +87,35 @@ function theme_comments(comments){
 c+="</div>";
 return c;
 }
+
+
+function get_image_path(uri) {
+    var image = uri.replace('public://',awri.host+"/sites/default/files/");
+    return image;
+}
+
+
+$.mobile.changeGlobalTheme = function(theme)
+{
+    // These themes will be cleared, add more
+    // swatch letters as needed.
+    var themes = " a b c d e";
+
+    // Updates the theme for all elements that match the
+    // CSS selector with the specified theme class.
+    function setTheme(cssSelector, themeClass, theme)
+    {
+        $(cssSelector)
+            .removeClass(themes.split(" ").join(" " + themeClass + "-"))
+            .addClass(themeClass + "-" + theme)
+            .attr("data-theme", theme);
+    }
+
+    // Add more selectors/theme classes as needed.
+    setTheme(".ui-mobile-viewport", "ui-overlay", theme);
+    setTheme("[data-role='page']", "ui-body", theme);
+    setTheme("[data-role='header']", "ui-bar", theme);
+    setTheme("[data-role='listview'] > li", "ui-bar", theme);
+    setTheme(".ui-btn", "ui-btn-up", theme);
+    setTheme(".ui-btn", "ui-btn-hover", theme);
+};

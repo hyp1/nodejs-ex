@@ -1,8 +1,8 @@
 /**
  *  class ChatUser
+ *  class ChatCommand
  *  class ChatMessage
  *  class LogMessage extends Chatmessage
- *  class ChatCommand
  */
 'use strict';
 

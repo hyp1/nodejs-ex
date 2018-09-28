@@ -104,7 +104,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/search_node/retrieve.json?keys="+txt, true);
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/search_node/retrieve.json?keys="+txt+'&parameters[status]=1', true);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 xmlhttp.onreadystatechange = function () {
@@ -179,7 +179,7 @@ var AWRI = function () {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/comment.json?parameters[nid]="+nid+"&parameters[status]=1&pagesize=150", true);
+                xmlhttp.open("GET", awri.host + "/" + awri.endpoint + "/comment.json?parameters[nid]="+nid+"&parameters[status]=1&pagesize=150", false);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
@@ -188,9 +188,9 @@ var AWRI = function () {
                         var result= JSON.parse(xmlhttp.responseText);
                         if(xmlhttp.status == 200){  
                             if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_comments',result);                                                                   
-                            resolve(result);
+                           return resolve(result);
                             } else
-                            reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_comments'));
+                           return reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_comments'));
                         }
                     }                
                 xmlhttp.send(null);
@@ -201,12 +201,17 @@ var AWRI = function () {
 
     }, { //Func
         key: "awriconnect_is_bookmark",
-        value: function awriconnect_is_bookmark(nid) {
+        value: function awriconnect_is_bookmark(flag_name,nid) {
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
                 xmlhttp.withCredentials = true;
                 xmlhttp.crossDomain = true;
-                xmlhttp.open("GET", awri.host +"/"+awri.endpoint +"/flag/is_flagged.json", true);
+                var data={
+                    "flag_name":flag_name,
+                    "entity_id":nid,
+                //    "uid":3
+                }
+                xmlhttp.open("POST", awri.host +"/"+awri.endpoint +"/flag/is_flagged.json", false);
                 xmlhttp.setRequestHeader("Content-Type", "application/json");
                 xmlhttp.setRequestHeader("X-CSRF-Token", awri._token);
                 //xmlhttp.setRequestHeader("Cookie",variable_get('session'));
@@ -215,12 +220,12 @@ var AWRI = function () {
                         var result= JSON.parse(xmlhttp.responseText); 
                         if(xmlhttp.status == 200){
                             if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_is_bookmark',result);                                                                   
-                            resolve(result);
+                          return  resolve(result);
                         }
-                        else  reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_is_bookmark'));
+                        else  return reject( new AWRIError(xmlhttp.status+' Fehler', 'awriconnect_is_bookmark'));
                     };
                 };
-                xmlhttp.send(null);
+                xmlhttp.send(JSON.stringify(data));
             });
         } //Func
 
@@ -432,9 +437,9 @@ var AWRI = function () {
                             if(typeof awriconnect_data == 'function')awriconnect_data('awriconnect_frage_get',data);                                                                                  
                             return resolve(data);
                         }
-                        if (xmlhttp.status == 403) reject( new AWRIError(xmlhttp.status+' Kein Zugriff für anonyme Benutzer.'));              
-                        if (xmlhttp.status == 0) reject( new AWRIError(xmlhttp.status+' Der Service wurde nicht gefunden.'));                
-                        if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler in awriconnect_frage_get.'));                    
+                        if (xmlhttp.status == 403) return reject( new AWRIError(xmlhttp.status+' Kein Zugriff für anonyme Benutzer.'));              
+                        if (xmlhttp.status == 0) return reject( new AWRIError(xmlhttp.status+' Der Service wurde nicht gefunden.'));                
+                        if (xmlhttp.status != 200) return reject( new AWRIError(xmlhttp.status+' Fehler in awriconnect_frage_get.'));                    
                     }
                 };
                 xmlhttp.send(null);
@@ -567,7 +572,7 @@ var AWRI = function () {
         }//func
 
     }, { //Func
-        key: "awriconnect_taxonomy_vocabulary",
+        key: "awriconnect_taxonomy_term",
         value: function awriconnect_taxonomy_term(page,fields,parameters,page_size,options) {
             var query="?page="+page; 
             if(!page||page=='undefined')page=0;
@@ -767,7 +772,7 @@ var AWRI = function () {
     }//func
 
 }, { //Func
-    key: "awriconnect_upload_file",
+    key: "_previewFile",
     value: function _previewFile(filefield,preview){
         var preview = document.querySelector(preview); //selects the query named img
         var file    = filefield.files[0]; //sames as here
@@ -775,7 +780,7 @@ var AWRI = function () {
         console.log(preview);
         preview.setAttribute('name',filefield.value);
         reader.onloadend = function () {
-            preview.src = reader.result;
+            preview.src = reader.result;            
         }     
         if (file) {
             reader.readAsDataURL(file); //reads the data as a URL

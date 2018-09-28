@@ -10,6 +10,7 @@ var cmdBufferIndex=0;
 function parseCommand(cmd){
     addCmdToBuffer(cmd);
     console.log(cmd,'parseCommand');
+    if(cmd=='create'||cmd=='frage')cmdCreate();
    if(cmd=='help'||cmd=='hilfe')cmdHelp();
    if(cmd=='stats'||cmd=='statistik')cmdStats();
    if(cmd=='news')cmdNews();
@@ -58,13 +59,20 @@ function cmdInfo(){
     'können sie nur als anonymer Benutzer an unserer Diskussion teilnehmen.',
     'Als anonymer Teilnehmer können sie im Chat keine erweiterten Funktionen ausführen.',
     'Bei erneutem laden des Browsers, werden die letzten 15 Chat Nachrichten geladen und angezeigt.',
+    'Dateien und Rechtsfragen können ganz einfach über dieses Icon <a href="#" class="ui-icon-mail ui-btn-icon-notext inlineIcon"></a> an andere Chat Teilnehmer gesendet werden.',    
     'Sie können  private Nachrichten senden, indem Sie die Person in der Mitgliederliste <a href="#myheader" class="ui-icon-user ui-btn-icon-notext inlineIcon"></a> rechts oben auswählen.',
     'Wenn sie dieses Häkchen aktivieren ☑️ werden sie bei privaten Nachrichten durch Browsernotifikationen benachrichtigt. ',
     'Schreiben sie <strong>/help</strong> oder <strong>/hilfe</strong> ins Chat Fenster, um weitere Hilfe anzuzeigen.',
+    'Um nach Rechtsfragen zu suchen, schreiben Sie <strong>/search</strong> oder <strong>/suche</strong> ins Chat Fenster.',
+    'Um eine Rechtsfrage zu stellem, schreiben Sie <strong>/create</strong> ins Chat Fenster.',    
     'Moderatoren haben dieses <span class="modsym">🛡</span> und Admins <span class="adminsym">⚔️</span> ein solches Präfix vor den Namen.',
     'Mit den Pfeiltasten (hoch/runter) können Sie ihre letzten Befehle wiederholen.',
     'Anonyme Benutzer haben dieses '+theme_user_picture('img/anonymous.png')+' Profilbild',
     'Viel Spass beim Diskutieren und bitte immer freundlich bleiben. ¯\\_(ツ)_/¯',
+    '<div class="speech-bubble"><h1>Guten Tag <strong>'+variable_get('user')._name+'</strong>.'
+    +' Ich bin <strong>Juri</strong>, ihr persönlicher Assistent für Rechtsfragen.</h1>'+
+     'Er solle es hilfesuchenden erleichtern rechtlichen Rat zu finden. Viel Spass beim Diskutieren und bitte immer freundlich bleiben. ¯\\_(ツ)_/¯</div>',
+    '<center><img src="img/Jusi.png" width=200></center>',
 ];
 help.forEach(function(line) {
     appendLine(line)
@@ -73,7 +81,7 @@ $('#msg').val('');
 }
 
 function cmdHelp(){
-    help=[
+    helpanon=[
     '<h2>Hilfe</h2>',
     'Chat Befehle beginnen mit einem Slash /[Befehl],',
     '<span style="color:green;">Befehlsliste (Alle Benutzer)</span>',
@@ -83,21 +91,27 @@ function cmdHelp(){
     '<strong>/news</strong> (Zeigt die aktuellsten 3 Beiträge von AWRI)',
     '<strong>/whoami</strong> (zeigt ihre Benutzer Informationen)',
     '<strong>/beep</strong> (spielt den Benachrichtiguns Ton ab)',
-    '<strong>/search [Suchwort] {AND|OR} [Suchwort] ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
+    '<strong>/search {[Suchwort] {AND|OR} [Suchwort]} ...</strong> (sucht in der AWRI Datenbank nach Ergebnissen)',
     '<strong>/show [Beitrags-ID]</strong> (zeigt den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/show content [Beitrags-ID] [Benutzer-ID]</strong> (zeigt dem Benutzer [Benutzer-ID] den Beitrag mit der [Beitrags-ID] an)',
     '<strong>/adminmsg</strong> (sendet die Nachricht an alle Admins oder Moderatoren im Chat)',
-    '<strong>/show image [Datei-ID] {[Benutzer-ID]}</strong> (zeigt das Bild mit der [Datei-ID] ihnen oder optional dem Benutzer mit der [Benutzer-ID] an)',
-   
+    '<strong>/show image [Datei-ID] {[Benutzer-ID]}</strong> (zeigt das Bild mit der [Datei-ID] ihnen oder optional dem Benutzer mit der [Benutzer-ID] an)', 
+];
+
+    helpuser=[
     '<span style="color:blue;">Befehlsliste (AWRI Mitglieder)</span>',
-    '<strong>/login [username] [passwort]</strong> (meldet Sie über die AWRI Seite an)', 
-    '<strong>/logout</strong> (meldet Sie von der AWRI Seite ab)', 
+    '<strong>/create</strong> (eine neue Rechtsfrage stellen)', 
     '<strong>/bookmarks {[Seite]}</strong> (zeigt ihre gepeicherten Lesezeichen an. Es werden immer 10 auf einer Seite angezeigt.)', 
     '<strong>/add bookmark [Beitrags-ID]</strong> (fügt den Beitrag mit der [Beitrags-ID] zu Ihren Lesezeichen hinzu.)', 
     '<strong>/del bookmark [Beitrags-ID]</strong> (entfernt den Beitrag mit der [Beitrags-ID] von Ihren Lesezeichen.)', 
     '<strong>/upload</strong> (Datei hochladen)', 
-  
     '<strong>/uploads {[Seite]}</strong> (Zeigt Ihre hochgeladenen Dateien an. Es werden immer 10 auf einer Seite angezeigt.)', 
+    '<strong>/login [username] [passwort]</strong> (meldet Sie über die AWRI Seite an)', 
+    '<strong>/logout</strong> (meldet Sie von der AWRI Seite ab)', 
+];
+
+
+helpadmin=[
     '<span style="color:red;">Befehlsliste (AWRI Admins/Moderatoren)</span>',
     '<strong>/kick [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus dem Chat)',
     '<strong>/unkick [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus der Sperrliste)',
@@ -105,12 +119,29 @@ function cmdHelp(){
     '<strong>/ban [Benutzer-ID]</strong> (Entfernt den Benutzer mit der [Benutzer-ID] aus dem Chat und sperrt seine IP Adresse)',
     '<strong>/unban [IP Adresse]</strong> (Entfernt die [IP-Adresse] aus der Sperrliste)',
     '<strong>/bans</strong> (Zeigt die Liste der gesperrten IP Adressen an.)',
-
 ];
-help.forEach(function(line) {
+
+helpanon.forEach(function(line) {
     appendLine(line);
 });
+if(user_has_role(variable_get('user'),'authenticated user'))
+helpuser.forEach(function(line) {
+    appendLine(line);
+});
+
+if(user_has_role(variable_get('user'),'administrator')||user_has_role(variable_get('user'),'moderator'))
+helpadmin.forEach(function(line) {
+    appendLine(line);
+});
+
 $('#msg').val('');
+}
+
+function cmdCreate(){
+    if(!user_has_role(variable_get("user"),'authenticated user')) 
+    return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");    
+    showCreateDialog("Bitte schildern sie den Sachverhalt möglichst genau.");
+    scrollBottom();
 }
 
 function cmdWhoami(){
@@ -173,12 +204,18 @@ console.log(stats);
     }
 
 function cmdSearch(text){
+if(text==""){
+    showSearchDialog("Suchen nach Stichwörtern...");
+    scrollBottom();
+    return;   
+}
 showLoader();
 //ACHTUNG ASYNC==true!!!
+appendLine('<h1>Suche nach: "'+text+'" ...</h1>');
     awri.awriconnect_search_node(text).then(function(result){
         result.forEach(function(node) {
-         //   appendLine(theme_node(node));
-            appendLine('<a href="#" onclick="cmdShow('+node.node.nid+')" data-role="button">👁️</a><a href="'+node.link+'" target="_BLANK"><strong>'+node.node.nid+'</strong></a> '+node.snippet);
+          //  appendLine(theme_node(node.node));
+            appendLine('<div class="node"><h2>'+node.node.nid+'</h2><a title="Beitrag ansehen" class="ui-link ui-btn ui-icon-eye ui-btn-icon-notext ui-corner-all" href="#" onclick="cmdShow('+node.node.nid+')" data-role="icon" title="Beitrag ansehen">👁️</a>'+node.snippet+'<p>Antworten:'+node.node.comment_count+'</p></div>');
         hideLoader();
     });
     }).catch(function(err){
@@ -191,23 +228,30 @@ $('#msg').val('');
 function cmdShow(nid){
     showLoader();   
     awri.awriconnect_frage_get(nid).then(function(node){      
-   
-    appendLine(theme_node(node)+'<a href="#" onclick="showUserMenu(this,'+nid+',\'cmdshowContentTo\');" >📧</a> <ul id="usermenu-'+node.nid+'" data-role="button"></ul>');  
- 
-   
-    awri.awriconnect_comments(nid).then(function(res){
-                        appendLine(theme_comments(res)); 
-                        hideLoader(); 
-                    }); 
+   var btn='<a data-rel="usermenu-'+node.nid+'" class="ui-link ui-btn ui-icon-mail ui-btn-icon-notext ui-corner-all" href="#" title="Senden an... " onclick="showUserMenu(\'usermenu-'+node.nid+'\','+nid+',\'cmdshowContentTo\');" ></a> <ul data-role="popup"class="usermenu" id="usermenu-'+node.nid+'" data-role="button"></ul>';
+   var line='<div class="node">';
+   line+=theme_node(node)+btn+'<p>Antworten:'+node.comment_count+'</p>';  
+   //appendLine();  
 
+  if(node.comment_count>0){
+   return awri.awriconnect_comments(nid).then(function(res){
+    line+=theme_comments(res);                    
+//    appendLine(); 
+                        hideLoader();
+                        appendLine(line+'</div>');  
+                    },line); 
+                } else  {
+    hideLoader();
+    appendLine(line+'</div>');  
+}
                         }).catch(function(err){
                             appendLine('Fehler: "'+err+'" !' ,'red');
                             hideLoader();
-
 }).catch(function(err){
     appendLine('Fehler: "'+err+'" !' ,'red');
     hideLoader();
 });
+
 
 $('#msg').val('');
 }
@@ -279,15 +323,20 @@ function cmdLogout(){
 
 function cmdUploads(page){
     if(!page||page=='undefined')page=0;
+    appendLine('<h1>Uploads (Seite '+(1+parseInt(page))+')</h1>');
     if(!user_has_role(variable_get("user"),'authenticated user')) 
     return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
     
     awri.awriconnect_get_files($("#user").attr('uid'),page).then(function(result){
         var files=JSON.parse(result);
-        files.forEach(function(file) {      
-            appendLine('<a href="#" onclick="showUserMenu(this,'+file.fid+',\'cmdshowImageTo\');" >📧</a> <ul id="usermenu-'+file.fid+'" data-role="button"></ul><a href="#" onclick="cmdshowImage('+file.fid+')" data-role="button">👁️</a><p><strong>['+file.fid+']</strong></p><p>Dateiname:'+ file.filename+'</p><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100"><p>Dateigrösse:'+(file.filesize/1000)+' Kb</p>');
+        files.forEach(function(file) {     
+            var btn='<a title="Datei senden an..." class="ui-link ui-btn ui-icon-mail ui-btn-icon-notext ui-corner-all" href="#" title="Senden an... " onclick="showUserMenu(\'usermenu-'+file.fid+'\','+file.fid+',\'cmdshowImageTo\');" ></a> <ul class="usermenu" id="usermenu-'+file.fid+'" data-role="button"></ul>';
+ 
+            appendLine('<p><h2>Datei-ID:['+file.fid+']</h2></p>'+btn+'<a class="ui-link ui-btn ui-icon-eye ui-btn-icon-notext ui-corner-all"  href="#" onclick="cmdshowImage('+file.fid+')" data-role="button" title="Datei ansehen"></a><img src="'+host+'/sites/default/files/attachments/'+file.filename+'" width="100"><p>Dateiname:'+ file.filename+'</p><p>Dateigrösse:'+(file.filesize/1000)+' Kb</p>');
         });
-        $('#msg').val('');
+       if(files.length>0) appendLine('<a href="#" class="ui-btn" onclick="cmdUploads('+(page+1)+')">Weiter</a>');     
+       $('#msg').val('');
+       $('#msg').focus();
     })
 }  
 
@@ -367,6 +416,8 @@ function cmdshowImageTo(fid,uid){
         var file=image.uri.replace("public://",host+"/sites/default/files/");
         msg.setText('<strong>Datei ID:['+image.fid+']</strong><p><img src="'+file+'"></p><p>Dateigrösse: '+(image.filesize/1000)+' Kb</p>');
         chat.sendPrivateMessage(uid,msg);
+        appendLine('<strong>Datei ID:['+image.fid+'] wurde gesendet</strong>');
+      
         scrollBottom();
     });
 }
@@ -415,13 +466,16 @@ var param=params.split(' ');
 
 function cmdBookmarks(page){
     if(!page||page=='undefined')page=0;
+    appendLine('<h1>Ihre Lesezeichen (Seite '+(1+page)+')</h1>');
+
     if(!user_has_role(variable_get("user"),'authenticated user')) 
     return appendLine('<small> '+getFormattedDate(Date.now())+'</small>: <img src="img/logo_blank_50x50.png" width="20" height="20"> Server: Sie sind kein AWRI Mitglied, bitte melden sie sich bei '+l("AWRI","https://awri.ch",{target:"_BLANK"})+' an!',"red");
     
     showLoader();   
     awri.awriconnect_bookmarks($("#user").attr("uid"),page).then(function(result){      
    //console.log(result);
-   appendLine(theme_bookmarks(result.nodes));  
+   appendLine(theme_bookmarks(result.nodes));
+   if(result.nodes.length>0)appendLine('<a href="#" class="ui-btn" onclick="cmdBookmarks('+(page+1)+')">Weiter</a>');    
     hideLoader();
 }).catch(function(err){
     appendLine('Fehler: "'+err+'" !' ,'red');
@@ -469,14 +523,14 @@ function cmdNews(){
     showLoader();
     //ACHTUNG ASYNC==true!!!
 //    awriconnect_fragen_index(page=0,fields,parameters=null,page_size=null,options="options[orderby][cerated]=desc")           
-
-       awri.awriconnect_fragen_index(0,'nid',1,3,"options[orderby][created]=desc").then(function(result){
+appendLine('<h1>News</h1>');
+      return awri.awriconnect_fragen_index(0,'nid','parameters[status]=1',3,"options[orderby][created]=desc").then(function(result){
        
             result.forEach(function(node) {
-            awri.awriconnect_frage_get(node.nid).then(function(node){
-                appendLine(theme_node(node));
-                hideLoader();   
-                                                
+            return awri.awriconnect_frage_get(node.nid).then(function(node){
+                appendLine(theme_node(node)+'<a title="Beitrag ansehen" class="ui-link ui-btn ui-icon-eye ui-btn-icon-notext ui-corner-all" href="#" onclick="cmdShow('+node.nid+')" data-role="icon" title="Beitrag ansehen">👁️</a>');
+          
+                hideLoader();                               
             });
         });
         $('#msg').val('');                   

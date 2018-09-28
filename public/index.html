@@ -59,14 +59,76 @@
             <!-- dialog -->
             <div id="dialog" class="hidden">
                 <div class="message">Anmeldung</div>
-                <input type="text">
+                <input type="text" value="">
                 <div>
                   <button class="ok">Weiter</button>
                   <button class="cancel">Zurück</button>
                   </div>
                 </div><!--// Dialog -->
 
-                  <!-- upload dialog -->
+
+           <!-- createdialog -->
+           <div id="createdialog" class="hidden" style="width:100%;">
+               <div class="node">
+                <h1>Rechtsfrage stellen</h1>
+                <label for="checkbox-anon" id="createdialog-anon" title="Frage anonym stellen?">Frage anonym stellen? </label>
+                <input type="checkbox" name="checkbox" id="checkbox-anon" class="custom" data-mini="true" />                              
+                <div id="namePopup">
+                    <label for="createdialog-fbname" title="Benutzername">Benutzername</label>   
+                    <input type="text" id="createdialog-fbname" disabled/>                  
+            </div>
+          
+            <div class="createdialog-message">Frage:</div>            
+            <textarea type="text" id="create" value=""></textarea>
+ 
+   
+                        <label for="kanton">Kanton:</label>
+                        <select name="kanton" id="kanton"></select>
+   
+            <a href="#" onclick="toggleUpload(1)">Datei 1</a>
+            <div id="upload1" class="hidden">
+            <input type="file" id="upload-file1" onchange="_previewFile(this,'upload-preview1',1)">
+            <input type="hidden" id="upload-file1-fid" value="-1">         
+            <img src="img/preview.jpg" id="upload-preview1" height="200" alt="Image preview...">
+            <input type="button" id="remove-file1" onclick="_removeFile(1);" value="Entfernen">
+            </div>
+            <a href="#" onclick="toggleUpload(2)">Datei 2</a>
+            <div id="upload2" class="hidden">
+            <input type="file" id="upload-file2" onchange="_previewFile(this,'upload-preview2',2)">
+            <input type="hidden" id="upload-file2-fid" value="-1">         
+            <img src="img/preview.jpg" id="upload-preview2" height="200" alt="Image preview...">
+            <input type="button" id="remove-file2" onclick="_removeFile(2);" value="Entfernen">
+        </div>
+        <a href="#" onclick="toggleUpload(3)">Datei 3</a>
+        <div id="upload3" class="hidden">
+            <input type="file" id="upload-file3" onchange="_previewFile(this,'upload-preview3',3)">
+            <input type="hidden" id="upload-file3-fid" value="-1">         
+            <img src="img/preview.jpg" id="upload-preview3" height="200" alt="Image preview...">
+            <input type="button" id="remove-file3" onclick="_removeFile(3);" value="Entfernen">
+        </div>
+        <a href="#" onclick="toggleUpload(4)">Datei 4</a>
+        <div id="upload4" class="hidden">
+            <input type="file" id="upload-file4" onchange="_previewFile(this,'upload-preview4',4)">
+            <input type="hidden" id="upload-file4-fid" value="-1">         
+            <img src="img/preview.jpg" id="upload-preview4" height="200" alt="Image preview...">
+            <input type="button" id="remove-file4" onclick="_removeFile(4);" value="Entfernen">
+        </div>
+        <a href="#" onclick="toggleUpload(5)">Datei 5</a>
+        <div id="upload5" class="hidden">
+            <input type="file" id="upload-file5" onchange="_previewFile(this,'upload-preview5',5)">
+            <input type="hidden" id="upload-file5-fid" value="-1">         
+            <img src="img/preview.jpg" id="upload-preview5" height="200" alt="Image preview...">
+            <input type="button" id="remove-file5" onclick="_removeFile(5);" value="Entfernen">
+       </div>
+  
+            <div>
+              <button class="ok">Frage stellen</button>
+              <button class="cancel">Abbrechen</button>
+              </div>
+            </div>
+            </div><!--// Dialog -->
+
+                <!-- upload dialog -->
             <div id="upldialog" class="hidden">
                 <div class="message">Hochladen</div>
                 <input type="file" id="upload-file" onchange="awri._previewFile(this,'img#upload-preview')">
@@ -89,7 +151,8 @@
                                 <div data-role="popup" id="popupCommands" data-theme="a">
                                     <ul datarole="listview" id="commandlist" style="padding:0px; margin:0;cursor:pointer;">
                                     <li onclick="cmdNews();">News</li>
-                                    <li onclick="$('#msg').val('/search [Text]');$('#popupCommands').popup('close');">Suche Beitrag...</li>                                
+                                    <li onclick="cmdCreate();">Rechtsfrage stellen...</li>
+                                    <li onclick="cmdSearch('');$('#popupCommands').popup('close');scrollBottom();">Suche Beitrag...</li>                                
                                     <li onclick="$('#msg').val('/show [Beitrag ID]');$('#popupCommands').popup('close');">Zeige Beitrag</li>
                                     <li  name="content" onclick="showClientsPopup(this);">Sende Beitrag an...<ul name="show content [Beitrag ID] " id="clients-content"></ul></li>
                                     <li onclick="$('#msg').val('/show image [Datei ID]');$('#popupCommands').popup('close');">Zeige Bild</li>
@@ -118,14 +181,24 @@
                                 </ul>
                                 </div>
 
-                                <a href="#popupColors" title="Schriftfrbe auswählen" id="actualcolor" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">🖊️</a>
+                                <a href="#popupColors" title="Schriftfarbe auswählen" id="actualcolor" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">🖊️</a>
                                 <div data-role="popup" id="popupColors" data-theme="a">
                                     <ul datarole=listview style="padding:0px; margin:0;cursor:pointer;">
-                                    <li class="color" style="width:35px;padding:0;background-color:#333;" onclick=setColor(this);>&nbsp;</li>          
+                                    <li class="color" style="width:35px;padding:0;height:35px;background-color:#333;" onclick=setColor(this);>&nbsp;</li>          
                                     <li class="color" style=" background-color:#630904;" onclick="setColor(this);">&nbsp;</li>
                                     <li class="color" style="background-color:#170463;" onclick=setColor(this);>&nbsp;</li>          
                                     <li class="color" style="background-color:#635704;" onclick="setColor(this);">&nbsp;</li>
                                     <li class="color" style="background-color:#046318;" onclick="setColor(this);">&nbsp;</li>        
+                                    </ul>
+                                </div>
+                                <a href="#popupTheme" title="Theme auswählen" id="actualcolor" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">🖥️</a>
+                                <div data-role="popup" id="popupTheme" data-theme="a">
+                                    <ul datarole=listview style="padding:0px; margin:0;cursor:pointer;">
+                                    <li class="color" style="width:35px;height:35px;padding:5 0 5 0;background-color:#f9f9f9;" onclick="$.mobile.changeGlobalTheme('a');"></li>          
+                                    <li class="color" style="background-color:#4d4d4d;" onclick="$.mobile.changeGlobalTheme('b');">&nbsp;</li>
+                                    <li class="color" style="background-color:#630904;" onclick="$.mobile.changeGlobalTheme('c');">&nbsp;</li>          
+                                    <li class="color" style="background-color:#046318;" onclick="$.mobile.changeGlobalTheme('d');">&nbsp;</li>
+                                    <li class="color" style="background-color:#000;" onclick="$.mobile.changeGlobalTheme('e');">&nbsp;</li>        
                                     </ul>
                                 </div>
                                 <a href="#popupEmojis" title="Emojis einfügen" data-rel="popup" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini ui-data-theme-a" data-theme="a">😊</a>
@@ -134,6 +207,8 @@
                                     <li class="emojis" style="width:35px;" onclick="putSmiley(this);">😊</li>
                                     <li class="emojis" onclick="putSmiley(this);">😘</li>
                                     <li class="emojis" onclick="putSmiley(this);">😉</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😀</li>
+                                    <li class="emojis" onclick="putSmiley(this);">😂</li>                                    
                                     <li class="emojis" onclick="putSmiley(this);">😯</li>
                                     <li class="emojis" onclick="putSmiley(this);">😭</li>
                                     <li class="emojis" onclick="putSmiley(this);">😡</li>                    
@@ -149,9 +224,14 @@
                     <div data-role="controlgroup" data-type="horizontal">
                         <label for="checkbox-mini-0" title="Browser Benachrichtigungen  für private Nachrichtigungen an oder aus schalten">☑️ </label>
                         <input type="checkbox" name="checkbox" id="checkbox-mini-0" class="custom" data-mini="true" />                  
-                        <label for="pause" title="Chatnachrichten anhalten">🛑</label>
+                        <label for="pause" title="Chatnachrichten anhalten">⏸️</label>
                         <input name="pause" type='checkbox' id="pause" href="#" class="custom" data-mini="true"/>                        
+                        <a title="Rechtsfrage stellen" href="#" onclick="cmdCreate();" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">❓</a>
                         <a title="Zeitline der Beiträge (extern)" href="https://awri.ch/html/timedown.html" target="_BLANK"  data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">📅</a>
+                        <a title="Chat neu Laden" href="#" onclick="document.location.reload();" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">🔃</a>
+                        <a title="Chat leeren" href="#" onclick="$('#messages').html('');" data-transition="slideup" class="emojis ui-btn ui-corner-all ui-data-mini" data-theme="a">❌</a>
+                        
+                        
                         <input title="Nachricht senden [Enter]" type='button' href="#" onclick="sendText();"  value="Senden"> 
                         </div>
             </div>
@@ -271,12 +351,18 @@ else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.start
 })();
 
 function showUserMenu(elem,id,cmd){
-    $(elem).html("");
+   elem=$('#'+elem);
+   elem.show();
+   elem.html("");
     clients.forEach(function(client) {
       //  console.log(client);
-        var n='<li onclick="'+cmd+'('+id+','+client._uid+');">'+theme_user_picture(client._picture)+client._name+'</li>';
+        var n='<li onclick="'+cmd+'('+id+','+client._uid+');closeUserMenu(\'usermenu-'+id+'\');">'+theme_user_picture(client._picture)+client._name+'</li>';
     $(elem).append(n);
     });
+}
+function closeUserMenu(elem){
+   elem=$('#'+elem);
+   elem.hide();
 }
 
 function showClientsPopup(el){
@@ -306,6 +392,193 @@ document.getElementById($(ulc).attr("id")).addEventListener("click",function(e) 
     
 };
 
+
+function showSearchDialog(message) {
+    var dialog       = document.getElementById('dialog');
+    var input        = dialog.querySelector('input');
+    var okButton     = dialog.querySelector('button.ok');
+  input.value="";
+  input.focus();     
+    dialog.querySelector('.message').innerHTML = String(message);
+    dialog.className = '';
+  
+    return new Promise(function(resolve, reject) {
+      dialog.addEventListener('click', function handleButtonClicks(e) {
+         
+//          if(input.value.length<5){
+//            dialog.querySelector('.message').innerHTML = "min. 5 Zeichen.";
+//            return;
+//            }
+        if (e.target.tagName !== 'BUTTON') { return; }
+        dialog.removeEventListener('click', handleButtonClicks);
+        dialog.className = 'hidden';
+        if (e.target === okButton) {
+        cmdSearch(input.value);
+            resolve(input.value);
+        } else {
+         //document.location.reload();
+        }
+      })
+  })
+  }
+  function toggleUpload(nr){
+      var upload=document.getElementById("upload"+nr);
+      $(upload).toggle();
+  }
+
+function showCreateDialog(message) {
+    var dialog       = document.getElementById('createdialog');
+    var input        = dialog.querySelector('textarea');
+
+    var file1        = document.getElementById('upload-preview1');
+    var fid1        = document.getElementById('upload-file1-fid');
+    var file2        = document.getElementById('upload-preview2');
+    var fid2       = document.getElementById('upload-file2-fid');
+    var file3        = document.getElementById('upload-preview3');
+    var fid3        = document.getElementById('upload-file3-fid');
+    var file4        = document.getElementById('upload-preview4');
+    var fid4        = document.getElementById('upload-file4-fid');
+    var file5        = document.getElementById('upload-preview5');
+    var fid5        = document.getElementById('upload-file5-fid');
+
+  var file2        = document.getElementById('upload-preview2');
+
+    var okButton     = dialog.querySelector('button.ok');
+    
+    dialog.querySelector('.createdialog-message').innerHTML = String(message);
+    dialog.className = '';
+ $('#createdialog-fbname').val(variable_get("user")._name);
+  var kanton=$('#kanton');
+
+awri.awriconnect_taxonomy_term(0,'vid,tid,name,description','parameters[vid]=3',27,'options[orderby][name]=asc').then(function(res){
+    for(i=0;i<res.length;i++)kanton.append('<option id="'+res[i].tid+'">'+res[i].name+'</option>')
+})
+
+    return new Promise(function(resolve, reject) {
+      dialog.addEventListener('click', function handleButtonClicks(e) {
+         // alert(e.target.tagName);
+        if (e.target.tagName == 'LABEL') {
+            if(e.target.id=="createdialog-anon"){
+                $("#namePopup").toggle();
+            }
+        }
+        if (e.target.tagName !== 'BUTTON') { return; }
+       
+        if(e.target==okButton&&input.value.length<10){
+         //alert(e.target.className);
+         alert("Der Text ist zu kurz");
+         $('#create').focus();   
+         return;
+        }
+        dialog.removeEventListener('click', handleButtonClicks);
+        dialog.className = 'hidden';
+        if (e.target === okButton) {
+            var images=[];
+            if(fid1.value!=="-1")images.push({fid:fid1.value});
+            if(fid2.value!=="-1")images.push({fid:fid2.value});
+            if(fid3.value!=="-1")images.push({fid:fid3.value});
+            if(fid4.value!=="-1")images.push({fid:fid4.value});
+            if(fid5.value!=="-1")images.push({fid:fid5.value});
+
+var n = $("#checkbox-anon");
+
+/*
+        if(file1.src.indexOf('img/preview.jpg')==-1){
+            awri.awriconnect_upload_file('upload-preview1').then(function(data){
+            var result=JSON.parse(data);
+            fid1.value=result.fid;
+            console.log(result,"UPLOADED1");
+            alert("uploaded File1"+result.fid);                
+        });
+        }
+        if(file2.src.indexOf('img/preview.jpg')==-1){
+            awri.awriconnect_upload_file('upload-preview2').then(function(data){
+            var result=JSON.parse(data);
+            fid2.value=result.fid;
+        });        
+    }
+        if(file3.src.indexOf('img/preview.jpg')==-1){
+            awri.awriconnect_upload_file('upload-preview3').then(function(data){
+            var result=JSON.parse(data);
+            fid3.value=result.fid;
+        });
+}
+*/
+
+//alert($("#kanton option:selected").attr('id'));
+
+
+//"field_image":{"und":[{"fid":"734","uid":"3","filename":"ball_100.png","uri":"public://attachments/ball_100_19.png","filemime":"image/png","filesize":"6967","status":"1","timestamp":"1535724671","type":"image","field_file_image_alt_text":[]
+var frage={
+    "body": input.value,
+    "anonym":+n.prop('checked') ? 1 : 0,
+    "fbid": "100000611529195",
+    "field_kanton":$("#kanton option:selected").attr('id'),
+    "field_image": {"und": images },                         
+	
+    };
+//console.log(frage);
+       var str='{"body": "Hallo Neu","anonym": "1","fbid": "100000611529195","fbname": "Robert Schweng"}';
+        
+       
+awri.awriconnect_frage_create(JSON.stringify(frage)).then(function(res){
+  appendLine("<h1>Ihre Frage wurde gestellt</h1>",'green')
+    console.log(res,"CREATE");
+}).catch(function(err){
+    console.log(err);
+});
+
+
+        
+//        if(file2.src.indexOf('img/preview.jpg')!=-1)alert("Kein File2");
+//        if(file3.src.indexOf('img/preview.jpg')!=-1)alert("Kein File3");
+
+//        console.log(file1.src);
+/*
+
+awri.awriconnect_upload_file('upload-preview2').then(function(data){
+    document.getElementById('upload-file2-fid').value=data.fid;
+console.log(data,"UPLOADED2");
+});
+*/
+            resolve(input.value);
+        } else {
+         //document.location.reload();
+       return;
+        }
+      })
+  })
+  }
+
+function _removeFile(nr){
+var file        = document.getElementById('upload-file'+nr);
+var preview = document.querySelector("img#upload-preview"+nr); //selects the query named img
+var fid        = document.getElementById('upload-file'+nr+'-fid');
+fid.value="-1";
+file.value="";
+preview.src="img/preview.jpg";
+}
+
+function _previewFile(filefield,preview,nr){
+        var preview = document.querySelector("img#"+preview); //selects the query named img
+        var file    = filefield.files[0]; //sames as here
+        var reader  = new FileReader();
+        var fid        = document.getElementById('upload-file'+nr+'-fid');
+
+        preview.setAttribute('name',filefield.value);
+        reader.onloadend = function () {
+            preview.src = reader.result;    
+            awri.awriconnect_upload_file(preview.id).then(function(file){
+fid.value=JSON.parse(file).fid;
+            });        
+        }     
+        if (file) {
+            reader.readAsDataURL(file); //reads the data as a URL
+        
+        } else {
+            preview.src = "";
+        }            
+    }//func
 
 function showDialog(message) {
     var dialog       = document.getElementById('dialog');
@@ -442,23 +715,11 @@ if(cmd._cmd=="private command" && cmd._data._txt.startsWith('show content'))show
 
 
 function showContentFrom(from,nid){
-console.log(from);
- appendLine(from.name +" sendet folgenden Beitrag:","red");
-
-showContent(nid);
-
+    appendLine(from.name +" sendet folgenden Beitrag:","red");
+    cmdShow(nid);
 };
 
-function showContent(nid){
-var render="";
-    awri.awriconnect_frage_get(nid).then(function(node){
-    render+=theme_node(node);
-         awri.awriconnect_comments(nid).then(function(comments){                        
-         render+=theme_comments(comments);
-         appendLine(render); 
-        });            
-    });
-};
+
 
 
 var private=false;
