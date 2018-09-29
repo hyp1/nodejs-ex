@@ -265,8 +265,8 @@ isKicked(user._uid).then(function(res){
     socket.on('disconnect', function (data){
         console.log(data,'disconnect');
         //console.info("disconnect socket  %s %s.",socket._uid,socket.sid);
-        console.log(socket._uid,'disconnect uid');
-        if(socket._uid!=='undefined')delete clients[socket._uid];
+      //  console.log(socket._uid,'disconnect uid');
+      //  if(socket._uid!=='undefined')delete clients[socket._uid];
         _broadcastUserlist();
     }); //disconnect
 
