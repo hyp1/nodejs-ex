@@ -290,8 +290,8 @@ var AWRI = function () {
         }//func
 
     }, { //Func
-        key: "awriconnect_user_login",
-        value: function awriconnect_user_login(username,password) {
+        key: "awriconnect_login",
+        value: function awriconnect_login(username,password) {
             return new Promise(function (resolve, reject) {
                 var xmlhttp = new XMLHttpRequest();
                 var postData = {        
@@ -536,8 +536,8 @@ var AWRI = function () {
                         if (xmlhttp.status == 0)  reject( new AWRIError(xmlhttp.status+' Der Service wurde nicht gefunden.'));                
                         if (xmlhttp.status != 200) reject( new AWRIError(xmlhttp.status+' Fehler in dummy.'));    
                     }
-                };
-                xmlhttp.send(JSON.stringify(data));
+                };      
+                xmlhttp.send(data);
             }).catch(function(err){
                 if(typeof awriconnect_error == 'function')awriconnect_error('dummy',err);   
             });
