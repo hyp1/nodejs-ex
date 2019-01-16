@@ -75,7 +75,13 @@ app.use('/', express.static('public'), function (req, res) {
 http.listen(8080, function (req, res) {
   console.log('listening on *:' + port);
 });
-io = require('socket.io').listen(http)
+io = require('socket.io').listen(http);
+io.origins((origin, callback) => {
+  if (origin !== 'https://forum.awri.ch') {
+    return callback('origin not allowed', false);
+  }
+  callback(null, true);
+});
 chat=new ChatServer(io);
 
 
