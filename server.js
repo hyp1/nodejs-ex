@@ -63,6 +63,10 @@ app.engine('html', require('ejs').renderFile); //console log modules unten!
 
 app.use('/', express.static('public'), function (req, res) {
   //console.log(req.headers);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, *');
+
   //res.sendFile(express.static('public')+'index.html');
   res.sendFile('index.html', { root: __dirname + '/public' });
 });
