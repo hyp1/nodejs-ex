@@ -38,8 +38,8 @@ if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
 }
 const LOGGING=0;
 
-//console.log(mongoURL, 'MONGO VORHER');
-//mongoURL = mongoURL || 'mongodb://userTR5:nmdym2aLFpT70Gqi@172.30.130.83/sampledb';
+console.log(mongoURL, 'MONGO VORHER');
+mongoURL = mongoURL || 'mongodb://userGJX:eipLOWYGuKqEIdet@172.30.50.100/sampledb';
 console.log(mongoURL, 'MONGO_URL(constructed)');
 console.log(ip, 'NODEJS_IP');
 console.log(port, 'NODEJS_PORT');
