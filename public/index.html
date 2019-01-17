@@ -333,6 +333,7 @@ var host = 'https://stage.awri.ch';
 
 var endpoint = 'connect';
 
+var chatsrv = 'nodejs-mongo-persistent-awri-chat.1d35.starter-us-east-1.openshiftapps.com';
 
 //AWRI.setLogger(console.log);
 awri=new AWRI(host,'connect');
@@ -344,7 +345,7 @@ cuser= new ChatUser();
   //  appendLine('<h2><img style="vertival-align:middle;" src="img/logo_blank_50x50.png"> Willkommen im AWRI Chat<h2>');
   //  appendLine('Schreiben Sie <strong>/info</strong> in den Chat, um weitere Informationen zu erhalten.');
 if(location.hostname==='localhost')chat=new ChatClient();
-else chat=new ChatClient('https:','nodejs-mongo-persistent-awri-chat.1d35.starter-us-east-1.openshiftapps.com');
+else chat=new ChatClient('https:',chatsrv);
 
 
 
@@ -634,7 +635,7 @@ function showUploadDialog(message) {
 
 awri.token().then(function(){
 if(location.hostname==='localhost')chat=new ChatClient();
-else chat=new ChatClient('https:','nodejs-mongo-persistent-chatserver.7e14.starter-us-west-2.openshiftapps.com');
+else chat=new ChatClient('https:',chatsrv);
 
     awri.connect().then(function(user){
     cuser= new ChatUser();
