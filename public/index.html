@@ -268,13 +268,13 @@ $( "#myheader" ).on( "panelclose", function( event, ui ) {
 } );
 
 //MOTD
-
 awri.awriconnect_load_node(18329).then(function(node){    
 appendLine(node.body['und'][0].value);
 })
 
 });
 
+//Buttons und Keybindings
 $(function() {
     $('#msg').focus();
     $("input#checkbox-mini-0:first").attr("checked",notifications);
@@ -330,14 +330,12 @@ var clients=[];
 
 //var host = 'http://localhost/stage.awri.ch';
 var host = 'https://stage.awri.ch';
-
 var endpoint = 'connect';
+awri=new AWRI(host,endpoint);
+//AWRI.setLogger(console.log);
+
 
 var chatsrv = 'nodejs-mongo-persistent-awri-chat.1d35.starter-us-east-1.openshiftapps.com';
-
-//AWRI.setLogger(console.log);
-awri=new AWRI(host,'connect');
-
 cuser= new ChatUser();
 
 
@@ -346,8 +344,6 @@ cuser= new ChatUser();
   //  appendLine('Schreiben Sie <strong>/info</strong> in den Chat, um weitere Informationen zu erhalten.');
 if(location.hostname==='localhost')chat=new ChatClient();
 else chat=new ChatClient('https:',chatsrv);
-
-
 
 })();
 
