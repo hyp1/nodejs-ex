@@ -77,7 +77,7 @@ http.listen(8080, function (req, res) {
 });
 io = require('socket.io').listen(http);
 io.origins((origin, callback) => {
-  if (origin !== 'https://forum.awri.ch') {
+  if (origin !== '*:*') {
     return callback('origin not allowed', false);
   }
   callback(null, true);
